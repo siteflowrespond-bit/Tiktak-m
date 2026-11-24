@@ -1,0 +1,52 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Celebrations</title>
+<link rel="stylesheet" href="overlay.css">
+<style>
+  .shout { position: fixed; left: 50%; top: 22%; transform: translate(-50%, -50%) scale(.5); opacity: 0; text-align: center; transition: transform .45s cubic-bezier(.2,1.6,.4,1), opacity .3s; z-index: 60; }
+  .shout.on { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  .shout .big { font-size: 46px; font-weight: 900; color: #ffd166; }
+  .shout .small { font-size: 18px; font-weight: 700; }
+</style></head>
+<body>
+<div class="shout shadow" id="shout"><div class="big" id="big"></div><div class="small" id="small"></div></div>
+<script src="/socket.io/socket.io.js"></script>
+<script src="common.js"></script>
+<script src="fx.js"></script>
+<script>
+  // Fireworks and confetti for big moments. Purely visual, sits on top of everything.
+  // ?min=100 (gift coins for fireworks)  ?follows=1 (confetti puff on follows)  ?subs=1 (confetti cannons on subscribes)  ?text=0 (no headline)
+  const min = Number(params.get('min') || 100);
+  const follows = params.get('follows') !== '0';
+  const subs = params.get('subs') !== '0';
+  const text = params.get('text') !== '0';
+  const fx = createFx();
+  let shoutTimer = 0;
+
+  function shout(big, small) {
+    if (!text) return;
+    document.getElementById('big').textContent = big;
+    document.getElementById('small').textContent = small;
+    const s = document.getElementById('shout');
+    s.classList.add('on');
+    clearTimeout(shoutTimer);
+    shoutTimer = setTimeout(() => s.classList.remove('on'), 3200);
+  }
+
+  function cannons(power = 18, count = 90) {
+    fx.confetti(0, innerHeight, { count, angle: -Math.PI / 3, spread: Math.PI / 5, power });
+    fx.confetti(innerWidth, innerHeight, { count, angle: -Math.PI * 2 / 3, spread: Math.PI / 5, power });
+  }
+
+  io().on('event', (e) => {
+    if (e.type === 'gift' && e.gift.coins >= min) {
+      const c = e.gift.coins;
+      const rockets = c >= 10000 ? 16 : c >= 5000 ? 10 : c >= 1000 ? 6 : 2;
+      for (let i = 0; i < rockets; i++) setTimeout(() => fx.firework(), i * 220 + Math.random() * 120);
+      if (c >= 1000) cannons();
+      shout(c >= 1000 ? 'HUGE GIFT' : 'Big gift', `${e.user.nickname} · ${e.gift.count > 1 ? `${e.gift.count}× ` : ''}${e.gift.name} · ${fmt(c)} coins`);
+    }
+    if (e.type === 'follow' && follows) fx.confetti(innerWidth * (0.3 + Math.random() * 0.4), innerHeight * 0.95, { count: 40, power: 14, spread: Math.PI / 3 });
+    if (e.type === 'subscribe' && subs) { cannons(20, 120); shout('New subscriber', e.user.nickname); }
+  });
+</script>
+</body></html>

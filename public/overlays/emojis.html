@@ -1,0 +1,94 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Emoji rain</title>
+<link rel="stylesheet" href="overlay.css">
+<style> canvas { position: fixed; inset: 0; width: 100%; height: 100%; } </style></head>
+<body>
+<canvas id="c"></canvas>
+<script src="/socket.io/socket.io.js"></script>
+<script src="common.js"></script>
+<script>
+  // Emojis from chat drop in, bounce and pile up, then fade.  ?mode=rain|float  ?size=46  ?max=120  ?per=8 (max per message)
+  // Likes can drop hearts too: ?likes=1
+  const mode = params.get('mode') === 'float' ? 'float' : 'rain';
+  const SIZE = Number(params.get('size') || 46);
+  const MAX = Number(params.get('max') || 120);
+  const PER = Number(params.get('per') || 8);
+  const likes = params.get('likes') === '1';
+  const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+  let W, H;
+  const items = [];
+  const seg = typeof Intl !== 'undefined' && Intl.Segmenter ? new Intl.Segmenter() : null;
+  const isEmoji = (g) => /\p{Extended_Pictographic}/u.test(g);
+  const sprites = new Map();
+
+  function resize() {
+    const dpr = Math.min(2, devicePixelRatio || 1);
+    W = innerWidth; H = innerHeight;
+    cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  addEventListener('resize', resize); resize();
+
+  // Pre-render each emoji once; drawing text every frame is slow.
+  function sprite(e) {
+    if (sprites.has(e)) return sprites.get(e);
+    const c = document.createElement('canvas'), s = SIZE * 2;
+    c.width = c.height = s;
+    const x = c.getContext('2d');
+    x.font = `${SIZE * 1.5}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;
+    x.textAlign = 'center'; x.textBaseline = 'middle';
+    x.fillText(e, s / 2, s / 2 + SIZE * 0.08);
+    sprites.set(e, c);
+    return c;
+  }
+
+  function emojisIn(text) {
+    const out = [];
+    if (seg) { for (const { segment } of seg.segment(text)) if (isEmoji(segment)) out.push(segment); }
+    else for (const ch of Array.from(text)) if (isEmoji(ch)) out.push(ch);
+    return out;
+  }
+
+  function spawn(e, delay) {
+    setTimeout(() => {
+      if (items.length >= MAX) items.shift();
+      const s = SIZE * (0.8 + Math.random() * 0.5);
+      if (mode === 'rain') items.push({ e, x: s + Math.random() * (W - s * 2), y: -s, vx: (Math.random() - 0.5) * 4, vy: Math.random() * 2, r: s / 2, rot: 0, vr: (Math.random() - 0.5) * 0.2, age: 0, life: 420 + Math.random() * 120 });
+      else items.push({ e, x: W * (0.15 + Math.random() * 0.7), y: H + s, vx: 0, vy: -(2 + Math.random() * 2), r: s / 2, rot: 0, vr: 0, age: 0, life: 260, wob: Math.random() * 6 });
+    }, delay);
+  }
+
+  function frame() {
+    ctx.clearRect(0, 0, W, H);
+    for (let i = items.length - 1; i >= 0; i--) {
+      const p = items[i];
+      p.age++;
+      if (mode === 'rain') {
+        p.vy += 0.5; p.x += p.vx; p.y += p.vy; p.rot += p.vr;
+        if (p.y > H - p.r) { p.y = H - p.r; p.vy *= -0.45; p.vx *= 0.8; p.vr = p.vx * 0.05; }
+        if (p.x < p.r || p.x > W - p.r) { p.vx *= -0.7; p.x = Math.max(p.r, Math.min(W - p.r, p.x)); }
+        for (let j = 0; j < i; j++) { // simple pile-up
+          const q = items[j], dx = p.x - q.x, dy = p.y - q.y, d = Math.hypot(dx, dy), m = p.r + q.r;
+          if (d < m && d > 0.01) { const k = (m - d) / 2; p.x += (dx / d) * k; p.y += (dy / d) * k; q.x -= (dx / d) * k; q.y -= (dy / d) * k; }
+        }
+      } else {
+        p.y += p.vy; p.x += Math.sin(p.age / 18 + p.wob) * 1.2;
+      }
+      const t = p.age / p.life;
+      if (t >= 1) { items.splice(i, 1); continue; }
+      ctx.save();
+      ctx.globalAlpha = t > 0.85 ? (1 - t) / 0.15 : Math.min(1, p.age / 8);
+      ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+      const sc = mode === 'float' ? 0.7 + Math.min(0.5, p.age / 80) : 1;
+      ctx.drawImage(sprite(p.e), -p.r * sc, -p.r * sc, p.r * 2 * sc, p.r * 2 * sc);
+      ctx.restore();
+    }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  io().on('event', (e) => {
+    if (e.type === 'chat') emojisIn(e.comment).slice(0, PER).forEach((em, i) => spawn(em, i * 90));
+    if (likes && e.type === 'like') for (let i = 0; i < Math.min(4, e.likes); i++) spawn('❤️', i * 80);
+  });
+</script>
+</body></html>

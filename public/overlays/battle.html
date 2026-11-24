@@ -1,0 +1,153 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Team battle</title>
+<link rel="stylesheet" href="overlay.css">
+<style>
+  :root { --a: #ff4d5e; --b: #3ba7ff; }
+  .box { position: fixed; left: 50%; top: 18px; transform: translateX(-50%); width: min(94vw, 760px); }
+  .head { display: grid; grid-template-columns: 1fr auto 1fr; align-items: end; margin-bottom: 8px; }
+  .team { display: flex; flex-direction: column; gap: 2px; }
+  .team.b { align-items: flex-end; text-align: right; }
+  .tname { font-size: 15px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; }
+  .a .tname { color: var(--a); } .b .tname { color: var(--b); }
+  .score { font-size: 40px; font-weight: 900; line-height: 1; }
+  .score.bump { animation: bump .35s ease; }
+  @keyframes bump { 40% { transform: scale(1.18); } }
+  .clock { font: 800 24px "Cascadia Mono", Consolas, ui-monospace, monospace; padding: 4px 12px; border-radius: 6px; background: rgba(16,16,16,.8); }
+  .clock.low { color: #ff6b6b; animation: pulse 1s infinite; }
+  @keyframes pulse { 50% { opacity: .55 } }
+  .bar { position: relative; height: 34px; border-radius: 17px; overflow: hidden; background: var(--b); box-shadow: 0 4px 14px rgba(0,0,0,.4), inset 0 0 0 3px rgba(255,255,255,.15); }
+  .fillA { position: absolute; inset: 0 auto 0 0; width: 50%; background: var(--a); transition: width .6s cubic-bezier(.3,1.5,.5,1); }
+  .bar::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(-45deg, rgba(255,255,255,.1) 0 10px, transparent 10px 20px); animation: slide 1.2s linear infinite; }
+  @keyframes slide { to { background-position: 28px 0; } }
+  .seam { position: absolute; top: -6px; bottom: -6px; width: 10px; margin-left: -5px; left: 50%; background: #fff; border-radius: 5px; box-shadow: 0 0 14px 4px rgba(255,255,255,.8); transition: left .6s cubic-bezier(.3,1.5,.5,1); z-index: 2; }
+  .mvp { display: flex; justify-content: space-between; margin-top: 8px; font-size: 14px; font-weight: 600; }
+  .mvp span { display: inline-flex; align-items: center; gap: 6px; }
+  .hint { text-align: center; margin-top: 6px; font-size: 14px; font-weight: 600; opacity: .9; }
+  .float { position: fixed; font-weight: 900; font-size: 20px; pointer-events: none; animation: up 1.2s ease-out forwards; }
+  @keyframes up { from { opacity: 1; transform: translate(-50%, 0) } to { opacity: 0; transform: translate(-50%, -46px) } }
+  .win { position: fixed; left: 50%; top: 45%; transform: translate(-50%, -50%) scale(.4); opacity: 0; font-size: 64px; font-weight: 900; letter-spacing: 2px; transition: transform .5s cubic-bezier(.2,1.6,.4,1), opacity .3s; text-transform: uppercase; }
+  .win.on { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+</style></head>
+<body>
+<div class="box shadow">
+  <div class="head">
+    <div class="team a"><span class="tname" id="nA"></span><span class="score num" id="sA">0</span></div>
+    <div class="clock num" id="clock"></div>
+    <div class="team b"><span class="tname" id="nB"></span><span class="score num" id="sB">0</span></div>
+  </div>
+  <div class="bar" id="bar"><div class="fillA" id="fillA"></div><div class="seam" id="seam"></div></div>
+  <div class="mvp"><span id="mA"></span><span id="mB"></span></div>
+  <div class="hint" id="hint"></div>
+</div>
+<div class="win shadow" id="win"></div>
+<script src="/socket.io/socket.io.js"></script>
+<script src="common.js"></script>
+<script src="fx.js"></script>
+<script>
+  // Two teams push a bar with gifts.
+  // ?a=Red&b=Blue (team names)  ?ga=Rose&gb=TikTok (gift that joins/scores for each team)
+  // Viewers can also pick a side in chat with !red / !blue (the team names). Others join the smaller team.
+  // ?time=180 (round length, seconds)  ?likes=1 (every 10 likes = 1 point)  ?ca=%23ff4d5e&cb=%233ba7ff (colors)
+  const A = params.get('a') || 'Red', B = params.get('b') || 'Blue';
+  const GA = (params.get('ga') || 'Rose').toLowerCase(), GB = (params.get('gb') || 'TikTok').toLowerCase();
+  const ROUND = Number(params.get('time') || 180);
+  const countLikes = params.get('likes') === '1';
+  if (params.get('ca')) document.documentElement.style.setProperty('--a', params.get('ca'));
+  if (params.get('cb')) document.documentElement.style.setProperty('--b', params.get('cb'));
+  const colA = getComputedStyle(document.documentElement).getPropertyValue('--a').trim();
+  const colB = getComputedStyle(document.documentElement).getPropertyValue('--b').trim();
+  document.getElementById('nA').textContent = A;
+  document.getElementById('nB').textContent = B;
+
+  const fx = createFx();
+  const members = new Map(); // userId -> 'a' | 'b'
+  let score = { a: 0, b: 0 }, mvp = { a: new Map(), b: new Map() }, endsAt = 0, over = false;
+  const $ = (id) => document.getElementById(id);
+
+  function hint() {
+    $('hint').textContent = endsAt ? '' : `Send ${params.get('ga') || 'Rose'} or type !${A.toLowerCase()} for ${A} · ${params.get('gb') || 'TikTok'} or !${B.toLowerCase()} for ${B}`;
+  }
+
+  function teamFor(e) {
+    if (e.type === 'gift') {
+      const n = e.gift.name.toLowerCase();
+      if (n === GA) { members.set(e.user.id, 'a'); return 'a'; }
+      if (n === GB) { members.set(e.user.id, 'b'); return 'b'; }
+    }
+    if (members.has(e.user.id)) return members.get(e.user.id);
+    let na = 0, nb = 0; for (const t of members.values()) t === 'a' ? na++ : nb++;
+    const t = na <= nb ? 'a' : 'b';
+    members.set(e.user.id, t);
+    return t;
+  }
+
+  function add(team, pts, user) {
+    if (over || pts <= 0) return;
+    if (!endsAt) { endsAt = Date.now() + ROUND * 1000; hint(); }
+    score[team] += pts;
+    const m = mvp[team]; m.set(user.id, { user, pts: (m.get(user.id)?.pts || 0) + pts });
+    render();
+    const s = $(team === 'a' ? 'sA' : 'sB'); s.classList.remove('bump'); void s.offsetWidth; s.classList.add('bump');
+    const r = $('seam').getBoundingClientRect();
+    fx.sparks(r.left + 5, r.top + r.height / 2, { count: Math.min(60, 10 + pts), color: team === 'a' ? colA : colB, speed: 7 });
+    const f = el('div', { class: 'float shadow', style: `left:${r.left + (team === 'a' ? -40 : 46)}px;top:${r.top + r.height + 6}px;color:${team === 'a' ? colA : colB}` }, `+${fmt(pts)}`);
+    document.body.append(f); f.addEventListener('animationend', () => f.remove());
+  }
+
+  function render() {
+    const total = score.a + score.b;
+    const pct = total ? Math.max(4, Math.min(96, (score.a / total) * 100)) : 50;
+    $('fillA').style.width = `${pct}%`;
+    $('seam').style.left = `${pct}%`;
+    $('sA').textContent = fmt(Math.floor(score.a)); $('sB').textContent = fmt(Math.floor(score.b));
+    for (const t of ['a', 'b']) {
+      const best = [...mvp[t].values()].sort((x, y) => y.pts - x.pts)[0];
+      $(t === 'a' ? 'mA' : 'mB').replaceChildren(...(best ? [avatarEl(best.user, 22), `${best.user.nickname} · ${fmt(best.pts)}`] : []));
+    }
+  }
+
+  function tick() {
+    const c = $('clock');
+    if (!endsAt) { c.textContent = `${Math.floor(ROUND / 60)}:${String(ROUND % 60).padStart(2, '0')}`; c.classList.remove('low'); return; }
+    const s = Math.max(0, Math.ceil((endsAt - Date.now()) / 1000));
+    c.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+    c.classList.toggle('low', s <= 10);
+    if (s === 0 && !over) end();
+  }
+
+  function end() {
+    over = true;
+    const w = score.a === score.b ? null : score.a > score.b ? 'a' : 'b';
+    const win = $('win');
+    win.textContent = w ? `${w === 'a' ? A : B} wins` : 'Draw';
+    win.style.color = w ? (w === 'a' ? colA : colB) : '#fff';
+    win.classList.add('on');
+    const col = w === 'a' ? colA : w === 'b' ? colB : '#ffd166';
+    for (let i = 0; i < 6; i++) setTimeout(() => fx.firework(undefined, undefined, col), i * 300);
+    fx.confetti(innerWidth / 2, innerHeight * 0.5, { count: 160, spread: Math.PI * 2, power: 14 });
+    setTimeout(() => {
+      win.classList.remove('on');
+      score = { a: 0, b: 0 }; mvp = { a: new Map(), b: new Map() }; members.clear(); endsAt = 0; over = false;
+      render(); hint();
+    }, 9000);
+  }
+
+  io().on('event', (e) => {
+    if (!e.user) return;
+    if (e.type === 'gift') add(teamFor(e), e.gift.coins, e.user);
+    else if (e.type === 'chat') {
+      const w = e.comment.trim().toLowerCase();
+      if (w === `!${A.toLowerCase()}`) members.set(e.user.id, 'a');
+      if (w === `!${B.toLowerCase()}`) members.set(e.user.id, 'b');
+    } else if (e.type === 'like' && countLikes) {
+      const t = teamFor(e);
+      const u = (e.likes || 1) / 10;
+      score[t] += u; // fractional; shows once it adds up
+      if (!endsAt && score[t] >= 1) { endsAt = Date.now() + ROUND * 1000; hint(); }
+      render();
+    }
+  });
+  setInterval(tick, 250);
+  render(); hint(); tick();
+</script>
+</body></html>

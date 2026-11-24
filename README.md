@@ -26,6 +26,13 @@ Copy a URL from the **Overlays** page. In TikTok LIVE Studio, add it as a *Link*
 |---|---|---|
 | Alerts (also plays sounds + TTS) | `/overlays/alerts.html` | `volume=0.5`, `tts=0`, `sounds=0`, `style=plain`, `accent=%23ff0000` |
 | Sound player (audio only) | `/overlays/sounds.html` | `volume=0.5`. Use instead of Alerts, not together |
+| Gift jar | `/overlays/jar.html` | `goal=1000`, `title=...`, `max=260` (coins on screen) |
+| Spin wheel | `/overlays/wheel.html` | `items=A,B,C`, `min=100` or `gift=Rose` or `cmd=!spin`, `cooldown=30`, `hide=1`, `sound=0` |
+| Team battle | `/overlays/battle.html` | `a=Red&b=Blue`, `ga=Rose&gb=TikTok`, `time=180`, `likes=1`, `ca=`/`cb=` colors |
+| Like race | `/overlays/race.html` | `by=likes\|coins`, `goal=300`, `lanes=5` |
+| Top gift spotlight | `/overlays/topgift.html` | `mode=gift\|streak` |
+| Emoji rain | `/overlays/emojis.html` | `mode=rain\|float`, `size=46`, `likes=1` |
+| Celebrations | `/overlays/celebrate.html` | `min=100`, `follows=0`, `subs=0`, `text=0` |
 | Chat | `/overlays/chat.html` | `max=8`, `events=0`, `fade=30` |
 | Gift combos | `/overlays/combos.html` | `max=5`, `hold=4` |
 | Like hearts | `/overlays/hearts.html` | `side=left\|center\|right`, `max=60` |

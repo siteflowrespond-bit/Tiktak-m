@@ -18,7 +18,9 @@ export class Engine extends EventEmitter {
   resetStats() {
     this.stats = {
       viewers: 0, likes: 0, coins: 0, follows: 0, shares: 0, comments: 0, gifts: 0, joins: 0, subs: 0,
-      startedAt: Date.now()
+      startedAt: Date.now(),
+      topGift: null, // biggest single gift (by coins, combo included)
+      topStreak: null // longest combo (by count)
     };
     this.gifters = new Map(); // user id -> { user, coins }
     this.likers = new Map(); // user id -> { user, likes }
@@ -45,6 +47,8 @@ export class Engine extends EventEmitter {
         s.gifts += evt.gift.count;
         s.coins += evt.gift.coins;
         bump(this.gifters, evt.user, 'coins', evt.gift.coins);
+        if (!s.topGift || evt.gift.coins > s.topGift.gift.coins) s.topGift = { user: evt.user, gift: evt.gift, ts: evt.ts };
+        if (evt.gift.count > 1 && (!s.topStreak || evt.gift.count > s.topStreak.gift.count)) s.topStreak = { user: evt.user, gift: evt.gift, ts: evt.ts };
         this.addTime(evt.gift.coins * this.getConfig().timer.perCoin);
         break;
       }

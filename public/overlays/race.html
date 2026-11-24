@@ -1,0 +1,106 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Like race</title>
+<link rel="stylesheet" href="overlay.css">
+<style>
+  .race { position: fixed; left: 16px; right: 16px; bottom: 16px; padding: 10px 12px 12px; }
+  .top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+  .title { font-size: 14px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; }
+  .goal { font-size: 13px; opacity: .8; }
+  .track { position: relative; overflow: hidden; }
+  .lane { position: relative; height: 40px; border-top: 1px dashed rgba(255,255,255,.18); }
+  .lane:last-child { border-bottom: 1px dashed rgba(255,255,255,.18); }
+  .finish { position: absolute; top: 0; bottom: 0; right: 0; width: 14px;
+    background: repeating-conic-gradient(#fff 0 25%, #111 0 50%) 0 0 / 14px 14px; opacity: .9; }
+  .runner { position: absolute; left: 0; height: 40px; display: flex; align-items: center; gap: 6px; transition: transform .7s cubic-bezier(.25,1.2,.45,1), top .5s ease; will-change: transform; }
+  .runner .av { position: relative; }
+  .runner .av::after { content: ""; position: absolute; right: 100%; top: 50%; width: 0; height: 3px; margin-top: -1.5px; border-radius: 2px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.7)); transition: width .3s; }
+  .runner.go .av::after { width: 34px; }
+  .runner.go .av { animation: hop .3s ease-in-out 2; }
+  @keyframes hop { 50% { transform: translateY(-5px) rotate(-6deg); } }
+  .runner .nm { font-weight: 700; font-size: 14px; white-space: nowrap; }
+  .runner .n { font-size: 12px; opacity: .75; margin-left: 2px; }
+  .empty { padding: 10px 0; text-align: center; opacity: .8; font-weight: 600; }
+  .banner { position: fixed; left: 50%; top: 30%; transform: translate(-50%, -50%) scale(.5); opacity: 0; text-align: center; transition: transform .5s cubic-bezier(.2,1.6,.4,1), opacity .3s; }
+  .banner.on { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  .banner .big { font-size: 54px; font-weight: 900; color: #ffd166; }
+  .banner .small { font-size: 18px; font-weight: 700; }
+</style></head>
+<body>
+<div class="race panel shadow">
+  <div class="top"><span class="title" id="title"></span><span class="goal num" id="goal"></span></div>
+  <div class="track" id="track"></div>
+</div>
+<div class="banner shadow" id="banner"><div class="big" id="bwho"></div><div class="small" id="bwhat"></div></div>
+<script src="/socket.io/socket.io.js"></script>
+<script src="common.js"></script>
+<script src="fx.js"></script>
+<script>
+  // Viewers race to the finish line. ?by=likes|coins  ?goal=300 (points to win)  ?lanes=5  ?title=Like%20race
+  const by = params.get('by') === 'coins' ? 'coins' : 'likes';
+  const goal = Number(params.get('goal') || (by === 'likes' ? 300 : 500));
+  const lanes = Number(params.get('lanes') || 5);
+  document.getElementById('title').textContent = params.get('title') || (by === 'likes' ? 'Like race' : 'Gift race');
+  document.getElementById('goal').textContent = `first to ${fmt(goal)} ${by}`;
+  const track = document.getElementById('track');
+  const fx = createFx();
+  const racers = new Map(); // id -> { user, pts, node }
+  let finished = false;
+
+  for (let i = 0; i < lanes; i++) track.append(el('div', { class: 'lane' }));
+  track.append(el('div', { class: 'finish' }));
+  const empty = el('div', { class: 'empty', style: `position:absolute;inset:0;display:flex;align-items:center;justify-content:center` }, by === 'likes' ? 'Tap likes to join the race' : 'Send gifts to join the race');
+  track.append(empty);
+
+  function render() {
+    const order = [...racers.values()].sort((a, b) => b.pts - a.pts);
+    const shown = order.slice(0, lanes);
+    empty.style.display = shown.length ? 'none' : 'flex';
+    const width = track.clientWidth - 14;
+    for (const r of racers.values()) if (!shown.includes(r) && r.node) { r.node.remove(); r.node = null; }
+    shown.forEach((r, i) => {
+      if (!r.node) {
+        r.label = el('span', { class: 'n num' });
+        r.node = el('div', { class: 'runner' }, el('span', { class: 'av' }, avatarEl(r.user, 30)), el('span', { class: 'nm' }, r.user.nickname, r.label));
+        track.append(r.node);
+      }
+      r.node.style.top = `${i * 40}px`;
+      const x = Math.min(1, r.pts / goal) * Math.max(0, width - 34);
+      r.node.style.transform = `translateX(${x}px)`;
+      r.label.textContent = fmt(Math.floor(r.pts));
+    });
+  }
+
+  function add(user, pts) {
+    if (finished || pts <= 0) return;
+    const r = racers.get(user.id) || { user, pts: 0, node: null };
+    r.pts += pts; r.user = user;
+    racers.set(user.id, r);
+    render();
+    if (r.node) { r.node.classList.remove('go'); void r.node.offsetWidth; r.node.classList.add('go'); }
+    if (r.pts >= goal) win(r);
+  }
+
+  function win(r) {
+    finished = true;
+    document.getElementById('bwho').textContent = r.user.nickname;
+    document.getElementById('bwhat').textContent = `wins the ${by === 'likes' ? 'like' : 'gift'} race`;
+    document.getElementById('banner').classList.add('on');
+    const rect = r.node?.getBoundingClientRect();
+    fx.confetti(rect ? rect.right : innerWidth - 40, rect ? rect.top : innerHeight - 100, { count: 140, angle: -Math.PI / 2 - 0.4, power: 16 });
+    for (let i = 0; i < 4; i++) setTimeout(() => fx.firework(), i * 350);
+    setTimeout(() => {
+      document.getElementById('banner').classList.remove('on');
+      for (const x of racers.values()) x.node?.remove();
+      racers.clear(); finished = false; render();
+    }, 7000);
+  }
+
+  addEventListener('resize', render);
+  io().on('event', (e) => {
+    if (by === 'likes' && e.type === 'like') add(e.user, e.likes || 1);
+    if (by === 'coins' && e.type === 'gift') add(e.user, e.gift.coins);
+  });
+  render();
+</script>
+</body></html>

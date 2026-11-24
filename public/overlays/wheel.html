@@ -1,0 +1,166 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Spin wheel</title>
+<link rel="stylesheet" href="overlay.css">
+<style>
+  .wrap { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; transition: transform .5s cubic-bezier(.3,1.4,.5,1), opacity .4s; }
+  .wrap.away { transform: translateY(110%); opacity: 0; }
+  .stage { position: relative; }
+  canvas { display: block; }
+  .pointer { position: absolute; left: 50%; top: -6px; width: 34px; height: 44px; margin-left: -17px; transform-origin: 50% 8px; filter: drop-shadow(0 3px 3px rgba(0,0,0,.5)); }
+  .pointer.tick { animation: tick .12s ease-out; }
+  @keyframes tick { 40% { transform: rotate(-22deg) } }
+  .cap { font-weight: 800; font-size: 20px; text-align: center; max-width: 90vw; }
+  .cap small { display: block; font-size: 14px; opacity: .8; font-weight: 600; }
+  .result { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(.6); opacity: 0; padding: 14px 26px; border-radius: 10px;
+    background: rgba(16,16,16,.88); text-align: center; transition: transform .35s cubic-bezier(.2,1.6,.4,1), opacity .2s; z-index: 5; }
+  .result.on { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  .result .who { font-size: 16px; opacity: .8; }
+  .result .what { font-size: 38px; font-weight: 900; color: #ffd166; }
+  .queue { font-size: 13px; opacity: .8; }
+</style></head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="stage" id="stage">
+    <canvas id="c"></canvas>
+    <svg class="pointer" id="ptr" viewBox="0 0 34 44"><path d="M17 44 2 10a15 15 0 1 1 30 0z" fill="#fff"/><circle cx="17" cy="14" r="6" fill="#e8453c"/></svg>
+  </div>
+  <div class="cap shadow" id="cap"></div>
+  <div class="queue shadow" id="queue"></div>
+</div>
+<div class="result shadow" id="result"><div class="who" id="rwho"></div><div class="what" id="rwhat"></div></div>
+<script src="/socket.io/socket.io.js"></script>
+<script src="common.js"></script>
+<script src="fx.js"></script>
+<script>
+  // ?items=Sing%20a%20song,Do%2010%20pushups,...   (segments)
+  // ?min=100 (gifts worth this many coins spin it)  ?gift=Rose (only this gift)  ?cmd=!spin (chat command, uses ?cooldown)
+  // ?cooldown=30  ?hide=1 (slide away when idle)  ?sound=0  ?size=420
+  const items = (params.get('items') || 'Sing a song,10 push-ups,Shout-out,Truth or dare,Spin again,Dance,Accent challenge,Viewer picks').split(',').map((s) => s.trim()).filter(Boolean);
+  const minCoins = Number(params.get('min') || 100);
+  const onlyGift = (params.get('gift') || '').toLowerCase();
+  const cmd = (params.get('cmd') || '').toLowerCase();
+  const cooldown = Number(params.get('cooldown') || 30) * 1000;
+  const autoHide = params.get('hide') === '1';
+  const sound = params.get('sound') !== '0';
+  const COLORS = ['#e8453c', '#f0a202', '#2a9d8f', '#3b82c4', '#8f5bd6', '#d6457f', '#5aa469', '#e07a2f'];
+
+  const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+  const wrap = document.getElementById('wrap'), ptr = document.getElementById('ptr');
+  const fx = createFx();
+  let size, angle = 0, spinning = false, lastCmd = 0;
+  const queue = [];
+
+  function layout() {
+    size = Number(params.get('size')) || Math.min(innerWidth * 0.85, innerHeight * 0.72, 520);
+    const dpr = Math.min(2, devicePixelRatio || 1);
+    cv.width = size * dpr; cv.height = size * dpr; cv.style.width = cv.style.height = `${size}px`;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    draw();
+  }
+  addEventListener('resize', layout);
+
+  function draw(highlight = -1) {
+    const r = size / 2 - 6, n = items.length, seg = (Math.PI * 2) / n;
+    ctx.clearRect(0, 0, size, size);
+    ctx.save(); ctx.translate(size / 2, size / 2);
+    // outer ring with bulbs
+    ctx.beginPath(); ctx.arc(0, 0, r + 4, 0, Math.PI * 2); ctx.fillStyle = '#1b1b1b'; ctx.fill();
+    ctx.rotate(angle);
+    for (let i = 0; i < n; i++) {
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, r - 8, i * seg, (i + 1) * seg); ctx.closePath();
+      ctx.fillStyle = COLORS[i % COLORS.length];
+      ctx.globalAlpha = highlight === -1 || highlight === i ? 1 : 0.45;
+      ctx.fill(); ctx.globalAlpha = 1;
+      ctx.strokeStyle = 'rgba(0,0,0,.25)'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.save(); ctx.rotate(i * seg + seg / 2);
+      ctx.fillStyle = '#fff'; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+      const fs = Math.max(11, Math.min(20, (r * seg) / 3.2));
+      ctx.font = `800 ${fs}px "Segoe UI", system-ui, sans-serif`;
+      ctx.shadowColor = 'rgba(0,0,0,.5)'; ctx.shadowBlur = 3;
+      let text = items[i];
+      while (ctx.measureText(text).width > r * 0.68 && text.length > 3) text = text.slice(0, -2) + '…';
+      ctx.fillText(text, r - 22, 0);
+      ctx.restore();
+    }
+    ctx.rotate(-angle);
+    for (let i = 0; i < 24; i++) {
+      const a = (i / 24) * Math.PI * 2;
+      ctx.beginPath(); ctx.arc(Math.cos(a) * (r - 1), Math.sin(a) * (r - 1), 3.2, 0, Math.PI * 2);
+      ctx.fillStyle = (i + Math.floor(Date.now() / 300)) % 2 ? '#ffe9a8' : '#7a6a3a'; ctx.fill();
+    }
+    ctx.beginPath(); ctx.arc(0, 0, r * 0.13, 0, Math.PI * 2); ctx.fillStyle = '#1b1b1b'; ctx.fill();
+    ctx.lineWidth = 3; ctx.strokeStyle = '#ffd166'; ctx.stroke();
+    ctx.restore();
+  }
+
+  function caption() {
+    const how = cmd ? `Type ${cmd}` : onlyGift ? `Send a ${params.get('gift')}` : `Send a gift worth ${fmt(minCoins)}+ coins`;
+    document.getElementById('cap').replaceChildren(how, el('small', {}, 'to spin the wheel'));
+    document.getElementById('queue').textContent = queue.length ? `${queue.length} more spin${queue.length > 1 ? 's' : ''} waiting` : '';
+  }
+
+  function request(user) {
+    queue.push(user);
+    caption();
+    if (!spinning) next();
+  }
+
+  function next() {
+    const user = queue.shift();
+    caption();
+    if (!user) { if (autoHide) wrap.classList.add('away'); return; }
+    wrap.classList.remove('away');
+    spinning = true;
+    const n = items.length, seg = (Math.PI * 2) / n;
+    const win = Math.floor(Math.random() * n);
+    // pointer is at the top (-90deg). Land the middle of `win` under it, with a little jitter.
+    const target = -Math.PI / 2 - (win * seg + seg / 2) + (Math.random() - 0.5) * seg * 0.6;
+    const start = angle;
+    let end = target;
+    while (end < start + Math.PI * 2 * 6) end += Math.PI * 2;
+    const dur = 5200 + Math.random() * 1200;
+    const t0 = performance.now();
+    let lastSeg = Math.floor(((-Math.PI / 2 - start) % (Math.PI * 2) + Math.PI * 4) % (Math.PI * 2) / seg);
+    setTimeout(() => {
+      (function anim(now) {
+        const t = Math.min(1, (now - t0 - 500) / dur);
+        const e = 1 - Math.pow(1 - Math.max(0, t), 4);
+        angle = start + (end - start) * e;
+        const s = Math.floor(((-Math.PI / 2 - angle) % (Math.PI * 2) + Math.PI * 4) % (Math.PI * 2) / seg);
+        if (s !== lastSeg) { lastSeg = s; ptr.classList.remove('tick'); void ptr.offsetWidth; ptr.classList.add('tick'); if (sound) blip(1300, 0.025, 'square', 0.04); }
+        draw();
+        if (t < 1) requestAnimationFrame(anim); else finish(user, win);
+      })(performance.now());
+    }, 500);
+  }
+
+  function finish(user, win) {
+    let blink = 0;
+    const iv = setInterval(() => { draw(blink++ % 2 ? -1 : win); if (blink > 7) { clearInterval(iv); draw(win); } }, 160);
+    document.getElementById('rwho').textContent = `${user.nickname} spun`;
+    document.getElementById('rwhat').textContent = items[win];
+    const res = document.getElementById('result');
+    res.classList.add('on');
+    if (sound) { blip(660, 0.12, 'triangle', 0.08); setTimeout(() => blip(990, 0.25, 'triangle', 0.08), 120); }
+    const rect = cv.getBoundingClientRect();
+    fx.confetti(rect.left + rect.width / 2, rect.top + rect.height / 2, { count: 120, spread: Math.PI * 2, power: 12 });
+    setTimeout(() => { res.classList.remove('on'); draw(); spinning = false; setTimeout(next, 600); }, 4200);
+  }
+
+  function onEvent(e) {
+    if (e.type === 'gift') {
+      if (onlyGift ? e.gift.name.toLowerCase() === onlyGift : e.gift.coins >= minCoins) request(e.user);
+    } else if (e.type === 'chat' && cmd && e.comment.trim().toLowerCase().split(/\s+/)[0] === cmd) {
+      if (Date.now() - lastCmd < cooldown) return;
+      lastCmd = Date.now();
+      request(e.user);
+    }
+  }
+
+  layout();
+  caption();
+  if (autoHide) wrap.classList.add('away');
+  setInterval(() => { if (!spinning) draw(); }, 300); // twinkle the bulbs
+  io().on('event', onEvent);
+</script>
+</body></html>

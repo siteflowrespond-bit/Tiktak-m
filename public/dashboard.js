@@ -78,7 +78,7 @@ function showPage(page) {
 }
 $('#nav').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) showPage(b.dataset.page); });
 try { showPage(localStorage.getItem('page')); } catch { showPage('live'); }
-$('#foot').textContent = `v0.4 · ${location.host}`;
+$('#foot').textContent = `v0.5 · ${location.host}`;
 
 // ── connection ───────────────────────────────────────────
 let status = 'disconnected';
@@ -508,6 +508,16 @@ $('#saveGoals').addEventListener('click', async (e) => { if (await saveConfig({ 
 function renderOverlays() {
   const goalCards = Object.entries(config.goals).map(([k, g]) => [`Goal: ${g.label}`, `Bar toward ${fmt(g.target)} ${k}.`, `/overlays/goal.html?goal=${k}`]);
   const groups = [
+    ['Animated & interactive', [
+      ['Gift jar', 'Gifts drop into a glass jar as coins and pile up. Fireworks when it fills, then it empties.', '/overlays/jar.html?goal=1000', { idle: 'Send a test gift' }],
+      ['Spin wheel', 'A 100+ coin gift spins the wheel. Set the prizes with ?items=', '/overlays/wheel.html?min=100', { pv: 'sound=0' }],
+      ['Team battle', 'Tug-of-war between two teams. Rose = Red, TikTok = Blue, or !red / !blue in chat.', '/overlays/battle.html?time=180'],
+      ['Like race', 'Top likers race to the finish line. First to 300 likes wins the round.', '/overlays/race.html?goal=300', { idle: 'Send test likes' }],
+      ['Top gift spotlight', 'Biggest gift of the stream under a spotlight. Flips when someone beats it.', '/overlays/topgift.html'],
+      ['Longest combo', 'Same spotlight for the longest gift combo.', '/overlays/topgift.html?mode=streak'],
+      ['Emoji rain', 'Emojis from chat fall, bounce and pile up.', '/overlays/emojis.html', { idle: 'Chat with emojis' }],
+      ['Celebrations', 'Fireworks for big gifts, confetti for follows and subscribes.', '/overlays/celebrate.html?min=100', { idle: 'Send a big test gift' }]
+    ]],
     ['Alerts & sound', [
       ['Alerts', 'Pop-up alerts. Also plays sound actions and TTS.', '/overlays/alerts.html', { pv: 'tts=0&volume=0', idle: 'Press Test on an alert' }],
       ['Sound player', 'Only plays sounds and TTS (invisible). Use instead of Alerts, not together.', '/overlays/sounds.html', { idle: 'Nothing to see, audio only' }]

@@ -9,7 +9,7 @@ const GIFTS = [
   { name: 'Galaxy', diamonds: 1000 },
   { name: 'Lion', diamonds: 29999 }
 ];
-const COMMENTS = ['hello!!', 'love this stream', '!hello', '!tts this is a test', 'where are you from?', '🔥🔥🔥', 'lol'];
+const COMMENTS = ['hello!!', 'love this stream', '!hello', '!tts this is a test', 'where are you from?', '🔥🔥🔥', 'lol', '😂😂😂', 'W stream 👏👏', '❤️❤️', 'no way 😱', '!red', '!blue', '💀💀', 'GG 🎉'];
 
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 

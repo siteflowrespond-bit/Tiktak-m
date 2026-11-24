@@ -1,0 +1,190 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Gift jar</title>
+<link rel="stylesheet" href="overlay.css">
+<style>
+  canvas { position: fixed; inset: 0; width: 100%; height: 100%; }
+  #label { position: fixed; left: 0; right: 0; text-align: center; font-weight: 800; font-size: 26px; }
+  #label small { display: block; font-size: 13px; letter-spacing: 1.5px; text-transform: uppercase; opacity: .75; font-weight: 700; }
+  .pop { position: fixed; font-weight: 800; font-size: 18px; white-space: nowrap; pointer-events: none; animation: rise 1.8s ease-out forwards; }
+  .pop b { color: #ffd166; }
+  @keyframes rise { 0% { opacity: 0; transform: translate(-50%, 10px) } 15% { opacity: 1 } 100% { opacity: 0; transform: translate(-50%, -50px) } }
+</style></head>
+<body>
+<canvas id="c"></canvas>
+<div id="label" class="shadow num"></div>
+<script src="/socket.io/socket.io.js"></script>
+<script src="common.js"></script>
+<script src="fx.js"></script>
+<script>
+  // Gifts drop into a glass jar as coins and pile up with physics.
+  // ?goal=1000 (coins to fill the jar; it empties and starts over when full)  ?title=Gift%20jar  ?max=260 (coins on screen)
+  const goal = Number(params.get('goal') || 1000);
+  const title = params.get('title') || 'Gift jar';
+  const MAX = Number(params.get('max') || 260);
+  const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+  const label = document.getElementById('label');
+  const fx = createFx();
+  let W, H, dpr, jar;
+  let total = 0, emptying = false;
+  const coins = [];
+  const imgCache = new Map();
+
+  function layout() {
+    dpr = Math.min(2, devicePixelRatio || 1);
+    W = innerWidth; H = innerHeight;
+    cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const w = Math.min(W * 0.62, H * 0.55), h = Math.min(H * 0.62, w * 1.25);
+    jar = { x0: W / 2 - w / 2, x1: W / 2 + w / 2, top: H - h - 50, bottom: H - 50, w, h, neck: w * 0.12, r: w * 0.16 };
+    label.style.top = `${jar.bottom + 6}px`;
+    drawLabel();
+  }
+  addEventListener('resize', layout);
+
+  // coin look by value
+  function tier(coinsEach) {
+    if (coinsEach >= 1000) return { r: 26, a: '#bfe9ff', b: '#3ba7ff', rim: '#1a6fb3' };
+    if (coinsEach >= 100) return { r: 21, a: '#ffd5f0', b: '#e05aa8', rim: '#9b2f70' };
+    if (coinsEach >= 10) return { r: 16, a: '#fff3b0', b: '#f0b429', rim: '#a8740b' };
+    return { r: 12, a: '#f4dcc1', b: '#c9874a', rim: '#875326' };
+  }
+
+  function drop(e) {
+    if (emptying) return;
+    const per = e.gift.diamonds || Math.max(1, Math.round(e.gift.coins / e.gift.count));
+    const t = tier(per);
+    const scale = jar.w / 420;
+    const n = Math.min(e.gift.count, 14);
+    if (e.gift.image && !imgCache.has(e.gift.image)) { imgCache.set(e.gift.image, null); loadImg(e.gift.image).then((img) => imgCache.set(e.gift.image, img)); }
+    for (let i = 0; i < n; i++) {
+      setTimeout(() => {
+        const r = t.r * Math.max(0.6, scale);
+        const x = W / 2 + (Math.random() - 0.5) * (jar.w - jar.neck * 2 - r * 2);
+        const y = jar.top - 30 - Math.random() * 60;
+        coins.push({ x, y, px: x - (Math.random() - 0.5) * 2, py: y - 2, r, t, img: e.gift.image, letter: (e.gift.name || '?')[0], spin: Math.random() * 6, landed: false });
+        if (coins.length > MAX) coins.shift();
+      }, i * 90);
+    }
+    total += e.gift.coins;
+    drawLabel();
+    const pop = el('div', { class: 'pop shadow', style: `left:${W / 2}px;top:${jar.top - 70}px` }, `${e.user.nickname} `, el('b', {}, `+${fmt(e.gift.coins)}`));
+    document.body.append(pop);
+    pop.addEventListener('animationend', () => pop.remove());
+    if (total >= goal) setTimeout(celebrateAndEmpty, 1600);
+  }
+
+  function drawLabel() { label.replaceChildren(el('small', {}, title), `${fmt(Math.min(total, goal))} / ${fmt(goal)}`); }
+
+  function celebrateAndEmpty() {
+    if (emptying) return;
+    emptying = true;
+    for (let i = 0; i < 5; i++) setTimeout(() => fx.firework(W / 2 + (Math.random() - 0.5) * W * 0.5), i * 260);
+    fx.confetti(W / 2, jar.top, { count: 140, power: 15 });
+    setTimeout(() => { for (const c of coins) { c.falling = true; c.px = c.x - (Math.random() - 0.5) * 6; } }, 1800);
+    setTimeout(() => { coins.length = 0; total = Math.max(0, total - goal); emptying = false; drawLabel(); }, 4200);
+  }
+
+  // physics (verlet + position relaxation)
+  function step() {
+    const G = 0.45;
+    for (const c of coins) {
+      const vx = (c.x - c.px) * 0.99, vy = (c.y - c.py) * 0.99;
+      c.px = c.x; c.py = c.y;
+      c.x += vx; c.y += vy + G;
+    }
+    for (let it = 0; it < 4; it++) {
+      for (let i = 0; i < coins.length; i++) {
+        const a = coins[i];
+        if (a.falling) continue;
+        for (let j = i + 1; j < coins.length; j++) {
+          const b = coins[j];
+          if (b.falling) continue;
+          const dx = b.x - a.x, dy = b.y - a.y, min = a.r + b.r;
+          const d2 = dx * dx + dy * dy;
+          if (d2 < min * min && d2 > 0.0001) {
+            const d = Math.sqrt(d2), push = (min - d) / 2, nx = dx / d, ny = dy / d;
+            a.x -= nx * push; a.y -= ny * push; b.x += nx * push; b.y += ny * push;
+          }
+        }
+        // jar walls (inner) with rounded bottom corners
+        const left = jar.x0 + 8 + a.r, right = jar.x1 - 8 - a.r, floor = jar.bottom - 8 - a.r;
+        if (a.y > jar.top - 10) {
+          if (a.x < left) { a.x = left; }
+          if (a.x > right) { a.x = right; }
+        }
+        if (a.y > floor) { a.y = floor; a.landed = true; a.px = a.x - (a.x - a.px) * 0.6; }
+        const cr = jar.r;
+        for (const [cx, sign] of [[jar.x0 + 8 + cr, -1], [jar.x1 - 8 - cr, 1]]) {
+          const cy = jar.bottom - 8 - cr;
+          if ((sign < 0 ? a.x < cx : a.x > cx) && a.y > cy) {
+            const dx = a.x - cx, dy = a.y - cy, d = Math.hypot(dx, dy), lim = cr - a.r;
+            if (d > lim && lim > 0) { a.x = cx + (dx / d) * lim; a.y = cy + (dy / d) * lim; }
+          }
+        }
+      }
+    }
+  }
+
+  function jarPath() {
+    const { x0, x1, top, bottom, neck, r } = jar;
+    ctx.beginPath();
+    ctx.moveTo(x0 + neck, top - 14);
+    ctx.quadraticCurveTo(x0 + neck - 4, top + 10, x0, top + 36);
+    ctx.lineTo(x0, bottom - r);
+    ctx.quadraticCurveTo(x0, bottom, x0 + r, bottom);
+    ctx.lineTo(x1 - r, bottom);
+    ctx.quadraticCurveTo(x1, bottom, x1, bottom - r);
+    ctx.lineTo(x1, top + 36);
+    ctx.quadraticCurveTo(x1 - neck + 4, top + 10, x1 - neck, top - 14);
+  }
+
+  function drawCoin(c) {
+    ctx.save();
+    ctx.translate(c.x, c.y);
+    const g = ctx.createRadialGradient(-c.r * 0.35, -c.r * 0.35, c.r * 0.1, 0, 0, c.r);
+    g.addColorStop(0, c.t.a); g.addColorStop(1, c.t.b);
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(0, 0, c.r, 0, Math.PI * 2); ctx.fill();
+    ctx.lineWidth = Math.max(1.5, c.r * 0.14); ctx.strokeStyle = c.t.rim; ctx.stroke();
+    const img = c.img && imgCache.get(c.img);
+    if (img) ctx.drawImage(img, -c.r * 0.7, -c.r * 0.7, c.r * 1.4, c.r * 1.4);
+    else {
+      ctx.fillStyle = c.t.rim; ctx.font = `800 ${c.r}px "Segoe UI", system-ui, sans-serif`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(c.letter, 0, c.r * 0.06);
+    }
+    ctx.restore();
+  }
+
+  function frame() {
+    step();
+    ctx.clearRect(0, 0, W, H);
+    // back of jar
+    jarPath(); ctx.closePath(); ctx.fillStyle = 'rgba(180,220,255,.10)'; ctx.fill();
+    for (const c of coins) drawCoin(c);
+    // fill line
+    const pct = Math.min(1, total / goal);
+    // glass front
+    jarPath();
+    ctx.lineWidth = 5; ctx.strokeStyle = 'rgba(230,245,255,.75)'; ctx.stroke();
+    ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(0,0,0,.25)'; ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,.18)';
+    ctx.fillRect(jar.x0 + 16, jar.top + 50, 8, jar.h * 0.55);
+    ctx.fillRect(jar.x0 + 30, jar.top + 60, 3, jar.h * 0.3);
+    // rim
+    ctx.beginPath(); ctx.ellipse(W / 2, jar.top - 14, jar.w / 2 - jar.neck + 6, 9, 0, 0, Math.PI * 2);
+    ctx.lineWidth = 6; ctx.strokeStyle = 'rgba(230,245,255,.8)'; ctx.stroke();
+    // progress ticks on the side
+    ctx.fillStyle = 'rgba(255,209,102,.9)';
+    ctx.fillRect(jar.x1 + 10, jar.bottom - jar.h * pct, 6, jar.h * pct);
+    ctx.fillStyle = 'rgba(255,255,255,.18)';
+    ctx.fillRect(jar.x1 + 10, jar.top, 6, jar.h * (1 - pct));
+    // remove coins that fell off-screen while emptying
+    for (let i = coins.length - 1; i >= 0; i--) if (coins[i].y > H + 60) coins.splice(i, 1);
+    requestAnimationFrame(frame);
+  }
+
+  layout();
+  requestAnimationFrame(frame);
+  const socket = io();
+  socket.on('event', (e) => { if (e.type === 'gift') drop(e); });
+</script>
+</body></html>
