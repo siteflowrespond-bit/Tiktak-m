@@ -32,6 +32,7 @@ Copy a URL from the **Overlays** page. In TikTok LIVE Studio, add it as a *Link*
 | Ticker | `/overlays/ticker.html` | |
 | Top gifters / likers | `/overlays/gifters.html` | `by=coins\|likes`, `count=5`, `title=...` |
 | Counter | `/overlays/counter.html?stat=likes` | `stat=likes\|viewers\|coins\|follows\|shares\|comments`, `label=...`, `bg=0` |
+| Live stats | `/overlays/stats.html` | `show=viewers,likes,coins,follows,shares,comments,gifts,subs,time`, `layout=row\|column\|rotate`, `every=5`, `bg=0` |
 | Subathon timer | `/overlays/timer.html` | `label=...`, `bg=0` |
 | Goal bar | `/overlays/goal.html?goal=likes` | `goal=likes\|follows\|coins\|shares` |
 

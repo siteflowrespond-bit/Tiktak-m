@@ -204,7 +204,7 @@ label.check { display: inline-flex; align-items: center; gap: 8px; cursor: point
   .nav button span { display: none; }
   .side-foot { display: none; }
   .cols.even { grid-template-columns: 1fr; }
-  .top, .content { padding-left: 14px; padding-right: 14px; }
+  .top, .content { padding-left: 16px; padding-right: 16px; }
   .connect { margin-left: 0; width: 100%; }
   .at { flex: 1; }
   .at input { width: 100%; }

@@ -1,0 +1,80 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Live stats</title>
+<link rel="stylesheet" href="overlay.css">
+<style>
+  .stats { display: inline-flex; margin: 10px; padding: 4px; }
+  .stats.row { flex-direction: row; }
+  .stats.column { flex-direction: column; min-width: 220px; }
+  .stat { display: flex; flex-direction: column; padding: 8px 16px; }
+  .row .stat + .stat { border-left: 1px solid rgba(255,255,255,.15); }
+  .column .stat { flex-direction: row; justify-content: space-between; align-items: baseline; gap: 24px; padding: 6px 12px; }
+  .column .stat + .stat { border-top: 1px solid rgba(255,255,255,.12); }
+  .k { font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; opacity: .7; }
+  .v { font-size: 30px; font-weight: 800; line-height: 1.1; }
+  .column .v { font-size: 24px; }
+  .v.tick { animation: tick .4s ease; }
+  @keyframes tick { 40% { color: #ffd166; } }
+  /* rotate: one stat at a time */
+  .stats.rotate { min-width: 200px; }
+  .rotate .stat { display: none; align-items: center; text-align: center; }
+  .rotate .stat.on { display: flex; animation: swap .4s ease; }
+  .rotate .v { font-size: 40px; }
+  @keyframes swap { from { opacity: 0; transform: translateY(8px); } }
+</style></head>
+<body>
+<div class="stats panel shadow" id="stats"></div>
+<script src="/socket.io/socket.io.js"></script>
+<script src="common.js"></script>
+<script>
+  // ?show=viewers,likes,coins,follows,shares,comments,gifts,subs,time
+  // ?layout=row|column|rotate   ?every=5 (seconds per stat when rotating)   ?bg=0
+  const ALL = {
+    viewers: 'Viewers', likes: 'Likes', coins: 'Coins', follows: 'New followers', shares: 'Shares',
+    comments: 'Comments', gifts: 'Gifts', subs: 'Subscribers', joins: 'Joined', time: 'Live for'
+  };
+  const show = (params.get('show') || 'viewers,likes,coins,follows,time').split(',').map((s) => s.trim()).filter((s) => ALL[s]);
+  const layout = ['row', 'column', 'rotate'].includes(params.get('layout')) ? params.get('layout') : 'row';
+  const box = document.getElementById('stats');
+  box.classList.add(layout);
+  if (params.get('bg') === '0') box.classList.remove('panel');
+
+  const cells = {};
+  for (const key of show) {
+    const v = el('span', { class: 'v num' }, key === 'time' ? '0:00' : '0');
+    cells[key] = v;
+    box.append(el('div', { class: 'stat' }, el('span', { class: 'k' }, ALL[key]), v));
+  }
+
+  let last = {}, startedAt = Date.now();
+  io().on('stats', (s) => {
+    startedAt = s.startedAt || startedAt;
+    for (const key of show) {
+      if (key === 'time') continue;
+      const n = s[key] || 0;
+      cells[key].textContent = fmt(n);
+      if (last[key] !== undefined && n > last[key]) { cells[key].classList.remove('tick'); void cells[key].offsetWidth; cells[key].classList.add('tick'); }
+      last[key] = n;
+    }
+  });
+
+  function drawTime() {
+    if (!cells.time) return;
+    const s = Math.max(0, Math.floor((Date.now() - startedAt) / 1000));
+    const h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60, sec = s % 60;
+    cells.time.textContent = h ? `${h}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}` : `${m}:${String(sec).padStart(2, '0')}`;
+  }
+  setInterval(drawTime, 1000);
+  drawTime();
+
+  if (layout === 'rotate') {
+    const items = [...box.children];
+    let i = 0;
+    items[0]?.classList.add('on');
+    setInterval(() => {
+      items[i].classList.remove('on');
+      i = (i + 1) % items.length;
+      items[i].classList.add('on');
+    }, Number(params.get('every') || 5) * 1000);
+  }
+</script>
+</body></html>

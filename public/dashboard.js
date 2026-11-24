@@ -50,6 +50,11 @@ function icon(name) {
 const fmt = (n) => Number(n || 0).toLocaleString();
 const hhmm = (ts) => new Date(ts || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
 const field = (label, input, cls) => el('label', { class: `f ${cls || ''}` }, el('span', {}, label), input);
+function copyText(text, fallbackInput) {
+  const done = () => toast('Copied');
+  const fail = () => { fallbackInput?.focus(); fallbackInput?.select(); toast('Press Ctrl+C to copy'); };
+  try { navigator.clipboard.writeText(text).then(done, fail); } catch { fail(); }
+}
 const uid = (p) => `${p}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`;
 
 const EVENTS = {
@@ -73,7 +78,7 @@ function showPage(page) {
 }
 $('#nav').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) showPage(b.dataset.page); });
 try { showPage(localStorage.getItem('page')); } catch { showPage('live'); }
-$('#foot').textContent = `v0.3 · ${location.host}`;
+$('#foot').textContent = `v0.4 · ${location.host}`;
 
 // ── connection ───────────────────────────────────────────
 let status = 'disconnected';
@@ -333,7 +338,7 @@ function renderRule(rule, idx) {
         el('button', { class: 'btn sq', type: 'button', title: 'Preview', onclick: () => preview(rule.alert.sound) }, icon('play')))),
       field('Say out loud', bind(rule, 'tts', el('input', { placeholder: 'Thanks {nickname}!' }), null, change), 'span2')),
     el('div', { class: 'sub' }, 'Placeholders'),
-    el('div', { class: 'vars' }, VARS.map((v) => el('code', { title: 'Copy', onclick: () => navigator.clipboard?.writeText(`{${v}}`).then(() => toast(`Copied {${v}}`)) }, `{${v}}`))));
+    el('div', { class: 'vars' }, VARS.map((v) => el('code', { title: 'Copy', onclick: () => copyText(`{${v}}`) }, `{${v}}`))));
 
   refresh();
   box.append(top, edit);
@@ -513,6 +518,11 @@ function renderOverlays() {
       ['Like hearts', 'Hearts float up when people tap likes.', '/overlays/hearts.html', { idle: 'Send test likes' }],
       ['Ticker', 'Latest follower, gift and share.', '/overlays/ticker.html']
     ]],
+    ['Live stats', [
+      ['Stats bar', 'Viewers, likes, coins, new followers and time live in one row.', '/overlays/stats.html'],
+      ['Stats list', 'The same stats stacked in a column. Pick with ?show=', '/overlays/stats.html?layout=column&show=viewers,likes,coins,follows,shares,comments,time'],
+      ['Stats rotator', 'Shows one stat at a time and cycles every 5 seconds.', '/overlays/stats.html?layout=rotate']
+    ]],
     ['Leaderboards & counters', [
       ['Top gifters', 'Biggest supporters this stream.', '/overlays/gifters.html'],
       ['Top likers', 'Who tapped the most.', '/overlays/gifters.html?by=likes'],
@@ -524,19 +534,19 @@ function renderOverlays() {
       ...goalCards
     ]]
   ];
-  const base = location.origin;
+  const base = new URL('.', location.href).href; // works at / and inside a sub-folder
   $('#overlays').replaceChildren(...groups.flatMap(([title, items]) => [
     el('div', { class: 'ov-group' }, title),
     el('div', { class: 'ovs' }, items.map(([name, desc, p, opt = {}]) => {
-      const url = base + p;
-      const src = opt.pv ? `${p}${p.includes('?') ? '&' : '?'}${opt.pv}` : p;
+      const url = base + p.slice(1);
+      const src = opt.pv ? `${p.slice(1)}${p.includes('?') ? '&' : '?'}${opt.pv}` : p.slice(1);
       return el('div', { class: 'panel ov' },
         el('div', { class: 'pv' }, opt.idle ? el('span', { class: 'idle' }, opt.idle) : null, el('iframe', { src, loading: 'lazy', title: name, tabIndex: -1 })),
         el('div', { class: 'info' }, el('h3', {}, name), el('p', {}, desc),
           el('div', { class: 'url' },
             el('input', { value: url, readOnly: true, onfocus: (e) => e.target.select() }),
-            el('button', { class: 'btn sq', title: 'Copy', onclick: () => navigator.clipboard.writeText(url).then(() => toast('Copied')) }, icon('copy')),
-            el('button', { class: 'btn sq', title: 'Open', onclick: () => window.open(url, '_blank') }, icon('external')))));
+            el('button', { class: 'btn sq', title: 'Copy', onclick: (e) => copyText(url, e.currentTarget.parentNode.querySelector('input')) }, icon('copy')),
+            el('a', { class: 'btn sq', title: 'Open in a new tab', href: url, target: '_blank', rel: 'noopener' }, icon('external')))));
     }))
   ]));
 }

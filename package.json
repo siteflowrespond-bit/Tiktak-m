@@ -1,13 +1,14 @@
 {
   "name": "tiktak",
   "private": true,
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "TikTok LIVE interactive toolkit: live event dashboard, gift/follow alerts, goals, chat & TTS overlays for TikTok LIVE Studio / OBS.",
   "type": "module",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "node --watch src/server.js"
+    "dev": "node --watch src/server.js",
+    "demo:build": "node scripts/build-demo.js"
   },
   "engines": {
     "node": ">=18"
