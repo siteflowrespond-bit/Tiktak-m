@@ -1,0 +1,6 @@
+/* Shared overlay styles. Backgrounds stay transparent for LIVE Studio / OBS. */
+html, body { margin: 0; background: transparent; overflow: hidden; }
+body { font-family: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif; color: #fff; }
+.shadow { text-shadow: 0 2px 4px rgba(0,0,0,.8), 0 0 12px rgba(0,0,0,.5); }
+.avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: #fe2c55; flex: none;
+  display: inline-flex; align-items: center; justify-content: center; font-weight: 700; }

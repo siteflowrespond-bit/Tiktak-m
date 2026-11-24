@@ -1,0 +1,36 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Goal</title>
+<link rel="stylesheet" href="overlay.css">
+<style>
+  .goal { margin: 10px; padding: 10px 14px; background: rgba(0,0,0,.5); border-radius: 14px; }
+  .top { display: flex; justify-content: space-between; font-weight: 700; font-size: 20px; margin-bottom: 8px; }
+  .bar { height: 22px; background: rgba(255,255,255,.15); border-radius: 11px; overflow: hidden; }
+  .fill { height: 100%; width: 0; background: linear-gradient(90deg, #25f4ee, #fe2c55); border-radius: 11px; transition: width .6s ease; }
+  .done .fill { background: linear-gradient(90deg, #3ddc84, #ffd23f); }
+</style></head>
+<body>
+<div class="goal shadow" id="goal" hidden>
+  <div class="top"><span id="label"></span><span id="count"></span></div>
+  <div class="bar"><div class="fill" id="fill"></div></div>
+</div>
+<script src="/socket.io/socket.io.js"></script>
+<script src="common.js"></script>
+<script>
+  // ?goal=likes|follows|coins|shares
+  const key = params.get('goal') || 'likes';
+  let goal = null, value = 0;
+  const socket = io();
+  socket.on('config', (c) => { goal = c.goals[key]; render(); });
+  socket.on('stats', (s) => { value = s[key] || 0; render(); });
+  function render() {
+    const box = document.getElementById('goal');
+    if (!goal || !goal.enabled) { box.hidden = true; return; }
+    box.hidden = false;
+    const pct = Math.min(100, (value / goal.target) * 100);
+    document.getElementById('label').textContent = goal.label;
+    document.getElementById('count').textContent = `${fmt(value)} / ${fmt(goal.target)}`;
+    document.getElementById('fill').style.width = pct + '%';
+    box.classList.toggle('done', pct >= 100);
+  }
+</script>
+</body></html>

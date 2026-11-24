@@ -1,0 +1,72 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Alerts</title>
+<link rel="stylesheet" href="overlay.css">
+<style>
+  #stage { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; }
+  .alert { display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center;
+    max-width: 90vw; animation: pop .5s cubic-bezier(.2,1.6,.4,1) both; }
+  .alert.out { animation: fadeout .4s ease forwards; }
+  .alert img { max-width: 220px; max-height: 220px; border-radius: 16px; }
+  .alert .text { font-size: 42px; font-weight: 800; line-height: 1.15; }
+  .alert .text .hl { color: #25f4ee; }
+  @keyframes pop { from { transform: scale(.3) translateY(40px); opacity: 0 } to { transform: none; opacity: 1 } }
+  @keyframes fadeout { to { transform: scale(.9); opacity: 0 } }
+  #unlock { position: fixed; bottom: 10px; left: 10px; background: #000a; padding: 8px 12px; border-radius: 8px; font-size: 13px; cursor: pointer; }
+</style></head>
+<body>
+<div id="stage"></div>
+<div id="unlock" hidden>Click once to enable sound</div>
+<script src="/socket.io/socket.io.js"></script>
+<script src="common.js"></script>
+<script>
+  const socket = io();
+  const stage = document.getElementById('stage');
+  const queue = [];
+  let busy = false, cfg = null;
+  const ttsOn = params.get('tts') !== '0';
+  const volume = Number(params.get('volume') ?? 0.8);
+
+  socket.on('config', (c) => { cfg = c; });
+  socket.on('alert', (a) => { queue.push(a); next(); });
+  socket.on('tts', ({ text }) => speak(text));
+
+  function next() {
+    if (busy || !queue.length) return;
+    busy = true;
+    const a = queue.shift();
+    const box = el('div', { class: 'alert shadow' });
+    if (a.image) {
+      const img = el('img', { src: a.image, alt: '', referrerPolicy: 'no-referrer' });
+      img.onerror = () => img.remove();
+      box.append(img);
+    }
+    box.append(el('div', { class: 'text' }, a.text));
+    stage.replaceChildren(box);
+    if (a.sound) play(a.sound);
+    setTimeout(() => {
+      box.classList.add('out');
+      setTimeout(() => { box.remove(); busy = false; next(); }, 400);
+    }, (a.duration || 4) * 1000);
+  }
+
+  function play(src) {
+    const audio = new Audio(src);
+    audio.volume = volume;
+    audio.play().catch(() => { document.getElementById('unlock').hidden = false; });
+  }
+
+  function speak(text) {
+    if (!ttsOn || !window.speechSynthesis) return;
+    const u = new SpeechSynthesisUtterance(text);
+    if (cfg) {
+      const v = speechSynthesis.getVoices().find((x) => x.name === cfg.tts.voice);
+      if (v) u.voice = v;
+      u.rate = cfg.tts.rate || 1;
+    }
+    u.volume = volume;
+    speechSynthesis.speak(u);
+  }
+
+  document.getElementById('unlock').onclick = (e) => { e.target.hidden = true; };
+</script>
+</body></html>

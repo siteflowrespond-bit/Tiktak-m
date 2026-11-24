@@ -1,0 +1,28 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Top gifters</title>
+<link rel="stylesheet" href="overlay.css">
+<style>
+  .box { margin: 10px; padding: 10px 14px; background: rgba(0,0,0,.5); border-radius: 14px; }
+  h3 { margin: 0 0 8px; font-size: 18px; color: #ffd23f; }
+  .row { display: flex; gap: 10px; align-items: center; padding: 4px 0; font-size: 17px; }
+  .rank { width: 22px; font-weight: 800; color: #25f4ee; }
+  .name { flex: 1; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .coins { font-variant-numeric: tabular-nums; }
+</style></head>
+<body>
+<div class="box shadow"><h3 id="title">Top gifters</h3><div id="rows"></div></div>
+<script src="/socket.io/socket.io.js"></script>
+<script src="common.js"></script>
+<script>
+  // ?count=5  ?title=Top%20supporters
+  const count = Number(params.get('count') || 5);
+  if (params.get('title')) document.getElementById('title').textContent = params.get('title');
+  const socket = io();
+  socket.on('stats', (s) => {
+    const rows = (s.topGifters || []).slice(0, count).map((g, i) =>
+      el('div', { class: 'row' }, el('span', { class: 'rank' }, i + 1), avatarEl(g.user, 28),
+        el('span', { class: 'name' }, g.user.nickname), el('span', { class: 'coins' }, `🪙 ${fmt(g.coins)}`)));
+    document.getElementById('rows').replaceChildren(...(rows.length ? rows : [el('div', { class: 'row' }, 'Be the first! 🎁')]));
+  });
+</script>
+</body></html>

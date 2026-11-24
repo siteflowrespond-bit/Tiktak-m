@@ -1,0 +1,42 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Chat</title>
+<link rel="stylesheet" href="overlay.css">
+<style>
+  #list { position: fixed; left: 0; right: 0; bottom: 0; padding: 10px; display: flex; flex-direction: column; gap: 6px; }
+  .msg { display: flex; gap: 8px; align-items: flex-start; background: rgba(0,0,0,.45); padding: 6px 10px;
+    border-radius: 12px; font-size: 18px; animation: slide .25s ease both; }
+  .msg .name { font-weight: 700; color: #25f4ee; margin-right: 6px; }
+  .msg.gift .name { color: #ffd23f; }
+  .msg.follow .name, .msg.share .name { color: #fe2c55; }
+  .msg .body { overflow-wrap: anywhere; }
+  @keyframes slide { from { transform: translateX(-20px); opacity: 0 } to { transform: none; opacity: 1 } }
+</style></head>
+<body>
+<div id="list"></div>
+<script src="/socket.io/socket.io.js"></script>
+<script src="common.js"></script>
+<script>
+  // ?max=8  ?events=1 (also show gifts/follows/shares)  ?fade=30 (seconds before a message disappears, 0 = never)
+  const max = Number(params.get('max') || 8);
+  const showEvents = params.get('events') !== '0';
+  const fade = Number(params.get('fade') || 0);
+  const list = document.getElementById('list');
+  const socket = io();
+
+  socket.on('event', (e) => {
+    let body;
+    if (e.type === 'chat') body = e.comment;
+    else if (!showEvents) return;
+    else if (e.type === 'gift') body = `sent ${e.gift.count}x ${e.gift.name} 🎁`;
+    else if (e.type === 'follow') body = 'followed ❤️';
+    else if (e.type === 'share') body = 'shared the LIVE ↗';
+    else return;
+    const row = el('div', { class: `msg shadow ${e.type}` },
+      avatarEl(e.user, 28),
+      el('div', { class: 'body' }, el('span', { class: 'name' }, e.user.nickname), body));
+    list.append(row);
+    while (list.children.length > max) list.firstChild.remove();
+    if (fade) setTimeout(() => row.remove(), fade * 1000);
+  });
+</script>
+</body></html>

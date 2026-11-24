@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tiktak-m Studio</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header>
+    <div class="brand">Tiktak<span>-m</span></div>
+    <form class="connect" id="connectForm">
+      <input id="username" placeholder="@your_tiktok_username" autocomplete="off">
+      <button class="primary" id="connectBtn" type="submit">Connect</button>
+      <button id="disconnectBtn" type="button">Disconnect</button>
+    </form>
+    <div class="status"><span class="dot" id="statusDot"></span><span id="statusText">Disconnected</span></div>
+  </header>
+
+  <nav id="tabs">
+    <button data-tab="live" class="active">Live</button>
+    <button data-tab="actions">Actions &amp; Events</button>
+    <button data-tab="goals">Goals &amp; TTS</button>
+    <button data-tab="overlays">Overlays</button>
+    <button data-tab="settings">Settings</button>
+  </nav>
+
+  <main>
+    <!-- LIVE -->
+    <section class="tab active" id="tab-live">
+      <div class="tiles">
+        <div class="tile"><div class="label">Viewers</div><div class="value" id="s-viewers">0</div></div>
+        <div class="tile"><div class="label">Likes</div><div class="value" id="s-likes">0</div></div>
+        <div class="tile"><div class="label">Coins</div><div class="value" id="s-coins">0</div></div>
+        <div class="tile"><div class="label">Follows</div><div class="value" id="s-follows">0</div></div>
+        <div class="tile"><div class="label">Shares</div><div class="value" id="s-shares">0</div></div>
+        <div class="tile"><div class="label">Comments</div><div class="value" id="s-comments">0</div></div>
+      </div>
+      <div class="grid cols-2">
+        <div class="card">
+          <div class="row" style="justify-content:space-between;margin-bottom:8px">
+            <h2 style="margin:0">Event feed</h2>
+            <button class="small" id="clearFeed">Clear</button>
+          </div>
+          <div class="filters" id="feedFilters">
+            <label><input type="checkbox" value="chat" checked> Chat</label>
+            <label><input type="checkbox" value="gift" checked> Gifts</label>
+            <label><input type="checkbox" value="follow" checked> Follows</label>
+            <label><input type="checkbox" value="share" checked> Shares</label>
+            <label><input type="checkbox" value="like"> Likes</label>
+            <label><input type="checkbox" value="join"> Joins</label>
+          </div>
+          <div class="feed" id="feed"></div>
+        </div>
+        <div class="grid" style="align-content:start">
+          <div class="card">
+            <h2>Simulator</h2>
+            <p class="hint">Fire fake events to test your alerts and overlays without going LIVE.</p>
+            <div class="row" id="simButtons">
+              <button data-sim="follow">Follow</button>
+              <button data-sim="share">Share</button>
+              <button data-sim="like">Likes</button>
+              <button data-sim="chat">Chat</button>
+              <button data-sim="join">Join</button>
+              <button data-sim="viewers">Viewers</button>
+            </div>
+            <div class="row" style="margin-top:10px">
+              <select id="simGift" style="flex:1"><option value="">Random gift</option></select>
+              <button data-sim="gift">Send gift</button>
+            </div>
+            <div class="row" style="margin-top:10px">
+              <input id="simChat" placeholder="Custom chat message, e.g. !hello">
+              <button id="simChatBtn">Send chat</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="row" style="justify-content:space-between;margin-bottom:8px">
+              <h2 style="margin:0">Top gifters</h2>
+              <button class="small" id="resetStats">Reset stats</button>
+            </div>
+            <table><thead><tr><th>#</th><th>User</th><th>Coins</th></tr></thead><tbody id="gifters"></tbody></table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ACTIONS -->
+    <section class="tab" id="tab-actions">
+      <div class="card">
+        <div class="row" style="justify-content:space-between;margin-bottom:8px">
+          <h2 style="margin:0">Actions &amp; Events</h2>
+          <div class="row">
+            <button id="addRule">+ Add rule</button>
+            <button class="primary" id="saveRules">Save</button>
+          </div>
+        </div>
+        <p class="hint">
+          When a trigger happens, show an alert on the <b>Alerts overlay</b> and/or speak text.
+          Placeholders: <code>{nickname}</code> <code>{username}</code> <code>{avatar}</code> <code>{giftName}</code>
+          <code>{giftImage}</code> <code>{count}</code> <code>{coins}</code> <code>{comment}</code> <code>{likes}</code>
+        </p>
+        <div id="rules"></div>
+      </div>
+    </section>
+
+    <!-- GOALS & TTS -->
+    <section class="tab" id="tab-goals">
+      <div class="grid cols-2">
+        <div class="card">
+          <h2>Goals</h2>
+          <p class="hint">Each goal has its own overlay (see the Overlays tab).</p>
+          <div id="goals"></div>
+          <button class="primary" id="saveGoals">Save goals</button>
+        </div>
+        <div class="card">
+          <h2>Chat text-to-speech</h2>
+          <p class="hint">Speech plays in the Alerts overlay (and in this dashboard if enabled below).</p>
+          <div class="field"><label><input type="checkbox" id="ttsEnabled"> Read chat aloud</label></div>
+          <div class="field"><label>Mode</label>
+            <select id="ttsMode"><option value="command">Only messages starting with a command</option><option value="all">Every chat message</option></select>
+          </div>
+          <div class="field"><label>Command prefix</label><input id="ttsPrefix"></div>
+          <div class="field"><label>Max characters</label><input id="ttsMax" type="number" min="10" max="500"></div>
+          <div class="field"><label>Voice</label><select id="ttsVoice"><option value="">System default</option></select></div>
+          <div class="field"><label>Speed</label><input id="ttsRate" type="range" min="0.5" max="2" step="0.1"></div>
+          <div class="field"><label><input type="checkbox" id="ttsLocal"> Also speak in this dashboard tab</label></div>
+          <button class="primary" id="saveTts">Save TTS</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- OVERLAYS -->
+    <section class="tab" id="tab-overlays">
+      <div class="card">
+        <h2>Overlay links</h2>
+        <p class="hint">
+          In <b>TikTok LIVE Studio</b>: Add source → <i>Link</i> and paste a URL.
+          In <b>OBS</b>: Add → <i>Browser</i> source and paste a URL. Backgrounds are transparent.
+        </p>
+        <div id="overlayLinks"></div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h2>Test alert</h2>
+        <div class="row">
+          <input id="testText" value="This is a test alert! 🎉">
+          <button id="testAlertBtn">Send to overlay</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="tab" id="tab-settings">
+      <div class="card" style="max-width:640px">
+        <h2>Connection settings</h2>
+        <div class="field">
+          <label>Euler Stream sign API key (optional)</label>
+          <input id="signApiKey" type="password" placeholder="Leave empty to use the free tier">
+          <span class="muted" id="keyState"></span>
+        </div>
+        <p class="hint">
+          TikTok LIVE connections are signed through the Euler Stream sign server used by
+          <code>tiktok-live-connector</code>. The free tier is rate-limited; a key from eulerstream.com raises the limits.
+        </p>
+        <div class="field"><label><input type="checkbox" id="autoReconnect"> Automatically reconnect (every 30s) if the connection drops</label></div>
+        <button class="primary" id="saveSettings">Save settings</button>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast"></div>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Ticker</title>
+<link rel="stylesheet" href="overlay.css">
+<style>
+  .bar { margin: 10px; padding: 8px 14px; background: rgba(0,0,0,.5); border-radius: 14px; display: flex; gap: 18px; font-size: 17px; flex-wrap: wrap; }
+  .bar b { color: #25f4ee; }
+</style></head>
+<body>
+<div class="bar shadow">
+  <span>Latest follower: <b id="follow">—</b></span>
+  <span>Latest gift: <b id="gift">—</b></span>
+  <span>Latest share: <b id="share">—</b></span>
+</div>
+<script src="/socket.io/socket.io.js"></script>
+<script src="common.js"></script>
+<script>
+  const socket = io();
+  socket.on('event', (e) => {
+    if (e.type === 'follow') document.getElementById('follow').textContent = e.user.nickname;
+    if (e.type === 'share') document.getElementById('share').textContent = e.user.nickname;
+    if (e.type === 'gift') document.getElementById('gift').textContent = `${e.user.nickname} · ${e.gift.count}x ${e.gift.name}`;
+  });
+</script>
+</body></html>
