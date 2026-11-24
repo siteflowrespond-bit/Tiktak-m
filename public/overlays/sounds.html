@@ -1,0 +1,17 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Sound player</title>
+<link rel="stylesheet" href="overlay.css">
+</head>
+<body>
+<div id="unlock" hidden style="position:fixed;bottom:10px;left:10px;background:#000c;padding:8px 12px;border-radius:6px;font-size:13px;cursor:pointer">Sound is blocked. Click here once.</div>
+<script src="/socket.io/socket.io.js"></script>
+<script src="common.js"></script>
+<script src="sound.js"></script>
+<script>
+  // Invisible: only plays sound actions. Use this if you don't use the Alerts overlay
+  // (the Alerts overlay already plays them, so don't add both). ?volume=0.5
+  playSounds(io(), { masterVolume: Number(params.get('volume') ?? 1) });
+  window.addEventListener('sound-blocked', () => { document.getElementById('unlock').hidden = false; });
+  document.getElementById('unlock').onclick = (e) => { e.target.hidden = true; };
+</script>
+</body></html>

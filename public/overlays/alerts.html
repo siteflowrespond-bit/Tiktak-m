@@ -3,36 +3,40 @@
 <link rel="stylesheet" href="overlay.css">
 <style>
   #stage { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; }
-  .alert { position: relative; display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center;
-    max-width: min(90vw, 720px); padding: 26px 40px 28px; border-radius: 26px; background: rgba(14,15,20,.82);
-    box-shadow: 0 20px 60px rgba(0,0,0,.45); animation: pop .55s cubic-bezier(.2,1.5,.4,1) both; }
-  .alert::before { content: ""; position: absolute; inset: 0; padding: 3px; border-radius: inherit;
-    background: linear-gradient(135deg, #ff3b6b, #8b7cff 55%, #2de2e6);
-    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
-  .alert.out { animation: fadeout .4s ease forwards; }
-  .alert img { max-width: 180px; max-height: 180px; border-radius: 18px; animation: bob 1.6s ease-in-out infinite; }
-  .alert .text { font-size: 38px; font-weight: 800; line-height: 1.15; letter-spacing: -.3px; }
-  body.plain .alert { background: none; box-shadow: none; padding: 0; }
-  body.plain .alert::before { display: none; }
-  @keyframes pop { from { transform: scale(.4) translateY(40px); opacity: 0 } to { transform: none; opacity: 1 } }
-  @keyframes fadeout { to { transform: scale(.92) translateY(-10px); opacity: 0 } }
-  @keyframes bob { 50% { transform: translateY(-6px) } }
-  #unlock { position: fixed; bottom: 10px; left: 10px; background: #000a; padding: 8px 12px; border-radius: 8px; font-size: 13px; cursor: pointer; }
+  .alert { display: flex; align-items: center; gap: 18px; max-width: min(92vw, 760px); padding: 18px 26px 18px 18px;
+    background: rgba(16,16,16,.86); border-left: 6px solid var(--accent, #e8453c); border-radius: 6px;
+    animation: in .35s cubic-bezier(.2,1.3,.4,1) both; }
+  .alert.no-img { padding-left: 24px; }
+  .alert.out { animation: out .3s ease forwards; }
+  .alert img { width: 84px; height: 84px; object-fit: contain; border-radius: 6px; flex: none; }
+  .alert .text { font-size: 34px; font-weight: 800; line-height: 1.15; }
+  body.plain .alert { background: none; border: 0; padding: 0; flex-direction: column; text-align: center; }
+  body.plain .alert img { width: 160px; height: 160px; }
+  body.plain .alert .text { font-size: 42px; }
+  @keyframes in { from { transform: translateY(24px); opacity: 0 } to { transform: none; opacity: 1 } }
+  @keyframes out { to { transform: translateY(-12px); opacity: 0 } }
+  #unlock { position: fixed; bottom: 10px; left: 10px; background: #000c; padding: 8px 12px; border-radius: 6px; font-size: 13px; cursor: pointer; }
 </style></head>
 <body>
 <div id="stage"></div>
-<div id="unlock" hidden>Click once to enable sound</div>
+<div id="unlock" hidden>Sound is blocked. Click here once.</div>
 <script src="/socket.io/socket.io.js"></script>
 <script src="common.js"></script>
+<script src="sound.js"></script>
 <script>
+  // ?volume=0.5  ?tts=0  ?sounds=0 (don't play sound actions)  ?style=plain  ?accent=%2325f4ee
   const socket = io();
   const stage = document.getElementById('stage');
   const queue = [];
   let busy = false, cfg = null;
   const ttsOn = params.get('tts') !== '0';
-  const volume = Number(params.get('volume') ?? 0.8);
-  // ?style=plain removes the card background and shows text only
+  const volume = Number(params.get('volume') ?? 1);
   if (params.get('style') === 'plain') document.body.classList.add('plain');
+  if (params.get('accent')) document.documentElement.style.setProperty('--accent', params.get('accent'));
+
+  const play = playSounds(params.get('sounds') === '0' ? { on() {} } : socket, { masterVolume: volume });
+  window.addEventListener('sound-blocked', () => { document.getElementById('unlock').hidden = false; });
+  document.getElementById('unlock').onclick = (e) => { e.target.hidden = true; };
 
   socket.on('config', (c) => { cfg = c; });
   socket.on('alert', (a) => { queue.push(a); next(); });
@@ -45,22 +49,16 @@
     const box = el('div', { class: 'alert shadow' });
     if (a.image) {
       const img = el('img', { src: a.image, alt: '', referrerPolicy: 'no-referrer' });
-      img.onerror = () => img.remove();
+      img.onerror = () => { img.remove(); box.classList.add('no-img'); };
       box.append(img);
-    }
+    } else box.classList.add('no-img');
     box.append(el('div', { class: 'text' }, a.text));
     stage.replaceChildren(box);
-    if (a.sound) play(a.sound);
+    if (a.sound) play(a.sound, 1);
     setTimeout(() => {
       box.classList.add('out');
-      setTimeout(() => { box.remove(); busy = false; next(); }, 400);
+      setTimeout(() => { box.remove(); busy = false; next(); }, 300);
     }, (a.duration || 4) * 1000);
-  }
-
-  function play(src) {
-    const audio = new Audio(src);
-    audio.volume = volume;
-    audio.play().catch(() => { document.getElementById('unlock').hidden = false; });
   }
 
   function speak(text) {
@@ -74,7 +72,5 @@
     u.volume = volume;
     speechSynthesis.speak(u);
   }
-
-  document.getElementById('unlock').onclick = (e) => { e.target.hidden = true; };
 </script>
 </body></html>

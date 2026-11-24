@@ -1,3 +1,4 @@
 node_modules/
-data/config.json
+data/
+public/sounds/custom/
 .env

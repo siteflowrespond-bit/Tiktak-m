@@ -48,4 +48,4 @@ export function simulate(type, opts = {}) {
   }
 }
 
-export const SIM_GIFTS = GIFTS.map((g) => g.name);
+export const SIM_GIFTS = GIFTS.map((g) => ({ name: g.name, diamonds: g.diamonds, image: '' }));

@@ -27,9 +27,9 @@
     let body;
     if (e.type === 'chat') body = e.comment;
     else if (!showEvents) return;
-    else if (e.type === 'gift') body = `sent ${e.gift.count}x ${e.gift.name} 🎁`;
-    else if (e.type === 'follow') body = 'followed ❤️';
-    else if (e.type === 'share') body = 'shared the LIVE ↗';
+    else if (e.type === 'gift') body = `sent ${e.gift.count}x ${e.gift.name}`;
+    else if (e.type === 'follow') body = 'followed';
+    else if (e.type === 'share') body = 'shared the LIVE';
     else return;
     const row = el('div', { class: `msg shadow ${e.type}` },
       avatarEl(e.user, 28),

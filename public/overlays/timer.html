@@ -1,0 +1,46 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Subathon timer</title>
+<link rel="stylesheet" href="overlay.css">
+<style>
+  .wrap { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; }
+  .box { position: relative; padding: 10px 26px 14px; text-align: center; }
+  .label { font-size: 15px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; opacity: .8; }
+  .time { font-size: 72px; font-weight: 800; line-height: 1; font-family: "Cascadia Mono", Consolas, ui-monospace, monospace; }
+  .box.paused .time { opacity: .55; }
+  .box.ending .time { color: #ff6b6b; }
+  .add { position: absolute; right: -8px; top: 0; font-size: 26px; font-weight: 800; color: #8ce99a; animation: up 1.6s ease-out forwards; }
+  @keyframes up { from { transform: translateY(10px); opacity: 0 } 15% { opacity: 1 } to { transform: translateY(-30px); opacity: 0 } }
+</style></head>
+<body>
+<div class="wrap"><div class="box panel shadow" id="box">
+  <div class="label" id="label">Subathon</div>
+  <div class="time num" id="time">0:00:00</div>
+</div></div>
+<script src="/socket.io/socket.io.js"></script>
+<script src="common.js"></script>
+<script>
+  // ?label=Stream%20ends%20in  ?bg=0 (no background)
+  if (params.get('label') !== null) document.getElementById('label').textContent = params.get('label');
+  if (params.get('bg') === '0') document.getElementById('box').classList.remove('panel');
+  let state = { running: false, remaining: 0, endsAt: 0 };
+  const box = document.getElementById('box');
+  io().on('timer', (t) => {
+    state = t;
+    if (t.added) {
+      const a = el('div', { class: 'add shadow' }, `+${t.added >= 60 ? `${Math.round(t.added / 60)}m` : `${t.added}s`}`);
+      box.append(a);
+      a.addEventListener('animationend', () => a.remove());
+    }
+    draw();
+  });
+  function draw() {
+    const ms = state.running ? Math.max(0, state.endsAt - Date.now()) : state.remaining;
+    const s = Math.ceil(ms / 1000);
+    const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+    document.getElementById('time').textContent = `${h}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+    box.classList.toggle('paused', !state.running);
+    box.classList.toggle('ending', state.running && s <= 60);
+  }
+  setInterval(draw, 250);
+</script>
+</body></html>

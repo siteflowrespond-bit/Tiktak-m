@@ -25,6 +25,28 @@ export const DEFAULT_CONFIG = {
     coins: { enabled: true, label: 'Coin goal', target: 1000 },
     shares: { enabled: false, label: 'Share goal', target: 50 }
   },
+  // Sound actions: play a sound when something happens (independent of alerts)
+  sounds: {
+    volume: 0.8,
+    maxAtOnce: 4,
+    rules: [
+      { id: 's-rose', enabled: true, trigger: { type: 'gift', giftName: 'Rose' }, sound: '/sounds/builtin/pop.wav', volume: 0.8, repeat: true, cooldown: 0 },
+      { id: 's-mid', enabled: true, trigger: { type: 'gift', giftName: '', minCoins: 100, maxCoins: 999 }, sound: '/sounds/builtin/tada.wav', volume: 1, repeat: false, cooldown: 0 },
+      { id: 's-big', enabled: true, trigger: { type: 'gift', giftName: '', minCoins: 1000 }, sound: '/sounds/builtin/airhorn.wav', volume: 1, repeat: false, cooldown: 0 },
+      { id: 's-follow', enabled: true, trigger: { type: 'follow' }, sound: '/sounds/builtin/ding.wav', volume: 0.7, repeat: false, cooldown: 0 },
+      { id: 's-share', enabled: true, trigger: { type: 'share' }, sound: '/sounds/builtin/whoosh.wav', volume: 0.7, repeat: false, cooldown: 0 },
+      { id: 's-drum', enabled: true, trigger: { type: 'command', command: '!drum' }, sound: '/sounds/builtin/drumroll.wav', volume: 0.9, repeat: false, cooldown: 30 }
+    ]
+  },
+  // Subathon timer: events add time while it's running
+  timer: {
+    startMinutes: 60,
+    perCoin: 6,
+    perFollow: 30,
+    perShare: 15,
+    perSub: 300,
+    per100Likes: 5
+  },
   rules: [
     {
       id: 'follow-alert',
@@ -67,7 +89,7 @@ export const DEFAULT_CONFIG = {
       enabled: true,
       name: '!hello command',
       trigger: { type: 'command', command: '!hello' },
-      alert: { text: 'Hi {nickname}! 👋', image: '{avatar}', sound: '', duration: 3 },
+      alert: { text: 'Hi {nickname}!', image: '{avatar}', sound: '', duration: 3 },
       tts: '',
       cooldown: 10
     }

@@ -32,6 +32,7 @@ export class TikTokSource extends EventEmitter {
     this.status = 'disconnected';
     this.manualDisconnect = false;
     this.reconnectTimer = null;
+    this.gifts = [];
   }
 
   setStatus(status, detail = '') {
@@ -57,6 +58,7 @@ export class TikTokSource extends EventEmitter {
     this.setStatus('connecting');
     try {
       const state = await conn.connect();
+      this.gifts = parseGiftList(conn.availableGifts);
       this.setStatus('connected', `room ${state.roomId}`);
       return state;
     } catch (err) {
@@ -128,6 +130,20 @@ export class TikTokSource extends EventEmitter {
       this.manualDisconnect = true; // stream is over; don't hammer reconnects
     });
   }
+}
+
+/** Turns the room's gift catalogue into [{ name, diamonds, image }], whatever shape it arrives in. */
+function parseGiftList(raw) {
+  const list = Array.isArray(raw) ? raw : raw?.gifts || raw?.giftList || raw?.data?.gifts || [];
+  const seen = new Set();
+  return list
+    .map((g) => ({
+      name: g.name || g.giftName || '',
+      diamonds: Number(g.diamond_count ?? g.diamondCount ?? 0),
+      image: imageUrl(g.image || g.giftImage || g.icon)
+    }))
+    .filter((g) => g.name && !seen.has(g.name) && seen.add(g.name))
+    .sort((a, b) => a.diamonds - b.diamonds);
 }
 
 function giftInfo(d, details, ext) {

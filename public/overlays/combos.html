@@ -1,0 +1,61 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Gift combos</title>
+<link rel="stylesheet" href="overlay.css">
+<style>
+  #list { position: fixed; left: 10px; bottom: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .combo { display: flex; align-items: center; gap: 10px; padding: 6px 16px 6px 6px; border-radius: 999px;
+    background: rgba(16,16,16,.78); animation: in .25s ease both; transition: opacity .4s, transform .4s; }
+  .combo.gone { opacity: 0; transform: translateX(-30px); }
+  .who { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; }
+  .who b { font-size: 16px; max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .who span { font-size: 13px; opacity: .75; }
+  .gift { width: 40px; height: 40px; object-fit: contain; }
+  .x { font-size: 30px; font-weight: 900; font-style: italic; color: #ffd166; min-width: 64px; }
+  .x.hit { animation: hit .22s ease; }
+  @keyframes in { from { transform: translateX(-30px); opacity: 0 } }
+  @keyframes hit { 50% { transform: scale(1.35) } }
+</style></head>
+<body>
+<div id="list"></div>
+<script src="/socket.io/socket.io.js"></script>
+<script src="common.js"></script>
+<script>
+  // Shows gift combos as they build up (x1, x2, x3 …). ?max=5  ?hold=4 (seconds after a combo ends)
+  const max = Number(params.get('max') || 5);
+  const hold = Number(params.get('hold') || 4) * 1000;
+  const list = document.getElementById('list');
+  const rows = new Map();
+
+  function upsert(e, final) {
+    const key = `${e.user.id}:${e.gift.name}`;
+    let r = rows.get(key);
+    if (!r) {
+      const x = el('span', { class: 'x shadow num' });
+      const node = el('div', { class: 'combo shadow' },
+        avatarEl(e.user, 40),
+        el('div', { class: 'who' }, el('b', {}, e.user.nickname), el('span', {}, `sent ${e.gift.name}`)),
+        e.gift.image ? el('img', { class: 'gift', src: e.gift.image, alt: '', referrerPolicy: 'no-referrer' }) : null,
+        x);
+      r = { node, x, timer: 0, count: 0 };
+      rows.set(key, r);
+      list.append(node);
+      while (list.children.length > max) { const first = list.firstChild; for (const [k, v] of rows) if (v.node === first) rows.delete(k); first.remove(); }
+    }
+    if (e.gift.count !== r.count) {
+      r.count = e.gift.count;
+      r.x.textContent = `x${e.gift.count}`;
+      r.x.classList.remove('hit'); void r.x.offsetWidth; r.x.classList.add('hit');
+    }
+    clearTimeout(r.timer);
+    r.timer = setTimeout(() => {
+      r.node.classList.add('gone');
+      setTimeout(() => { r.node.remove(); rows.delete(key); }, 400);
+    }, final ? hold : hold * 3);
+  }
+
+  io().on('event', (e) => {
+    if (e.type === 'giftStreak') upsert(e, false);
+    if (e.type === 'gift') upsert(e, true);
+  });
+</script>
+</body></html>
