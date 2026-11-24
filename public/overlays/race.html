@@ -4,7 +4,7 @@
 <style>
   .race { position: fixed; left: 16px; right: 16px; bottom: 16px; padding: 10px 12px 12px; }
   .top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
-  .title { font-size: 14px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; }
+  .title { font-family: var(--tt-display); font-size: 15px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; }
   .goal { font-size: 13px; opacity: .8; }
   .track { position: relative; overflow: hidden; }
   .lane { position: relative; height: 40px; border-top: 1px dashed rgba(255,255,255,.18); }
@@ -15,7 +15,7 @@
   .runner .av { position: relative; }
   .runner .av::after { content: ""; position: absolute; right: 100%; top: 50%; width: 0; height: 3px; margin-top: -1.5px; border-radius: 2px;
     background: linear-gradient(90deg, transparent, rgba(255,255,255,.7)); transition: width .3s; }
-  .runner.go .av::after { width: 34px; }
+  .runner.go .av::after { width: 40px; background: linear-gradient(90deg, transparent, var(--tt-a)); }
   .runner.go .av { animation: hop .3s ease-in-out 2; }
   @keyframes hop { 50% { transform: translateY(-5px) rotate(-6deg); } }
   .runner .nm { font-weight: 700; font-size: 14px; white-space: nowrap; }
@@ -23,7 +23,7 @@
   .empty { padding: 10px 0; text-align: center; opacity: .8; font-weight: 600; }
   .banner { position: fixed; left: 50%; top: 30%; transform: translate(-50%, -50%) scale(.5); opacity: 0; text-align: center; transition: transform .5s cubic-bezier(.2,1.6,.4,1), opacity .3s; }
   .banner.on { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-  .banner .big { font-size: 54px; font-weight: 900; color: #ffd166; }
+  .banner .big { font-family: var(--tt-display); font-size: 58px; font-weight: 800; color: var(--tt-butter); letter-spacing: -1.5px; }
   .banner .small { font-size: 18px; font-weight: 700; }
 </style></head>
 <body>

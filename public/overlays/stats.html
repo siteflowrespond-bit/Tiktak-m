@@ -6,14 +6,15 @@
   .stats.row { flex-direction: row; }
   .stats.column { flex-direction: column; min-width: 220px; }
   .stat { display: flex; flex-direction: column; padding: 8px 16px; }
-  .row .stat + .stat { border-left: 1px solid rgba(255,255,255,.15); }
+  .row .stat + .stat { border-left: 1px solid var(--tt-line); }
   .column .stat { flex-direction: row; justify-content: space-between; align-items: baseline; gap: 24px; padding: 6px 12px; }
-  .column .stat + .stat { border-top: 1px solid rgba(255,255,255,.12); }
-  .k { font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; opacity: .7; }
-  .v { font-size: 30px; font-weight: 800; line-height: 1.1; }
+  .column .stat + .stat { border-top: 1px solid var(--tt-line); }
+  .k { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; opacity: .7; }
+  .v { font-size: 32px; font-weight: 800; line-height: 1.05; letter-spacing: -1px; }
+  .k::before { content: ""; width: 7px; height: 7px; border-radius: 2px; background: var(--c, var(--tt-a)); box-shadow: 0 0 8px var(--c, var(--tt-a)); }
   .column .v { font-size: 24px; }
   .v.tick { animation: tick .4s ease; }
-  @keyframes tick { 40% { color: #ffd166; } }
+  @keyframes tick { 40% { color: var(--tt-a); } }
   /* rotate: one stat at a time */
   .stats.rotate { min-width: 200px; }
   .rotate .stat { display: none; align-items: center; text-align: center; }
@@ -42,7 +43,8 @@
   for (const key of show) {
     const v = el('span', { class: 'v num' }, key === 'time' ? '0:00' : '0');
     cells[key] = v;
-    box.append(el('div', { class: 'stat' }, el('span', { class: 'k' }, ALL[key]), v));
+    const C = { viewers: 'sky', likes: 'rose', coins: 'butter', follows: 'ember', shares: 'lilac', comments: 'mint', gifts: 'butter', subs: 'lilac', joins: 'mint', time: 'a' };
+    box.append(el('div', { class: 'stat', style: `--c:var(--tt-${C[key]})` }, el('span', { class: 'k' }, ALL[key]), v));
   }
 
   let last = {}, startedAt = Date.now();

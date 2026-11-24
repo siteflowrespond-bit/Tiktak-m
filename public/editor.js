@@ -222,8 +222,19 @@ function edRenderInsp() {
   if (!w) {
     const name = el('input', { id: 'edName', value: l.name });
     name.addEventListener('input', () => { l.name = name.value || 'Untitled'; $e('#edLayout').selectedOptions[0].textContent = l.name; edDirty(); });
+    const all = el('select', {}, el('option', { value: '' }, 'Mixed / keep'), THEMES.map(([v, lab]) => el('option', { value: v }, lab)));
+    const used = new Set(l.widgets.map((w) => new URLSearchParams(w.src.split('?')[1] || '').get('theme') || 'ember'));
+    all.value = used.size === 1 ? [...used][0] : '';
+    all.addEventListener('change', () => {
+      if (!all.value) return;
+      edSnapshot();
+      for (const w of l.widgets) w.src = withParam(w.src, 'theme', all.value === 'ember' ? '' : all.value);
+      edDirty(); edRenderStage();
+      toast(`Every overlay in this layout now uses ${all.selectedOptions[0].textContent}`);
+    });
     parts.push(el('div', { class: 'panel-head' }, el('h2', {}, 'Layout')),
       el('div', { class: 'panel-body' }, el('label', { class: 'f' }, el('span', {}, 'Name'), name),
+        el('label', { class: 'f', style: 'margin-top:10px' }, el('span', {}, 'Theme for every overlay'), all),
         el('p', { class: 'note', style: 'margin:10px 0 0' }, l.widgets.length ? 'Click an overlay on the canvas to edit it.' : 'Add overlays from the list on the left, or start from a ready-made set.'),
         l.widgets.length ? null : el('button', { class: 'btn red sm', style: 'margin-top:10px', onclick: edStarter }, icon('plus'), `Add a starter set (${l.width > l.height ? 'landscape' : 'portrait'})`)));
   } else {
@@ -250,6 +261,12 @@ function edRenderInsp() {
           align('Left', () => { w.x = 0; }), align('Center', () => { w.x = Math.round((l.width - w.w) / 2); }), align('Right', () => { w.x = l.width - w.w; }),
           align('Top', () => { w.y = 0; }), align('Middle', () => { w.y = Math.round((l.height - w.h) / 2); }), align('Bottom', () => { w.y = l.height - w.h; }))),
       el('button', { class: 'btn sm', onclick: () => { edSnapshot(); Object.assign(w, { x: 0, y: 0, w: l.width, h: l.height }); edDirty(); edRender(); } }, 'Fill the whole screen'),
+      el('label', { class: 'f' }, el('span', {}, 'Colour theme'), (() => {
+        const sel = el('select', {}, THEMES.map(([v, lab]) => el('option', { value: v }, lab)));
+        sel.value = new URLSearchParams(query).get('theme') || 'ember';
+        sel.addEventListener('change', () => { edSnapshot(); w.src = withParam(w.src, 'theme', sel.value === 'ember' ? '' : sel.value); edDirty(); edRenderStage(); edRenderInsp(); });
+        return sel;
+      })()),
       el('label', { class: 'f' }, el('span', {}, `Options for ${file} (press Enter)`), opts),
       el('div', { class: 'row' },
         el('button', { class: 'btn sm', title: 'Duplicate (Ctrl+D)', onclick: edDuplicate }, icon('dup'), 'Duplicate'),

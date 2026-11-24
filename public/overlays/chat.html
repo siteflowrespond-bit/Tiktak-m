@@ -3,11 +3,12 @@
 <link rel="stylesheet" href="overlay.css">
 <style>
   #list { position: fixed; left: 0; right: 0; bottom: 0; padding: 10px; display: flex; flex-direction: column; gap: 6px; }
-  .msg { display: flex; gap: 8px; align-items: flex-start; background: rgba(0,0,0,.45); padding: 6px 10px;
-    border-radius: 12px; font-size: 18px; animation: slide .25s ease both; }
-  .msg .name { font-weight: 700; color: #25f4ee; margin-right: 6px; }
-  .msg.gift .name { color: #ffd23f; }
-  .msg.follow .name, .msg.share .name { color: #fe2c55; }
+  .msg { display: flex; gap: 8px; align-items: flex-start; background: var(--tt-panel); color: var(--tt-text); padding: 7px 12px 7px 8px; border: 1px solid var(--tt-line);
+    border-radius: 16px; font-size: 18px; animation: slide .25s ease both; }
+  .msg .name { font-weight: 800; color: var(--tt-sky); margin-right: 6px; }
+  .msg.gift .name { color: var(--tt-butter); }
+  .msg.gift { box-shadow: inset 3px 0 0 var(--tt-butter); }
+  .msg.follow .name, .msg.share .name { color: var(--tt-a); }
   .msg .body { overflow-wrap: anywhere; }
   @keyframes slide { from { transform: translateX(-20px); opacity: 0 } to { transform: none; opacity: 1 } }
 </style></head>

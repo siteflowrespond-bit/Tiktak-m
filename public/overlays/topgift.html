@@ -4,31 +4,31 @@
 <style>
   .spot { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 300px; height: 300px; display: grid; place-items: center; }
   .rays { position: absolute; inset: -40px; border-radius: 50%;
-    background: repeating-conic-gradient(from 0deg, rgba(255,209,102,.38) 0 9deg, transparent 9deg 22deg);
+    background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--tt-butter) 40%, transparent) 0 9deg, transparent 9deg 22deg);
     -webkit-mask: radial-gradient(circle, #000 25%, transparent 68%); mask: radial-gradient(circle, #000 25%, transparent 68%);
     animation: spin 14s linear infinite; }
-  .spot.streak .rays { background: repeating-conic-gradient(from 0deg, rgba(120,200,255,.38) 0 9deg, transparent 9deg 22deg); }
+  .spot.streak .rays { background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--tt-sky) 40%, transparent) 0 9deg, transparent 9deg 22deg); }
   @keyframes spin { to { transform: rotate(360deg); } }
   .card { position: relative; width: 230px; padding: 16px 14px 14px; border-radius: 14px; text-align: center; overflow: hidden;
-    background: rgba(18,16,12,.9); box-shadow: 0 0 0 2px rgba(255,209,102,.7), 0 12px 30px rgba(0,0,0,.5); transform-style: preserve-3d; }
-  .spot.streak .card { box-shadow: 0 0 0 2px rgba(120,200,255,.7), 0 12px 30px rgba(0,0,0,.5); }
+    background: var(--tt-panel); color: var(--tt-text); box-shadow: 0 0 0 2px var(--tt-butter), 0 0 40px -8px var(--tt-butter), 0 12px 30px rgba(0,0,0,.5); transform-style: preserve-3d; }
+  .spot.streak .card { box-shadow: 0 0 0 2px var(--tt-sky), 0 0 40px -8px var(--tt-sky), 0 12px 30px rgba(0,0,0,.5); }
   .card.flip { animation: flip .7s cubic-bezier(.3,1.3,.5,1); }
   @keyframes flip { from { transform: rotateY(90deg) scale(.8); } }
   .card::after { content: ""; position: absolute; top: 0; bottom: 0; width: 60px; left: -80px; transform: skewX(-20deg);
     background: linear-gradient(90deg, transparent, rgba(255,255,255,.35), transparent); animation: shine 4.5s ease-in-out infinite; }
   @keyframes shine { 0%, 70% { left: -80px; } 100% { left: 300px; } }
-  .label { font-size: 12px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: #ffd166; }
-  .spot.streak .label { color: #8fd3ff; }
+  .label { font-size: 12px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: var(--tt-butter); }
+  .spot.streak .label { color: var(--tt-sky); }
   .icon { height: 84px; display: grid; place-items: center; margin: 6px 0; }
   .icon img { max-height: 84px; max-width: 110px; animation: float 3s ease-in-out infinite; }
   .coin { width: 70px; height: 70px; border-radius: 50%; display: grid; place-items: center; font-size: 30px; font-weight: 900; color: #8a5a00;
     background: radial-gradient(circle at 35% 30%, #fff3b0, #f0b429 70%); box-shadow: inset 0 0 0 5px #c98f12; animation: float 3s ease-in-out infinite; }
   @keyframes float { 50% { transform: translateY(-6px) rotate(3deg); } }
-  .gname { font-weight: 800; font-size: 18px; }
-  .amt { font-size: 28px; font-weight: 900; color: #ffd166; line-height: 1.1; }
-  .spot.streak .amt { color: #8fd3ff; }
+  .gname { font-family: var(--tt-display); font-weight: 800; font-size: 20px; }
+  .amt { font-size: 30px; font-weight: 800; color: var(--tt-butter); line-height: 1.1; letter-spacing: -.5px; }
+  .spot.streak .amt { color: var(--tt-sky); }
   .who { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px; font-weight: 700; }
-  .stamp { position: absolute; top: 12px; right: -6px; transform: rotate(14deg) scale(0); background: #e8453c; color: #fff; font-weight: 900; font-size: 13px;
+  .stamp { position: absolute; top: 12px; right: -6px; transform: rotate(14deg) scale(0); background: var(--tt-a); color: #fff; font-weight: 900; font-size: 13px;
     padding: 4px 10px; border-radius: 4px; letter-spacing: 1px; z-index: 3; }
   .stamp.on { animation: stamp 3.2s ease forwards; }
   @keyframes stamp { 0% { transform: rotate(14deg) scale(2.4); opacity: 0 } 12% { transform: rotate(14deg) scale(1); opacity: 1 } 85% { opacity: 1 } 100% { opacity: 0; transform: rotate(14deg) scale(1) } }
@@ -59,7 +59,7 @@
       card.classList.remove('flip'); void card.offsetWidth; card.classList.add('flip');
       const st = document.getElementById('stamp'); st.classList.remove('on'); void st.offsetWidth; st.classList.add('on');
       const r = card.getBoundingClientRect();
-      fx.confetti(r.left + r.width / 2, r.top + 20, { count: 90, spread: Math.PI * 2, power: 10, colors: streak ? ['#8fd3ff', '#fff', '#3ba7ff'] : ['#ffd166', '#fff', '#f0b429', '#ff9f43'] });
+      fx.confetti(r.left + r.width / 2, r.top + 20, { count: 90, spread: Math.PI * 2, power: 10, colors: streak ? [tt('sky'), '#fff', ttShade(tt('sky'), -.3)] : [tt('butter'), '#fff', tt('a'), ttShade(tt('butter'), -.25)] });
     }
   }
 

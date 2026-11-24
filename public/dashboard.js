@@ -55,6 +55,15 @@ function copyText(text, fallbackInput) {
   const fail = () => { fallbackInput?.focus(); fallbackInput?.select(); toast('Press Ctrl+C to copy'); };
   try { navigator.clipboard.writeText(text).then(done, fail); } catch { fail(); }
 }
+const THEMES = [['ember', 'Ember'], ['mint', 'Mint'], ['candy', 'Candy (light)'], ['mono', 'Mono']];
+/** Set or remove one query parameter on an overlay link like "jar.html?goal=1000". */
+function withParam(src, key, value) {
+  const [path, q = ''] = src.split('?');
+  const sp = new URLSearchParams(q);
+  if (value) sp.set(key, value); else sp.delete(key);
+  const out = sp.toString();
+  return out ? `${path}?${out}` : path;
+}
 const uid = (p) => `${p}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`;
 
 const EVENTS = {
@@ -62,7 +71,7 @@ const EVENTS = {
   gift: { label: 'gift', color: 'var(--amber)' },
   follow: { label: 'follow', color: 'var(--red)' },
   share: { label: 'share', color: 'var(--blue)' },
-  like: { label: 'like', color: '#f28ab2' },
+  like: { label: 'like', color: 'var(--rose)' },
   join: { label: 'join', color: 'var(--green)' },
   subscribe: { label: 'sub', color: 'var(--plum)' }
 };
@@ -78,7 +87,7 @@ function showPage(page) {
 }
 $('#nav').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) showPage(b.dataset.page); });
 try { showPage(localStorage.getItem('page')); } catch { showPage('live'); }
-$('#foot').textContent = 'v0.9 · / to search';
+$('#foot').textContent = 'v1.0 · / to search';
 
 // ── connection ───────────────────────────────────────────
 let status = 'disconnected';
@@ -101,6 +110,7 @@ socket.on('status', ({ status: s, username, detail }) => {
   status = s;
   liveSince = s === 'connected' ? liveSince || Date.now() : 0;
   $('#onair').className = `onair ${s}`;
+  document.body.classList.toggle('is-live', s === 'connected');
   $('#onair').title = [username && `@${username}`, detail].filter(Boolean).join(' · ');
   $('#connectBtn').textContent = s === 'disconnected' ? 'Connect' : s === 'connected' ? 'Disconnect' : 'Stop';
   $('#connectBtn').classList.toggle('red', s === 'disconnected');
@@ -120,13 +130,51 @@ setInterval(drawOnAir, 1000);
 
 // ── stats ────────────────────────────────────────────────
 const STATS = [['viewers', 'Viewers'], ['likes', 'Likes'], ['coins', 'Coins'], ['follows', 'Follows'], ['shares', 'Shares'], ['comments', 'Comments']];
-$('#strip').append(...STATS.map(([k, label]) => el('div', {}, el('div', { class: 'k' }, label), el('div', { class: 'v', id: `v-${k}` }, '0'))));
+const SVGNS = 'http://www.w3.org/2000/svg';
+function sparkSvg(k) {
+  const svg = document.createElementNS(SVGNS, 'svg');
+  svg.setAttribute('class', 'spark'); svg.setAttribute('viewBox', '0 0 100 26'); svg.setAttribute('preserveAspectRatio', 'none'); svg.id = `sp-${k}`;
+  for (const c of ['area', 'line']) { const p = document.createElementNS(SVGNS, 'path'); p.setAttribute('class', c); svg.append(p); }
+  return svg;
+}
+$('#strip').append(...STATS.map(([k, label]) => el('div', {}, el('div', { class: 'k' }, label), el('div', { class: 'v', id: `v-${k}` }, '0'), sparkSvg(k))));
+
+// sparklines: sample every 5 seconds, keep the last 40 points
+const sparkHist = Object.fromEntries(STATS.map(([k]) => [k, []]));
+function drawSpark(k) {
+  const pts = sparkHist[k];
+  const svg = document.getElementById(`sp-${k}`);
+  if (!svg || pts.length < 2) return;
+  const max = Math.max(...pts), min = Math.min(...pts), span = max - min || 1;
+  const xy = pts.map((v, i) => [(i / (pts.length - 1)) * 100, 24 - ((v - min) / span) * 20]);
+  const line = xy.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(2)},${y.toFixed(2)}`).join('');
+  svg.querySelector('.line').setAttribute('d', line);
+  svg.querySelector('.area').setAttribute('d', `${line}L100,26L0,26Z`);
+}
+setInterval(() => { for (const [k] of STATS) { sparkHist[k].push(stats[k] || 0); if (sparkHist[k].length > 40) sparkHist[k].shift(); drawSpark(k); } }, 5000);
+
+// numbers count up instead of jumping
+const shownVal = {};
+function countTo(k, target) {
+  const node = $(`#v-${k}`);
+  const from = shownVal[k] ?? 0;
+  shownVal[k] = target;
+  if (from === target) { node.textContent = fmt(target); return; }
+  const t0 = performance.now(), dur = Math.min(700, 200 + Math.abs(target - from) * 4);
+  (function step(now) {
+    const p = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - p, 3);
+    if (shownVal[k] !== target) return; // a newer value took over
+    node.textContent = fmt(Math.round(from + (target - from) * e));
+    if (p < 1) requestAnimationFrame(step);
+  })(t0);
+}
 let stats = {};
 socket.on('stats', (s) => {
   for (const [k] of STATS) {
     const v = $(`#v-${k}`);
-    v.textContent = fmt(s[k]);
-    if (stats[k] !== undefined && s[k] > stats[k]) { v.classList.remove('up'); void v.offsetWidth; v.classList.add('up'); }
+    countTo(k, s[k] || 0);
+    if (stats[k] !== undefined && s[k] > stats[k]) { v.classList.add('up'); clearTimeout(v._t); v._t = setTimeout(() => v.classList.remove('up'), 700); }
+    if (!sparkHist[k].length) { sparkHist[k].push(s[k] || 0, s[k] || 0); }
   }
   stats = s;
   const top = (s.topGifters || []).slice(0, 5);
@@ -554,10 +602,17 @@ function renderOverlays() {
   const all = groups.flatMap((g) => g.items);
   const tabs = [['start', 'Start here', STARTER.length], ['all', 'All', all.length], ...groups.map((g) => [g.id, g.title, g.items.length])];
   if (!tabs.some(([id]) => id === ovTab)) ovTab = 'start';
+  let ovTheme = 'ember';
+  try { ovTheme = localStorage.getItem('ovTheme') || 'ember'; } catch {}
+  const themeSel = el('select', { id: 'ovTheme', title: 'Colour theme for the overlay links below', style: 'width:auto;margin-left:auto' }, THEMES.map(([v, l]) => el('option', { value: v }, `Theme: ${l}`)));
+  themeSel.value = ovTheme;
+  themeSel.addEventListener('change', () => { try { localStorage.setItem('ovTheme', themeSel.value); } catch {} renderOverlays(); });
+  const themed = (p) => (ovTheme === 'ember' ? p : withParam(p, 'theme', ovTheme));
   $('#ovTabs').replaceChildren(...tabs.map(([id, label, n]) => el('button', {
     class: id === ovTab ? 'active' : '', role: 'tab', 'aria-selected': String(id === ovTab),
     onclick: () => { ovTab = id; try { localStorage.setItem('ovTab', id); } catch {} renderOverlays(); }
   }, label, el('span', { class: 'c' }, n))));
+  $('#ovTabs').append(themeSel);
 
   let sections;
   if (ovTab === 'start') sections = [{ title: 'Start with these four. Add more any time.', items: STARTER.map((n) => all.find((i) => i.name === n)).filter(Boolean) }];
@@ -570,11 +625,12 @@ function renderOverlays() {
     el('button', { class: 'btn red sm', onclick: () => showPage('layout') }, icon('grid'), 'Open Layout editor'));
   $('#overlays').replaceChildren(banner, ...sections.flatMap((sec) => [
     el('div', { class: 'ov-group' }, sec.title),
-    el('div', { class: 'ovs' }, sec.items.map(({ name, desc, path: p, opt }) => {
+    el('div', { class: 'ovs' }, sec.items.map(({ name, desc, path: p0, opt }) => {
+      const p = themed(p0);
       const url = base + p.slice(1);
       const src = opt.pv ? `${p.slice(1)}${p.includes('?') ? '&' : '?'}${opt.pv}` : p.slice(1);
       const used = () => { try { localStorage.setItem('usedOverlay', '1'); } catch {} drawSteps(); };
-      return el('div', { class: 'panel ov', 'data-ov': p },
+      return el('div', { class: 'panel ov', 'data-ov': p0 },
         el('div', { class: 'pv' }, opt.idle ? el('span', { class: 'idle' }, opt.idle) : null, el('iframe', { src, loading: 'lazy', title: name, tabIndex: -1 })),
         el('div', { class: 'info' }, el('h3', {}, name), el('p', {}, desc),
           el('div', { class: 'url' },

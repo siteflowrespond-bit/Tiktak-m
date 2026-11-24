@@ -18,6 +18,21 @@ npm start
 
 Open **http://localhost:8787**, type your TikTok username, and click **Connect**. The Live page has a three-step checklist for first-time setup. Press `/` (or Ctrl+K) anywhere to search for an overlay, alert, sound, setting or quick action. You have to be LIVE for the connection to succeed. If auto-reconnect is on, it keeps retrying every 30s until you go live.
 
+## Look and themes
+
+Tiktak's own look is **Tiktak Night**: an ink-violet base with *ember* orange as the signature colour, plus butter (coins), rose (likes), sky (shares), lilac (subscribes) and mint (connected). Type is Bricolage Grotesque for headlines and numbers, Figtree for text and JetBrains Mono for data. The logo is a metronome that swings while you're live.
+
+Every overlay comes in four themes. Add `?theme=` to its link, pick one on the Overlays page, or set it per overlay (or for a whole layout) in the Layout editor:
+
+| Theme | Feel |
+|---|---|
+| `ember` (default) | Ink panels, ember and butter accents |
+| `mint` | Deep teal panels, mint and lime accents |
+| `candy` | Light, bright panels with pink and sky accents |
+| `mono` | Black and white |
+
+Fonts load from Google Fonts; without internet the overlays fall back to system fonts.
+
 ## Overlays
 
 Copy a URL from the **Overlays** page. In TikTok LIVE Studio, add it as a *Link* source. In OBS, add it as a *Browser* source.

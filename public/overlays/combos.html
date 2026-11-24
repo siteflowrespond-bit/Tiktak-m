@@ -4,13 +4,13 @@
 <style>
   #list { position: fixed; left: 10px; bottom: 10px; display: flex; flex-direction: column; gap: 8px; }
   .combo { display: flex; align-items: center; gap: 10px; padding: 6px 16px 6px 6px; border-radius: 999px;
-    background: rgba(16,16,16,.78); animation: in .25s ease both; transition: opacity .4s, transform .4s; }
+    background: var(--tt-panel); color: var(--tt-text); border: 1px solid var(--tt-line); box-shadow: 0 0 30px -10px var(--tt-glow); animation: in .25s ease both; transition: opacity .4s, transform .4s; }
   .combo.gone { opacity: 0; transform: translateX(-30px); }
   .who { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; }
   .who b { font-size: 16px; max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .who span { font-size: 13px; opacity: .75; }
   .gift { width: 40px; height: 40px; object-fit: contain; }
-  .x { font-size: 30px; font-weight: 900; font-style: italic; color: #ffd166; min-width: 64px; }
+  .x { font-family: var(--tt-display); font-size: 32px; font-weight: 800; font-style: italic; color: var(--tt-butter); min-width: 64px; letter-spacing: -1px; }
   .x.hit { animation: hit .22s ease; }
   @keyframes in { from { transform: translateX(-30px); opacity: 0 } }
   @keyframes hit { 50% { transform: scale(1.35) } }

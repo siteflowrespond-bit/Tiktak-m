@@ -18,7 +18,7 @@
   // Floating hearts for likes, and floating gift icons for gifts. ?max=60 (hearts on screen)  ?side=right|left|center
   const max = Number(params.get('max') || 60);
   const side = params.get('side') || 'right';
-  const colors = ['#ff4d6d', '#ff8fa3', '#ffd166', '#f15bb5', '#e5383b', '#ff7b00'];
+  const colors = [tt('rose'), ttShade(tt('rose'), .35), tt('a'), tt('butter'), tt('lilac'), ttShade(tt('rose'), -.2)];
   const heart = (c) => `<svg viewBox="0 0 24 24"><path fill="${c}" d="M12 21s-7.5-4.6-9.6-9.3C.8 8 3 4 6.9 4c2.1 0 3.6 1.1 5.1 2.9C13.5 5.1 15 4 17.1 4 21 4 23.2 8 21.6 11.7 19.5 16.4 12 21 12 21z"/></svg>`;
   let alive = 0;
 

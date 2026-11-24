@@ -3,10 +3,10 @@
 <link rel="stylesheet" href="overlay.css">
 <style>
   .c { display: inline-flex; align-items: baseline; gap: 10px; margin: 10px; padding: 8px 16px; }
-  .v { font-size: 44px; font-weight: 800; }
+  .v { font-size: 48px; font-weight: 800; letter-spacing: -1.5px; }
   .l { font-size: 18px; font-weight: 600; opacity: .8; }
   .v.tick { animation: tick .3s ease; }
-  @keyframes tick { 50% { transform: translateY(-3px); color: #ffd166 } }
+  @keyframes tick { 50% { transform: translateY(-3px); color: var(--tt-a) } }
 </style></head>
 <body>
 <div class="c panel shadow" id="c"><span class="v num" id="v">0</span><span class="l" id="l"></span></div>

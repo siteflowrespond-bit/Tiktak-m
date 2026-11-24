@@ -2,18 +2,18 @@
 <html><head><meta charset="utf-8"><title>Team battle</title>
 <link rel="stylesheet" href="overlay.css">
 <style>
-  :root { --a: #ff4d5e; --b: #3ba7ff; }
+  :root { --a: var(--tt-team-a); --b: var(--tt-team-b); }
   .box { position: fixed; left: 50%; top: 18px; transform: translateX(-50%); width: min(94vw, 760px); }
   .head { display: grid; grid-template-columns: 1fr auto 1fr; align-items: end; margin-bottom: 8px; }
   .team { display: flex; flex-direction: column; gap: 2px; }
   .team.b { align-items: flex-end; text-align: right; }
   .tname { font-size: 15px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; }
   .a .tname { color: var(--a); } .b .tname { color: var(--b); }
-  .score { font-size: 40px; font-weight: 900; line-height: 1; }
+  .score { font-family: var(--tt-display); font-size: 44px; font-weight: 800; line-height: 1; letter-spacing: -1.5px; }
   .score.bump { animation: bump .35s ease; }
   @keyframes bump { 40% { transform: scale(1.18); } }
-  .clock { font: 800 24px "Cascadia Mono", Consolas, ui-monospace, monospace; padding: 4px 12px; border-radius: 6px; background: rgba(16,16,16,.8); }
-  .clock.low { color: #ff6b6b; animation: pulse 1s infinite; }
+  .clock { font: 800 26px var(--tt-display); padding: 4px 14px; border-radius: 999px; background: var(--tt-panel); color: var(--tt-text); border: 1px solid var(--tt-line); }
+  .clock.low { color: var(--tt-rose); animation: pulse 1s infinite; }
   @keyframes pulse { 50% { opacity: .55 } }
   .bar { position: relative; height: 34px; border-radius: 17px; overflow: hidden; background: var(--b); box-shadow: 0 4px 14px rgba(0,0,0,.4), inset 0 0 0 3px rgba(255,255,255,.15); }
   .fillA { position: absolute; inset: 0 auto 0 0; width: 50%; background: var(--a); transition: width .6s cubic-bezier(.3,1.5,.5,1); }
@@ -25,7 +25,7 @@
   .hint { text-align: center; margin-top: 6px; font-size: 14px; font-weight: 600; opacity: .9; }
   .float { position: fixed; font-weight: 900; font-size: 20px; pointer-events: none; animation: up 1.2s ease-out forwards; }
   @keyframes up { from { opacity: 1; transform: translate(-50%, 0) } to { opacity: 0; transform: translate(-50%, -46px) } }
-  .win { position: fixed; left: 50%; top: 45%; transform: translate(-50%, -50%) scale(.4); opacity: 0; font-size: 64px; font-weight: 900; letter-spacing: 2px; transition: transform .5s cubic-bezier(.2,1.6,.4,1), opacity .3s; text-transform: uppercase; }
+  .win { position: fixed; left: 50%; top: 45%; transform: translate(-50%, -50%) scale(.4); opacity: 0; font-family: var(--tt-display); font-size: 68px; font-weight: 800; letter-spacing: 2px; transition: transform .5s cubic-bezier(.2,1.6,.4,1), opacity .3s; text-transform: uppercase; }
   .win.on { transform: translate(-50%, -50%) scale(1); opacity: 1; }
 </style></head>
 <body>
@@ -54,8 +54,8 @@
   const countLikes = params.get('likes') === '1';
   if (params.get('ca')) document.documentElement.style.setProperty('--a', params.get('ca'));
   if (params.get('cb')) document.documentElement.style.setProperty('--b', params.get('cb'));
-  const colA = getComputedStyle(document.documentElement).getPropertyValue('--a').trim();
-  const colB = getComputedStyle(document.documentElement).getPropertyValue('--b').trim();
+  const colA = params.get('ca') || tt('team-a');
+  const colB = params.get('cb') || tt('team-b');
   document.getElementById('nA').textContent = A;
   document.getElementById('nB').textContent = B;
 
@@ -122,7 +122,7 @@
     win.textContent = w ? `${w === 'a' ? A : B} wins` : 'Draw';
     win.style.color = w ? (w === 'a' ? colA : colB) : '#fff';
     win.classList.add('on');
-    const col = w === 'a' ? colA : w === 'b' ? colB : '#ffd166';
+    const col = w === 'a' ? colA : w === 'b' ? colB : tt('butter');
     for (let i = 0; i < 6; i++) setTimeout(() => fx.firework(undefined, undefined, col), i * 300);
     fx.confetti(innerWidth / 2, innerHeight * 0.5, { count: 160, spread: Math.PI * 2, power: 14 });
     setTimeout(() => {

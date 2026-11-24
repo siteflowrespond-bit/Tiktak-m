@@ -4,13 +4,18 @@
 <style>
   #stage { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; }
   .alert { display: flex; align-items: center; gap: 18px; max-width: min(92vw, 760px); padding: 18px 26px 18px 18px;
-    background: rgba(16,16,16,.86); border-left: 6px solid var(--accent, #e8453c); border-radius: 6px;
+    background: var(--tt-panel); color: var(--tt-text); border: 1px solid var(--tt-line); border-left: 6px solid var(--accent, var(--tt-a)); border-radius: 16px; position: relative; overflow: hidden;
+    box-shadow: 0 18px 44px -16px rgba(0,0,0,.75), 0 0 40px -12px var(--tt-glow);
     animation: in .35s cubic-bezier(.2,1.3,.4,1) both; }
   .alert.no-img { padding-left: 24px; }
   .alert.out { animation: out .3s ease forwards; }
   .alert img { width: 84px; height: 84px; object-fit: contain; border-radius: 6px; flex: none; }
-  .alert .text { font-size: 34px; font-weight: 800; line-height: 1.15; }
-  body.plain .alert { background: none; border: 0; padding: 0; flex-direction: column; text-align: center; }
+  .alert .text { font-family: var(--tt-display); font-size: 36px; font-weight: 800; line-height: 1.1; letter-spacing: -.5px; }
+  .alert .timebar { position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: var(--accent, var(--tt-a)); transform-origin: left; animation: drain linear forwards; }
+  @keyframes drain { to { transform: scaleX(0); } }
+  :root[data-theme="candy"] .alert .text { text-shadow: none; }
+  body.plain .alert { background: none; border: 0; padding: 0; flex-direction: column; text-align: center; box-shadow: none; color: #fff; }
+  body.plain .alert .timebar { display: none; }
   body.plain .alert img { width: 160px; height: 160px; }
   body.plain .alert .text { font-size: 42px; }
   @keyframes in { from { transform: translateY(24px); opacity: 0 } to { transform: none; opacity: 1 } }
@@ -52,7 +57,7 @@
       img.onerror = () => { img.remove(); box.classList.add('no-img'); };
       box.append(img);
     } else box.classList.add('no-img');
-    box.append(el('div', { class: 'text' }, a.text));
+    box.append(el('div', { class: 'text' }, a.text), el('i', { class: 'timebar', style: `animation-duration:${a.duration || 4}s` }));
     stage.replaceChildren(box);
     if (a.sound) play(a.sound, 1);
     setTimeout(() => {

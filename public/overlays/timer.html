@@ -5,10 +5,10 @@
   .wrap { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; }
   .box { position: relative; padding: 10px 26px 14px; text-align: center; }
   .label { font-size: 15px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; opacity: .8; }
-  .time { font-size: 72px; font-weight: 800; line-height: 1; font-family: "Cascadia Mono", Consolas, ui-monospace, monospace; }
+  .time { font-size: 78px; font-weight: 800; line-height: 1; font-family: var(--tt-display); letter-spacing: -2px; }
   .box.paused .time { opacity: .55; }
-  .box.ending .time { color: #ff6b6b; }
-  .add { position: absolute; right: -8px; top: 0; font-size: 26px; font-weight: 800; color: #8ce99a; animation: up 1.6s ease-out forwards; }
+  .box.ending .time { color: var(--tt-rose); }
+  .add { position: absolute; right: -8px; top: 0; font-size: 26px; font-weight: 800; color: var(--tt-mint); animation: up 1.6s ease-out forwards; }
   @keyframes up { from { transform: translateY(10px); opacity: 0 } 15% { opacity: 1 } to { transform: translateY(-30px); opacity: 0 } }
 </style></head>
 <body>
