@@ -1,5 +1,7 @@
 # flock.tt
 
+*A live you won't forget.*
+
 **Website and live demo: [flocktt.xyz](https://flocktt.xyz)**
 
 A TikTok LIVE interaction toolkit in the spirit of TikFinity. It runs on your own computer and does four things:
