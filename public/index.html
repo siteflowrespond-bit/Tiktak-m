@@ -3,172 +3,209 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Tiktak-m Studio</title>
+  <title>Tiktak</title>
+  <link rel="icon" href="/logo.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-  <header>
-    <div class="brand">Tiktak<span>-m</span></div>
-    <form class="connect" id="connectForm">
-      <input id="username" placeholder="@your_tiktok_username" autocomplete="off">
-      <button class="primary" id="connectBtn" type="submit">Connect</button>
-      <button id="disconnectBtn" type="button">Disconnect</button>
-    </form>
-    <div class="status"><span class="dot" id="statusDot"></span><span id="statusText">Disconnected</span></div>
-  </header>
+<!-- Icon sprite -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-live" viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"/></symbol>
+  <symbol id="i-zap" viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
+  <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 2 10 5-10 5L2 7l10-5z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></symbol>
+  <symbol id="i-coin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M14.5 9.5h-3.25a1.75 1.75 0 0 0 0 3.5h1.5a1.75 1.75 0 0 1 0 3.5H9.5M12 7.5v1.5M12 16.5V18"/></symbol>
+  <symbol id="i-follow" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
+  <symbol id="i-gift" viewBox="0 0 24 24"><path d="M20 12v10H4V12M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></symbol>
+  <symbol id="i-join" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/></symbol>
+  <symbol id="i-command" viewBox="0 0 24 24"><path d="m4 17 6-6-6-6M12 19h8"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="m6 4 14 8-14 8z"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+  <symbol id="i-external" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-save" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></symbol>
+  <symbol id="i-reset" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></symbol>
+  <symbol id="i-volume" viewBox="0 0 24 24"><path d="M11 5 6 9H2v6h4l5 4V5zM19 5a10 10 0 0 1 0 14M15.5 8.5a5 5 0 0 1 0 7"/></symbol>
+  <symbol id="i-trophy" viewBox="0 0 24 24"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14.7V17c0 .6-.5 1-1 1.2C7.8 18.8 7 20.2 7 22M14 14.7V17c0 .6.5 1 1 1.2 1.2.6 2 2 2 3.8M18 2H6v7a6 6 0 0 0 12 0V2z"/></symbol>
+  <symbol id="i-flask" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6L4 20a1 1 0 0 0 .9 1.5h14.2A1 1 0 0 0 20 20l-6-11V3"/><path d="M7 15h10"/></symbol>
+</svg>
 
-  <nav id="tabs">
-    <button data-tab="live" class="active">Live</button>
-    <button data-tab="actions">Actions &amp; Events</button>
-    <button data-tab="goals">Goals &amp; TTS</button>
-    <button data-tab="overlays">Overlays</button>
-    <button data-tab="settings">Settings</button>
-  </nav>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <img class="brand-logo" src="/logo.svg" alt="">
+      <div class="brand-name">Tik<b>tak</b></div>
+    </div>
+    <nav class="nav" id="nav">
+      <button data-page="live" class="active"><svg class="i"><use href="#i-live"/></svg><span>Live</span></button>
+      <button data-page="actions"><svg class="i"><use href="#i-zap"/></svg><span>Actions</span></button>
+      <button data-page="goals"><svg class="i"><use href="#i-target"/></svg><span>Goals &amp; TTS</span></button>
+      <button data-page="overlays"><svg class="i"><use href="#i-layers"/></svg><span>Overlays</span></button>
+      <button data-page="settings"><svg class="i"><use href="#i-sliders"/></svg><span>Settings</span></button>
+    </nav>
+    <div class="sidebar-foot">
+      <strong>Tip</strong>
+      Use the simulator on the Live page to test alerts before you go live.
+    </div>
+  </aside>
 
-  <main>
-    <!-- LIVE -->
-    <section class="tab active" id="tab-live">
-      <div class="tiles">
-        <div class="tile"><div class="label">Viewers</div><div class="value" id="s-viewers">0</div></div>
-        <div class="tile"><div class="label">Likes</div><div class="value" id="s-likes">0</div></div>
-        <div class="tile"><div class="label">Coins</div><div class="value" id="s-coins">0</div></div>
-        <div class="tile"><div class="label">Follows</div><div class="value" id="s-follows">0</div></div>
-        <div class="tile"><div class="label">Shares</div><div class="value" id="s-shares">0</div></div>
-        <div class="tile"><div class="label">Comments</div><div class="value" id="s-comments">0</div></div>
+  <div class="main">
+    <header class="topbar">
+      <div>
+        <h1 class="page-title" id="pageTitle">Live</h1>
+        <div class="page-sub" id="pageSub">Real-time activity from your stream</div>
       </div>
-      <div class="grid cols-2">
-        <div class="card">
-          <div class="row" style="justify-content:space-between;margin-bottom:8px">
-            <h2 style="margin:0">Event feed</h2>
-            <button class="small" id="clearFeed">Clear</button>
-          </div>
-          <div class="filters" id="feedFilters">
-            <label><input type="checkbox" value="chat" checked> Chat</label>
-            <label><input type="checkbox" value="gift" checked> Gifts</label>
-            <label><input type="checkbox" value="follow" checked> Follows</label>
-            <label><input type="checkbox" value="share" checked> Shares</label>
-            <label><input type="checkbox" value="like"> Likes</label>
-            <label><input type="checkbox" value="join"> Joins</label>
-          </div>
-          <div class="feed" id="feed"></div>
-        </div>
-        <div class="grid" style="align-content:start">
-          <div class="card">
-            <h2>Simulator</h2>
-            <p class="hint">Fire fake events to test your alerts and overlays without going LIVE.</p>
-            <div class="row" id="simButtons">
-              <button data-sim="follow">Follow</button>
-              <button data-sim="share">Share</button>
-              <button data-sim="like">Likes</button>
-              <button data-sim="chat">Chat</button>
-              <button data-sim="join">Join</button>
-              <button data-sim="viewers">Viewers</button>
-            </div>
-            <div class="row" style="margin-top:10px">
-              <select id="simGift" style="flex:1"><option value="">Random gift</option></select>
-              <button data-sim="gift">Send gift</button>
-            </div>
-            <div class="row" style="margin-top:10px">
-              <input id="simChat" placeholder="Custom chat message, e.g. !hello">
-              <button id="simChatBtn">Send chat</button>
-            </div>
-          </div>
-          <div class="card">
-            <div class="row" style="justify-content:space-between;margin-bottom:8px">
-              <h2 style="margin:0">Top gifters</h2>
-              <button class="small" id="resetStats">Reset stats</button>
-            </div>
-            <table><thead><tr><th>#</th><th>User</th><th>Coins</th></tr></thead><tbody id="gifters"></tbody></table>
-          </div>
-        </div>
-      </div>
-    </section>
+      <form class="connect" id="connectForm">
+        <span class="pill" id="statusPill"><span class="dot"></span><span id="statusText">Offline</span></span>
+        <div class="handle"><span>@</span><input id="username" placeholder="tiktok username" autocomplete="off" spellcheck="false"></div>
+        <button class="btn primary" id="connectBtn" type="submit">Connect</button>
+      </form>
+    </header>
 
-    <!-- ACTIONS -->
-    <section class="tab" id="tab-actions">
-      <div class="card">
-        <div class="row" style="justify-content:space-between;margin-bottom:8px">
-          <h2 style="margin:0">Actions &amp; Events</h2>
-          <div class="row">
-            <button id="addRule">+ Add rule</button>
-            <button class="primary" id="saveRules">Save</button>
+    <div class="content">
+      <!-- ───── LIVE ───── -->
+      <section class="page active" id="page-live">
+        <div class="tiles" id="tiles"></div>
+        <div class="grid live-grid">
+          <div class="card">
+            <div class="card-head">
+              <h2>Activity</h2>
+              <div class="spacer"></div>
+              <button class="btn ghost sm" id="clearFeed">Clear</button>
+            </div>
+            <div class="card-body" style="padding-bottom:8px">
+              <div class="chips" id="feedFilters"></div>
+            </div>
+            <div class="feed" id="feed">
+              <div class="feed-empty" id="feedEmpty">
+                <svg class="i"><use href="#i-live"/></svg>
+                <div><b>Waiting for activity</b></div>
+                <div>Connect to a LIVE or use the simulator.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="stack">
+            <div class="card">
+              <div class="card-head"><h2>Simulator</h2><div class="spacer"></div><svg class="i" style="color:var(--muted)"><use href="#i-flask"/></svg></div>
+              <div class="card-body">
+                <p class="hint">Send fake events to test your alerts and overlays without going live.</p>
+                <div class="sim-grid" id="simGrid"></div>
+                <div class="inline">
+                  <select id="simGift"><option value="">Random gift</option></select>
+                  <button class="btn" data-sim="gift" style="--c:var(--gold)"><svg class="i" style="color:var(--gold)"><use href="#i-gift"/></svg>Gift</button>
+                </div>
+                <form class="inline" id="simChatForm">
+                  <input id="simChat" placeholder="Chat as a viewer, e.g. !hello">
+                  <button class="btn" type="submit">Send</button>
+                </form>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-head">
+                <h2>Top gifters</h2>
+                <div class="spacer"></div>
+                <button class="btn ghost sm" id="resetStats" title="Reset all stats"><svg class="i"><use href="#i-reset"/></svg>Reset</button>
+              </div>
+              <div class="card-body"><div class="leader" id="gifters"></div></div>
+            </div>
+
+            <div class="card">
+              <div class="card-head"><h2>Goals</h2></div>
+              <div class="card-body"><div class="goal-mini" id="goalMini"></div></div>
+            </div>
           </div>
         </div>
-        <p class="hint">
-          When a trigger happens, show an alert on the <b>Alerts overlay</b> and/or speak text.
-          Placeholders: <code>{nickname}</code> <code>{username}</code> <code>{avatar}</code> <code>{giftName}</code>
-          <code>{giftImage}</code> <code>{count}</code> <code>{coins}</code> <code>{comment}</code> <code>{likes}</code>
-        </p>
+      </section>
+
+      <!-- ───── ACTIONS ───── -->
+      <section class="page" id="page-actions">
+        <div class="toolbar">
+          <div class="chips">
+            <span class="tag-s" id="ruleCount"></span>
+          </div>
+          <div class="spacer"></div>
+          <button class="btn" id="addRule"><svg class="i"><use href="#i-plus"/></svg>New action</button>
+          <button class="btn primary" id="saveRules"><span class="badge-dot"></span>Save changes</button>
+        </div>
         <div id="rules"></div>
-      </div>
-    </section>
+      </section>
 
-    <!-- GOALS & TTS -->
-    <section class="tab" id="tab-goals">
-      <div class="grid cols-2">
-        <div class="card">
-          <h2>Goals</h2>
-          <p class="hint">Each goal has its own overlay (see the Overlays tab).</p>
-          <div id="goals"></div>
-          <button class="primary" id="saveGoals">Save goals</button>
-        </div>
-        <div class="card">
-          <h2>Chat text-to-speech</h2>
-          <p class="hint">Speech plays in the Alerts overlay (and in this dashboard if enabled below).</p>
-          <div class="field"><label><input type="checkbox" id="ttsEnabled"> Read chat aloud</label></div>
-          <div class="field"><label>Mode</label>
-            <select id="ttsMode"><option value="command">Only messages starting with a command</option><option value="all">Every chat message</option></select>
+      <!-- ───── GOALS & TTS ───── -->
+      <section class="page" id="page-goals">
+        <div class="grid two">
+          <div class="card">
+            <div class="card-head"><h2>Stream goals</h2><div class="spacer"></div><button class="btn primary sm" id="saveGoals">Save</button></div>
+            <div class="card-body">
+              <p class="hint">Each goal has its own progress-bar overlay. Progress resets when you connect or press Reset.</p>
+              <div id="goals"></div>
+            </div>
           </div>
-          <div class="field"><label>Command prefix</label><input id="ttsPrefix"></div>
-          <div class="field"><label>Max characters</label><input id="ttsMax" type="number" min="10" max="500"></div>
-          <div class="field"><label>Voice</label><select id="ttsVoice"><option value="">System default</option></select></div>
-          <div class="field"><label>Speed</label><input id="ttsRate" type="range" min="0.5" max="2" step="0.1"></div>
-          <div class="field"><label><input type="checkbox" id="ttsLocal"> Also speak in this dashboard tab</label></div>
-          <button class="primary" id="saveTts">Save TTS</button>
+          <div class="card">
+            <div class="card-head"><h2>Chat text-to-speech</h2><div class="spacer"></div><button class="btn primary sm" id="saveTts">Save</button></div>
+            <div class="card-body">
+              <p class="hint">Reads chat aloud through the Alerts overlay.</p>
+              <label class="switch" style="margin-bottom:16px"><input type="checkbox" id="ttsEnabled"><span class="track"></span>Read chat aloud</label>
+              <div class="fields">
+                <div class="field"><label>Read</label>
+                  <select id="ttsMode"><option value="command">Only messages with a command</option><option value="all">Every message</option></select>
+                </div>
+                <div class="field"><label>Command</label><input id="ttsPrefix" placeholder="!tts"></div>
+                <div class="field"><label>Max characters</label><input id="ttsMax" type="number" min="10" max="500"></div>
+                <div class="field"><label>Voice</label><select id="ttsVoice"><option value="">System default</option></select></div>
+                <div class="field wide"><label>Speed <span id="ttsRateVal" style="color:var(--text)"></span></label><input id="ttsRate" type="range" min="0.5" max="2" step="0.1"></div>
+              </div>
+              <div class="inline" style="margin-top:16px;align-items:center">
+                <label class="switch"><input type="checkbox" id="ttsLocal"><span class="track"></span>Also speak in this tab</label>
+                <div style="flex:1"></div>
+                <button class="btn sm" id="ttsTest"><svg class="i"><use href="#i-volume"/></svg>Test voice</button>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <!-- OVERLAYS -->
-    <section class="tab" id="tab-overlays">
-      <div class="card">
-        <h2>Overlay links</h2>
-        <p class="hint">
-          In <b>TikTok LIVE Studio</b>: Add source → <i>Link</i> and paste a URL.
-          In <b>OBS</b>: Add → <i>Browser</i> source and paste a URL. Backgrounds are transparent.
-        </p>
-        <div id="overlayLinks"></div>
-      </div>
-      <div class="card" style="margin-top:16px">
-        <h2>Test alert</h2>
-        <div class="row">
-          <input id="testText" value="This is a test alert! 🎉">
-          <button id="testAlertBtn">Send to overlay</button>
+      <!-- ───── OVERLAYS ───── -->
+      <section class="page" id="page-overlays">
+        <div class="card" style="margin-bottom:18px">
+          <div class="card-body how">
+            <div><b>TikTok LIVE Studio</b>Click <i>Add source</i>, choose <i>Link</i>, then paste an overlay URL.</div>
+            <div><b>OBS / Streamlabs</b>Add a <i>Browser</i> source and paste the URL. Backgrounds are transparent.</div>
+          </div>
         </div>
-      </div>
-    </section>
+        <div class="ov-grid" id="overlayGrid"></div>
+      </section>
 
-    <!-- SETTINGS -->
-    <section class="tab" id="tab-settings">
-      <div class="card" style="max-width:640px">
-        <h2>Connection settings</h2>
-        <div class="field">
-          <label>Euler Stream sign API key (optional)</label>
-          <input id="signApiKey" type="password" placeholder="Leave empty to use the free tier">
-          <span class="muted" id="keyState"></span>
+      <!-- ───── SETTINGS ───── -->
+      <section class="page" id="page-settings">
+        <div class="card" style="max-width:680px">
+          <div class="card-head"><h2>Connection</h2></div>
+          <div class="card-body">
+            <label class="switch" style="margin-bottom:18px"><input type="checkbox" id="autoReconnect"><span class="track"></span>Reconnect automatically every 30s if the connection drops or you're not live yet</label>
+            <div class="field">
+              <label>Euler Stream API key (optional)</label>
+              <input id="signApiKey" type="password" placeholder="Leave empty to use the free tier" autocomplete="off">
+            </div>
+            <p class="hint" style="margin-top:8px"><span id="keyState"></span> TikTok connections are signed through Euler Stream. The free tier is rate-limited; a key from eulerstream.com raises the limits.</p>
+            <button class="btn primary" id="saveSettings">Save settings</button>
+          </div>
         </div>
-        <p class="hint">
-          TikTok LIVE connections are signed through the Euler Stream sign server used by
-          <code>tiktok-live-connector</code>. The free tier is rate-limited; a key from eulerstream.com raises the limits.
-        </p>
-        <div class="field"><label><input type="checkbox" id="autoReconnect"> Automatically reconnect (every 30s) if the connection drops</label></div>
-        <button class="primary" id="saveSettings">Save settings</button>
-      </div>
-    </section>
-  </main>
+      </section>
+    </div>
+  </div>
+</div>
 
-  <div class="toast" id="toast"></div>
-  <script src="/socket.io/socket.io.js"></script>
-  <script src="/dashboard.js"></script>
+<div class="toasts" id="toasts"></div>
+<script src="/socket.io/socket.io.js"></script>
+<script src="/dashboard.js"></script>
 </body>
 </html>

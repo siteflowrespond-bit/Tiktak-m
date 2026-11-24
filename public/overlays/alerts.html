@@ -3,14 +3,20 @@
 <link rel="stylesheet" href="overlay.css">
 <style>
   #stage { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; }
-  .alert { display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center;
-    max-width: 90vw; animation: pop .5s cubic-bezier(.2,1.6,.4,1) both; }
+  .alert { position: relative; display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center;
+    max-width: min(90vw, 720px); padding: 26px 40px 28px; border-radius: 26px; background: rgba(14,15,20,.82);
+    box-shadow: 0 20px 60px rgba(0,0,0,.45); animation: pop .55s cubic-bezier(.2,1.5,.4,1) both; }
+  .alert::before { content: ""; position: absolute; inset: 0; padding: 3px; border-radius: inherit;
+    background: linear-gradient(135deg, #ff3b6b, #8b7cff 55%, #2de2e6);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
   .alert.out { animation: fadeout .4s ease forwards; }
-  .alert img { max-width: 220px; max-height: 220px; border-radius: 16px; }
-  .alert .text { font-size: 42px; font-weight: 800; line-height: 1.15; }
-  .alert .text .hl { color: #25f4ee; }
-  @keyframes pop { from { transform: scale(.3) translateY(40px); opacity: 0 } to { transform: none; opacity: 1 } }
-  @keyframes fadeout { to { transform: scale(.9); opacity: 0 } }
+  .alert img { max-width: 180px; max-height: 180px; border-radius: 18px; animation: bob 1.6s ease-in-out infinite; }
+  .alert .text { font-size: 38px; font-weight: 800; line-height: 1.15; letter-spacing: -.3px; }
+  body.plain .alert { background: none; box-shadow: none; padding: 0; }
+  body.plain .alert::before { display: none; }
+  @keyframes pop { from { transform: scale(.4) translateY(40px); opacity: 0 } to { transform: none; opacity: 1 } }
+  @keyframes fadeout { to { transform: scale(.92) translateY(-10px); opacity: 0 } }
+  @keyframes bob { 50% { transform: translateY(-6px) } }
   #unlock { position: fixed; bottom: 10px; left: 10px; background: #000a; padding: 8px 12px; border-radius: 8px; font-size: 13px; cursor: pointer; }
 </style></head>
 <body>
@@ -25,6 +31,8 @@
   let busy = false, cfg = null;
   const ttsOn = params.get('tts') !== '0';
   const volume = Number(params.get('volume') ?? 0.8);
+  // ?style=plain removes the card background and shows text only
+  if (params.get('style') === 'plain') document.body.classList.add('plain');
 
   socket.on('config', (c) => { cfg = c; });
   socket.on('alert', (a) => { queue.push(a); next(); });

@@ -102,6 +102,6 @@ app.post('/api/test-alert', (req, res) => {
 });
 
 server.listen(PORT, HOST, () => {
-  log(`Tiktak-m running → http://localhost:${PORT}`);
+  log(`Tiktak running → http://localhost:${PORT}`);
   log('Open the dashboard in your browser, then add overlay links to TikTok LIVE Studio or OBS.');
 });

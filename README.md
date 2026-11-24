@@ -1,4 +1,4 @@
-# Tiktak-m
+# Tiktak
 
 A TikTok LIVE interaction toolkit in the spirit of TikFinity. It runs on your own computer and does four things:
 
@@ -24,7 +24,7 @@ Copy a URL from the **Overlays** tab:
 
 | Overlay | URL | Options |
 |---|---|---|
-| Alerts + sounds + TTS | `/overlays/alerts.html` | `?volume=0.5`, `?tts=0` |
+| Alerts + sounds + TTS | `/overlays/alerts.html` | `?volume=0.5`, `?tts=0`, `?style=plain` |
 | Chat box | `/overlays/chat.html` | `?max=8`, `?events=0`, `?fade=30` |
 | Goal bar | `/overlays/goal.html?goal=likes` | `goal=likes\|follows\|coins\|shares` |
 | Top gifters | `/overlays/gifters.html` | `?count=5`, `?title=...` |
