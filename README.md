@@ -22,18 +22,9 @@ Open **http://localhost:8787**, type your TikTok username, and click **Connect**
 
 ## Look and themes
 
-The look is **flock.tt Dusk**, taken from the sky at the moment a murmuration of starlings rises: twilight navy above, an *afterglow* peach at the horizon (the signature colour for live, buttons and focus), and dusk tones for events: sunlit gold (coins), rosé (likes), tide blue (shares), lavender (subscribes) and sage (connected). Headlines and numbers use Unbounded, text uses Manrope, data uses IBM Plex Mono. The logo is a flock of birds swooping across a dusk sky; it drifts while you're live. Overlay panels carry three small birds on their top-left corner.
+flock.tt is black and white: black surfaces, white text and labels, and white as the only accent. Buttons are rounded pills with a white fill that sweeps in on hover. Type is Geist and Geist Mono. The logo is a black flock of birds on a white rounded square; it drifts while you're live.
 
-Every overlay comes in four themes. Add `?theme=` to its link, pick one on the Overlays page, or set it per overlay (or for a whole layout) in the Layout editor:
-
-| Theme | Feel |
-|---|---|
-| `dusk` (default) | Navy panels, afterglow and gold accents |
-| `mint` | Deep teal panels, mint and lime accents |
-| `candy` | Light, bright panels with pink and sky accents |
-| `mono` | Black and white |
-
-Fonts load from Google Fonts; without internet everything falls back to system fonts.
+Overlays are black panels with white text by default. Add `?theme=white` to an overlay link for white panels with black text, pick it on the Overlays page, or set it per overlay (or for a whole layout) in the Layout editor.
 
 ## Overlays
 

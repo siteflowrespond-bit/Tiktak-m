@@ -8,7 +8,7 @@ window.createFx = function createFx(zIndex = 50) {
   const parts = [];
   const rockets = [];
   let dpr = 1, W = 0, H = 0, running = false;
-  const COLORS = [...(window.ttPalette ? ttPalette() : ['#ff6a3d', '#ffcd57', '#3fe0b0', '#a98bff', '#ff5c93', '#5ac4ff']), '#ffffff'];
+  const COLORS = ['#ffffff', '#ffffff', '#e6e6e6', '#bdbdbd', '#8c8c8c'];
 
   function resize() {
     dpr = Math.min(2, window.devicePixelRatio || 1);

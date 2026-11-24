@@ -44,10 +44,11 @@
   // coin look by value, in the theme's colours: small = ember, 10+ = butter, 100+ = rose, 1000+ = sky
   const coinOf = (c, r) => ({ r, a: ttShade(c, 0.55), b: c, rim: ttShade(c, -0.4) });
   function tier(coinsEach) {
-    if (coinsEach >= 1000) return coinOf(tt('sky'), 26);
-    if (coinsEach >= 100) return coinOf(tt('rose'), 21);
-    if (coinsEach >= 10) return coinOf(tt('butter'), 16);
-    return coinOf(tt('ember'), 12);
+    // black and white: bigger gifts are bigger and lighter coins
+    if (coinsEach >= 1000) return { r: 26, a: '#ffffff', b: '#e6e6e6', rim: '#000000' };
+    if (coinsEach >= 100) return { r: 21, a: '#f2f2f2', b: '#bdbdbd', rim: '#1a1a1a' };
+    if (coinsEach >= 10) return { r: 16, a: '#d9d9d9', b: '#8c8c8c', rim: '#1a1a1a' };
+    return { r: 12, a: '#a6a6a6', b: '#5c5c5c', rim: '#111111' };
   }
 
   function drop(e) {

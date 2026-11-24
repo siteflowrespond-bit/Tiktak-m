@@ -1,63 +1,49 @@
 /* flock.tt overlay theme. Pick one per overlay link with ?theme=dusk|mint|candy|mono (dusk is the default).
    Backgrounds stay transparent for TikTok LIVE Studio / OBS. */
-@import url("https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700&family=Manrope:wght@500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Geist:wght@500;600;700;800&display=swap");
 
+/* Black and white. ?theme=white swaps to white panels with black text. */
 :root {
-  --tt-panel: rgba(12, 22, 40, .86);
-  --tt-line: rgba(238, 243, 255, .11);
-  --tt-text: #ffffff;
-  --tt-dim: rgba(238, 243, 255, .72);
-  --tt-track: rgba(238, 243, 255, .14);
-  --tt-a: #ff9469;        /* afterglow: signature accent */
-  --tt-ember: #ff9469;
-  --tt-butter: #ffd27a;
-  --tt-mint: #7fe0b8;
-  --tt-lilac: #b6a4ff;
-  --tt-rose: #ff86b4;
-  --tt-sky: #63cde8;
-  --tt-team-a: #ff9469;
-  --tt-team-b: #63cde8;
-  --tt-glow: rgba(255, 148, 105, .45);
-  --tt-shadow: 0 1px 2px rgba(0,0,0,.85), 0 0 12px rgba(0,0,0,.45);
-  --tt-display: "Unbounded", "Segoe UI", system-ui, sans-serif;
-  --tt-font: "Manrope", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
-}
-:root[data-theme="mint"] {
-  --tt-panel: rgba(6, 30, 30, .86);
-  --tt-a: #3fe0b0; --tt-ember: #3fe0b0; --tt-butter: #e6ff7a; --tt-mint: #3fe0b0; --tt-lilac: #8fb8ff; --tt-rose: #ff7fa8; --tt-sky: #62d7ff;
-  --tt-team-a: #3fe0b0; --tt-team-b: #b98cff; --tt-glow: rgba(63, 224, 176, .45);
-}
-:root[data-theme="candy"] {
-  --tt-panel: rgba(255, 246, 250, .95);
-  --tt-line: rgba(64, 20, 60, .10);
-  --tt-text: #2b1238;
-  --tt-dim: rgba(43, 18, 56, .62);
-  --tt-track: rgba(43, 18, 56, .12);
-  --tt-a: #ff3d7f; --tt-ember: #ff6a3d; --tt-butter: #f5a300; --tt-mint: #10b98a; --tt-lilac: #8a5cff; --tt-rose: #ff3d7f; --tt-sky: #1aa3ff;
-  --tt-team-a: #ff3d7f; --tt-team-b: #1aa3ff; --tt-glow: rgba(255, 61, 127, .35);
-}
-:root[data-theme="mono"] {
-  --tt-panel: rgba(0, 0, 0, .82);
+  --tt-panel: rgba(0, 0, 0, .86);
   --tt-line: rgba(255, 255, 255, .16);
-  --tt-a: #ffffff; --tt-ember: #ffffff; --tt-butter: #ffffff; --tt-mint: #d6d6d6; --tt-lilac: #bdbdbd; --tt-rose: #e6e6e6; --tt-sky: #cfcfcf;
-  --tt-team-a: #ffffff; --tt-team-b: #8a8a8a; --tt-glow: rgba(255, 255, 255, .25);
+  --tt-text: #ffffff;
+  --tt-dim: rgba(255, 255, 255, .65);
+  --tt-track: rgba(255, 255, 255, .16);
+  --tt-a: #ffffff;
+  --tt-ember: #ffffff;
+  --tt-butter: #ffffff;
+  --tt-mint: #ffffff;
+  --tt-lilac: #ffffff;
+  --tt-rose: #ffffff;
+  --tt-sky: #ffffff;
+  --tt-team-a: #ffffff;
+  --tt-team-b: #6e6e6e;
+  --tt-avatar-bg: #ffffff;
+  --tt-avatar-fg: #000000;
+  --tt-glow: transparent;
+  --tt-shadow: 0 1px 2px rgba(0,0,0,.85), 0 0 12px rgba(0,0,0,.45);
+  --tt-display: "Geist", "Inter", "Segoe UI", system-ui, sans-serif;
+  --tt-font: "Geist", "Inter", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+}
+:root[data-theme="white"] {
+  --tt-panel: rgba(255, 255, 255, .95);
+  --tt-line: rgba(0, 0, 0, .12);
+  --tt-text: #000000;
+  --tt-dim: rgba(0, 0, 0, .6);
+  --tt-track: rgba(0, 0, 0, .12);
+  --tt-a: #000000; --tt-ember: #000000; --tt-butter: #000000; --tt-mint: #000000; --tt-lilac: #000000; --tt-rose: #000000; --tt-sky: #000000;
+  --tt-team-a: #000000; --tt-team-b: #9a9a9a;
+  --tt-avatar-bg: #000000; --tt-avatar-fg: #ffffff;
 }
 
 html, body { margin: 0; background: transparent; overflow: hidden; }
 body { font-family: var(--tt-font); color: #fff; -webkit-font-smoothing: antialiased; }
 .shadow { text-shadow: var(--tt-shadow); }
 .num { font-variant-numeric: tabular-nums; font-family: var(--tt-display); }
-.avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: var(--tt-a); flex: none; color: #fff; text-shadow: none;
-  display: inline-flex; align-items: center; justify-content: center; font-weight: 800; box-shadow: 0 0 0 2px rgba(255,255,255,.85); }
+.avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: var(--tt-avatar-bg); flex: none; color: var(--tt-avatar-fg); text-shadow: none;
+  display: inline-flex; align-items: center; justify-content: center; font-weight: 800; }
 
 /* the flock.tt panel: frosted ink with a small accent "tick" at the top-left */
-.panel { position: relative; background: var(--tt-panel); color: var(--tt-text); border-radius: 14px; border: 1px solid var(--tt-line);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 14px 34px -16px rgba(0,0,0,.7); }
-/* signature: three birds flying off the top-left corner of every panel */
-.panel::before { content: ""; position: absolute; left: 14px; top: -4px; width: 22px; height: 8px; pointer-events: none;
-  background:
-    radial-gradient(circle at 3px 5px, var(--tt-a) 0 2.4px, transparent 2.9px),
-    radial-gradient(circle at 10px 3px, var(--tt-a) 0 1.8px, transparent 2.3px),
-    radial-gradient(circle at 16px 1.6px, var(--tt-a) 0 1.3px, transparent 1.8px);
-  filter: drop-shadow(0 0 5px var(--tt-glow)); }
-:root[data-theme="candy"] .panel, :root[data-theme="candy"] .panel * { text-shadow: none; }
+.panel { position: relative; background: var(--tt-panel); color: var(--tt-text); border-radius: 18px; border: 1px solid var(--tt-line);
+  box-shadow: 0 14px 34px -18px rgba(0,0,0,.6); }
+:root[data-theme="white"] .panel, :root[data-theme="white"] .panel * { text-shadow: none; }
