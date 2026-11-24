@@ -13,13 +13,12 @@ A TikTok LIVE interaction toolkit in the spirit of TikFinity. It runs on your ow
 
 ## Download
 
-**Windows:** [flocktt-setup.exe](https://github.com/siteflowrespond-bit/Tiktak-m/releases/latest/download/flocktt-setup.exe) · **Mac:** [flocktt-mac.dmg](https://github.com/siteflowrespond-bit/Tiktak-m/releases/latest/download/flocktt-mac.dmg)
+**Windows:** [flocktt-setup.exe](https://github.com/siteflowrespond-bit/Tiktak-m/releases/latest/download/flocktt-setup.exe) · **Mac:** coming soon
 
 Install it, open flock.tt, type your TikTok username and press **Connect**. Keep the app open while you stream: TikTok LIVE Studio and OBS load the overlays from it.
 
-The installers aren't code-signed yet, so the first launch shows a warning:
+The installer isn't code-signed yet, so the first launch shows a warning:
 - **Windows:** "Windows protected your PC" → **More info** → **Run anyway**.
-- **Mac:** drag flock.tt into Applications, then right-click it → **Open** → **Open**. To stream from a Mac, use OBS (add the overlay link as a Browser source).
 
 Settings and uploaded sounds are kept in your user folder (`%APPDATA%\flock.tt` on Windows, `~/Library/Application Support/flock.tt` on Mac), so updating or reinstalling keeps them.
 

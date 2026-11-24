@@ -21,9 +21,11 @@ jobs:
           - os: windows-latest
             target: --win
             file: release/flocktt-setup.exe
-          - os: macos-15
-            target: --mac
-            file: release/flocktt-mac.dmg
+          # Mac: GitHub hasn't assigned a macOS runner to this repo (jobs were cancelled while queued).
+          # Add this back once one is available:
+          # - os: macos-15
+          #   target: --mac
+          #   file: release/flocktt-mac.dmg
     runs-on: ${{ matrix.os }}
     timeout-minutes: 45
     steps:
