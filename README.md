@@ -16,7 +16,7 @@ npm install
 npm start
 ```
 
-Open **http://localhost:8787**, type your TikTok username, and click **Connect**. You have to be LIVE for the connection to succeed. If auto-reconnect is on, it keeps retrying every 30s until you go live.
+Open **http://localhost:8787**, type your TikTok username, and click **Connect**. The Live page has a three-step checklist for first-time setup. Press `/` (or Ctrl+K) anywhere to search for an overlay, alert, sound, setting or quick action. You have to be LIVE for the connection to succeed. If auto-reconnect is on, it keeps retrying every 30s until you go live.
 
 ## Overlays
 
@@ -85,4 +85,5 @@ TikTok LIVE ──► src/tiktok.js ──► src/engine.js ──► Socket.IO 
 - Minecraft, Streamer.bot and OBS WebSocket integrations
 - Viewer points and a leaderboard that persist across streams
 - Overlay style editor (fonts, colors and positions)
+- Saved overlay presets per game or stream type
 - Package as a desktop app with Electron

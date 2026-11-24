@@ -21,6 +21,8 @@
   <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
   <symbol id="i-external" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3"/></symbol>
   <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
   <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
 </svg>
 
@@ -28,12 +30,12 @@
   <aside class="side">
     <div class="logo"><img src="/logo.svg" alt=""><span>tiktak</span></div>
     <nav class="nav" id="nav">
-      <button data-page="live" class="active"><svg class="i"><use href="#i-live"/></svg><span>Live</span></button>
-      <button data-page="actions"><svg class="i"><use href="#i-zap"/></svg><span>Alerts</span></button>
-      <button data-page="sounds"><svg class="i"><use href="#i-sound"/></svg><span>Sounds</span></button>
-      <button data-page="goals"><svg class="i"><use href="#i-clock"/></svg><span>Goals &amp; timer</span></button>
-      <button data-page="overlays"><svg class="i"><use href="#i-layers"/></svg><span>Overlays</span></button>
-      <button data-page="settings"><svg class="i"><use href="#i-sliders"/></svg><span>Settings</span></button>
+      <button data-page="live" class="active"><svg class="i"><use href="#i-live"/></svg><span>Live<small>What's happening now</small></span></button>
+      <button data-page="overlays"><svg class="i"><use href="#i-layers"/></svg><span>Overlays<small>Add to your stream</small></span></button>
+      <button data-page="actions"><svg class="i"><use href="#i-zap"/></svg><span>Alerts<small>On-screen pop-ups</small></span></button>
+      <button data-page="sounds"><svg class="i"><use href="#i-sound"/></svg><span>Sounds<small>Sounds &amp; text-to-speech</small></span></button>
+      <button data-page="goals"><svg class="i"><use href="#i-clock"/></svg><span>Goals &amp; timer<small>Targets &amp; subathon</small></span></button>
+      <button data-page="settings"><svg class="i"><use href="#i-sliders"/></svg><span>Settings<small>Connection</small></span></button>
     </nav>
     <div class="side-foot mono" id="foot">v0.3</div>
   </aside>
@@ -41,6 +43,12 @@
   <div class="main">
     <header class="top">
       <h1 id="pageTitle">Live</h1>
+      <div class="search" id="search">
+        <svg class="i"><use href="#i-search"/></svg>
+        <input id="q" type="search" placeholder="Search overlays, alerts, sounds, settings…" autocomplete="off" spellcheck="false" aria-label="Search" aria-controls="results" aria-expanded="false">
+        <kbd id="qkey">/</kbd>
+        <div class="results" id="results" role="listbox" hidden></div>
+      </div>
       <form class="connect" id="connectForm">
         <span class="onair" id="onair"><i></i><span id="onairText">Offline</span></span>
         <div class="at"><input id="username" placeholder="username" autocomplete="off" spellcheck="false"></div>
@@ -51,6 +59,10 @@
     <div class="content">
       <!-- LIVE -->
       <section class="page active" id="page-live">
+        <div class="panel start" id="start" hidden>
+          <div class="panel-head"><h2>Get started</h2><div class="grow"></div><button class="btn flat sm" id="startHide">Hide</button></div>
+          <ol class="steps" id="steps"></ol>
+        </div>
         <div class="panel strip" id="strip"></div>
         <div class="cols">
           <div class="panel">
@@ -176,7 +188,8 @@
 
       <!-- OVERLAYS -->
       <section class="page" id="page-overlays">
-        <p class="note">In TikTok LIVE Studio, add a <b>Link</b> source. In OBS, add a <b>Browser</b> source. Then paste the URL. Backgrounds are transparent.</p>
+        <p class="note">Copy a link and paste it into TikTok LIVE Studio as a <b>Link</b> source, or into OBS as a <b>Browser</b> source. Backgrounds are transparent.</p>
+        <div class="tabs" id="ovTabs" role="tablist"></div>
         <div id="overlays"></div>
       </section>
 

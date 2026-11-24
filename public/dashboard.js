@@ -78,7 +78,7 @@ function showPage(page) {
 }
 $('#nav').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) showPage(b.dataset.page); });
 try { showPage(localStorage.getItem('page')); } catch { showPage('live'); }
-$('#foot').textContent = `v0.5 · ${location.host}`;
+$('#foot').textContent = 'v0.6 · / to search';
 
 // ── connection ───────────────────────────────────────────
 let status = 'disconnected';
@@ -302,7 +302,7 @@ function renderRules() {
 function renderRule(rule, idx) {
   rule.alert ||= { text: '', image: '', sound: '', duration: 4 };
   const dirty = () => markUnsaved($('#saveRules'));
-  const box = el('div', { class: `rule${rule.enabled ? '' : ' off'}${openRules.has(rule.id) ? ' open' : ''}` });
+  const box = el('div', { class: `rule${rule.enabled ? '' : ' off'}${openRules.has(rule.id) ? ' open' : ''}`, 'data-id': rule.id });
   const sum = el('div', { class: 'rule-sum' });
   const name = el('div', { class: 'rule-name' });
   const refresh = () => {
@@ -367,7 +367,7 @@ function renderSoundRules() {
   const dirty = () => markUnsaved($('#saveSounds'));
   if (!list.length) { $('#soundRules').replaceChildren(el('div', { class: 'panel-body faint' }, 'No sound actions yet.')); return; }
   $('#soundRules').replaceChildren(...list.map((r, idx) => {
-    const row = el('div', { class: `snd${r.enabled ? '' : ' off'}` });
+    const row = el('div', { class: `snd${r.enabled ? '' : ' off'}`, 'data-id': r.id });
     const on = el('input', { type: 'checkbox', checked: r.enabled, title: 'On/off' });
     on.addEventListener('change', () => { r.enabled = on.checked; row.classList.toggle('off', !on.checked); dirty(); });
     const vol = el('input', { type: 'range', min: 0, max: 1, step: 0.05, value: r.volume ?? 1, title: 'Volume' });
@@ -505,10 +505,11 @@ function renderGoals() {
 $('#saveGoals').addEventListener('click', async (e) => { if (await saveConfig({ goals: config.goals }, 'Goals saved', e.currentTarget)) { drawGoalMini(); renderOverlays(); } });
 
 // ── overlays ─────────────────────────────────────────────
-function renderOverlays() {
+const STARTER = ['Alerts', 'Chat', 'Stats bar', 'Gift jar'];
+function overlayCatalog() {
   const goalCards = Object.entries(config.goals).map(([k, g]) => [`Goal: ${g.label}`, `Bar toward ${fmt(g.target)} ${k}.`, `/overlays/goal.html?goal=${k}`]);
   const groups = [
-    ['Animated & interactive', [
+    ['animated', 'Animated', [
       ['Gift jar', 'Gifts drop into a glass jar as coins and pile up. Fireworks when it fills, then it empties.', '/overlays/jar.html?goal=1000', { idle: 'Send a test gift' }],
       ['Spin wheel', 'A 100+ coin gift spins the wheel. Set the prizes with ?items=', '/overlays/wheel.html?min=100', { pv: 'sound=0' }],
       ['Team battle', 'Tug-of-war between two teams. Rose = Red, TikTok = Blue, or !red / !blue in chat.', '/overlays/battle.html?time=180'],
@@ -518,45 +519,65 @@ function renderOverlays() {
       ['Emoji rain', 'Emojis from chat fall, bounce and pile up.', '/overlays/emojis.html', { idle: 'Chat with emojis' }],
       ['Celebrations', 'Fireworks for big gifts, confetti for follows and subscribes.', '/overlays/celebrate.html?min=100', { idle: 'Send a big test gift' }]
     ]],
-    ['Alerts & sound', [
-      ['Alerts', 'Pop-up alerts. Also plays sound actions and TTS.', '/overlays/alerts.html', { pv: 'tts=0&volume=0', idle: 'Press Test on an alert' }],
+    ['alerts', 'Alerts & sound', [
+      ['Alerts', 'Pop-up alerts. Also plays sound actions and text-to-speech.', '/overlays/alerts.html', { pv: 'tts=0&volume=0', idle: 'Press Test on an alert' }],
       ['Sound player', 'Only plays sounds and TTS (invisible). Use instead of Alerts, not together.', '/overlays/sounds.html', { idle: 'Nothing to see, audio only' }]
     ]],
-    ['Chat & gifts', [
+    ['chat', 'Chat & gifts', [
       ['Chat', 'Chat with gifts, follows and shares mixed in.', '/overlays/chat.html', { idle: 'Waiting for chat' }],
       ['Gift combos', 'Combo counter that ticks up x1, x2, x3 while gifts stream in.', '/overlays/combos.html', { idle: 'Send a test gift' }],
       ['Like hearts', 'Hearts float up when people tap likes.', '/overlays/hearts.html', { idle: 'Send test likes' }],
       ['Ticker', 'Latest follower, gift and share.', '/overlays/ticker.html']
     ]],
-    ['Live stats', [
+    ['stats', 'Stats & leaderboards', [
       ['Stats bar', 'Viewers, likes, coins, new followers and time live in one row.', '/overlays/stats.html'],
       ['Stats list', 'The same stats stacked in a column. Pick with ?show=', '/overlays/stats.html?layout=column&show=viewers,likes,coins,follows,shares,comments,time'],
-      ['Stats rotator', 'Shows one stat at a time and cycles every 5 seconds.', '/overlays/stats.html?layout=rotate']
-    ]],
-    ['Leaderboards & counters', [
+      ['Stats rotator', 'Shows one stat at a time and cycles every 5 seconds.', '/overlays/stats.html?layout=rotate'],
       ['Top gifters', 'Biggest supporters this stream.', '/overlays/gifters.html'],
       ['Top likers', 'Who tapped the most.', '/overlays/gifters.html?by=likes'],
       ['Like counter', 'One big number. Change ?stat= for viewers, coins, follows …', '/overlays/counter.html?stat=likes'],
       ['Viewer counter', 'Current viewers.', '/overlays/counter.html?stat=viewers']
     ]],
-    ['Goals & timer', [
+    ['goals', 'Goals & timer', [
       ['Subathon timer', 'Countdown that grows with gifts, follows and likes.', '/overlays/timer.html'],
       ...goalCards
     ]]
   ];
+  return groups.map(([id, title, items]) => ({ id, title, items: items.map(([name, desc, path, opt = {}]) => ({ name, desc, path, opt, group: id })) }));
+}
+
+let ovTab = 'start';
+try { ovTab = localStorage.getItem('ovTab') || 'start'; } catch {}
+
+function renderOverlays() {
+  const groups = overlayCatalog();
+  const all = groups.flatMap((g) => g.items);
+  const tabs = [['start', 'Start here', STARTER.length], ['all', 'All', all.length], ...groups.map((g) => [g.id, g.title, g.items.length])];
+  if (!tabs.some(([id]) => id === ovTab)) ovTab = 'start';
+  $('#ovTabs').replaceChildren(...tabs.map(([id, label, n]) => el('button', {
+    class: id === ovTab ? 'active' : '', role: 'tab', 'aria-selected': String(id === ovTab),
+    onclick: () => { ovTab = id; try { localStorage.setItem('ovTab', id); } catch {} renderOverlays(); }
+  }, label, el('span', { class: 'c' }, n))));
+
+  let sections;
+  if (ovTab === 'start') sections = [{ title: 'Start with these four. Add more any time.', items: STARTER.map((n) => all.find((i) => i.name === n)).filter(Boolean) }];
+  else if (ovTab === 'all') sections = groups;
+  else sections = groups.filter((g) => g.id === ovTab);
+
   const base = new URL('.', location.href).href; // works at / and inside a sub-folder
-  $('#overlays').replaceChildren(...groups.flatMap(([title, items]) => [
-    el('div', { class: 'ov-group' }, title),
-    el('div', { class: 'ovs' }, items.map(([name, desc, p, opt = {}]) => {
+  $('#overlays').replaceChildren(...sections.flatMap((sec) => [
+    el('div', { class: 'ov-group' }, sec.title),
+    el('div', { class: 'ovs' }, sec.items.map(({ name, desc, path: p, opt }) => {
       const url = base + p.slice(1);
       const src = opt.pv ? `${p.slice(1)}${p.includes('?') ? '&' : '?'}${opt.pv}` : p.slice(1);
-      return el('div', { class: 'panel ov' },
+      const used = () => { try { localStorage.setItem('usedOverlay', '1'); } catch {} drawSteps(); };
+      return el('div', { class: 'panel ov', 'data-ov': p },
         el('div', { class: 'pv' }, opt.idle ? el('span', { class: 'idle' }, opt.idle) : null, el('iframe', { src, loading: 'lazy', title: name, tabIndex: -1 })),
         el('div', { class: 'info' }, el('h3', {}, name), el('p', {}, desc),
           el('div', { class: 'url' },
             el('input', { value: url, readOnly: true, onfocus: (e) => e.target.select() }),
-            el('button', { class: 'btn sq', title: 'Copy', onclick: (e) => copyText(url, e.currentTarget.parentNode.querySelector('input')) }, icon('copy')),
-            el('a', { class: 'btn sq', title: 'Open in a new tab', href: url, target: '_blank', rel: 'noopener' }, icon('external')))));
+            el('button', { class: 'btn sq', title: 'Copy link', onclick: (e) => { copyText(url, e.currentTarget.parentNode.querySelector('input')); used(); } }, icon('copy')),
+            el('a', { class: 'btn sq', title: 'Open in a new tab', href: url, target: '_blank', rel: 'noopener', onclick: used }, icon('external')))));
     }))
   ]));
 }
@@ -581,6 +602,169 @@ async function loadGifts() {
     ...gifts.slice(0, 60).map((g) => el('option', { value: g.name }, `${g.name} (${fmt(g.diamonds)})`)));
 }
 
+// ── get started ──────────────────────────────────────────
+const flag = (k) => { try { return localStorage.getItem(k) === '1'; } catch { return false; } };
+const setFlag = (k) => { try { localStorage.setItem(k, '1'); } catch {} };
+function drawSteps() {
+  const steps = [
+    { done: status === 'connected', title: 'Connect to your LIVE', text: 'Type your TikTok username at the top and press Connect.', btn: ['Go to username', () => $('#username').focus()] },
+    { done: flag('usedOverlay'), title: 'Add an overlay', text: 'Copy a link from Overlays into TikTok LIVE Studio or OBS.', btn: ['Open overlays', () => showPage('overlays')] },
+    { done: flag('tested'), title: 'Test it', text: 'Send a fake follow and watch your overlay react.', btn: ['Send a test follow', () => { api('POST', '/api/simulate', { type: 'follow' }); setFlag('tested'); drawSteps(); }] }
+  ];
+  const allDone = steps.every((x) => x.done);
+  $('#start').hidden = flag('startHidden') || allDone;
+  $('#steps').replaceChildren(...steps.map((x) => el('li', { class: x.done ? 'done' : '' },
+    el('div', {}, el('b', {}, x.title), el('span', {}, x.text), x.done ? null : el('div', {}, el('button', { class: 'btn sm', onclick: x.btn[1] }, x.btn[0]))))));
+}
+$('#startHide').addEventListener('click', () => { setFlag('startHidden'); drawSteps(); });
+socket.on('status', () => drawSteps());
+document.addEventListener('click', (e) => { if (e.target.closest('[data-sim]')) { setFlag('tested'); setTimeout(drawSteps); } });
+
+// ── search ───────────────────────────────────────────────
+const PAGE_INFO = {
+  live: ['Live', 'Activity, stats, test events', 'live', 'home dashboard activity feed log chat viewers'],
+  overlays: ['Overlays', 'Links for TikTok LIVE Studio and OBS', 'layers', 'widgets browser source link obs studio'],
+  actions: ['Alerts', 'Pop-ups when viewers do things', 'zap', 'alert actions events notifications popup'],
+  sounds: ['Sounds', 'Sound actions, library, text-to-speech', 'sound', 'audio sfx soundboard volume tts voice'],
+  goals: ['Goals & timer', 'Goal bars and the subathon timer', 'clock', 'goal target subathon countdown timer'],
+  settings: ['Settings', 'Connection and API key', 'sliders', 'options reconnect api key euler']
+};
+
+function flashEl(node) {
+  if (!node) return;
+  node.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  node.classList.remove('flash'); void node.offsetWidth; node.classList.add('flash');
+  setTimeout(() => node.classList.remove('flash'), 1900);
+}
+function goTo(page, find) {
+  showPage(page);
+  requestAnimationFrame(() => flashEl(typeof find === 'function' ? find() : find ? document.querySelector(find) : null));
+}
+const sim = (type, extra = {}) => () => { api('POST', '/api/simulate', { type, ...extra }); setFlag('tested'); drawSteps(); toast(`Sent a test ${type}`); };
+
+function searchEntries() {
+  const out = [];
+  for (const [page, [title, sub, ic, kw]] of Object.entries(PAGE_INFO)) out.push({ kind: 'Pages', icon: ic, title, sub, kw, run: () => showPage(page) });
+  for (const g of overlayCatalog()) for (const o of g.items) {
+    out.push({ kind: 'Overlays', icon: 'layers', title: o.name, sub: o.desc, where: 'Overlays', kw: `overlay widget ${g.title}`, run: () => {
+      ovTab = STARTER.includes(o.name) ? 'start' : o.group; renderOverlays();
+      goTo('overlays', () => document.querySelector(`[data-ov="${CSS.escape(o.path)}"]`));
+    } });
+  }
+  for (const r of config.rules) {
+    out.push({ kind: 'Alerts', icon: 'zap', title: r.name || 'Untitled alert', sub: `${triggerText(r.trigger)} → ${r.alert?.text || 'no text'}`, where: 'Alerts', kw: `alert ${r.trigger.type} ${r.trigger.command || ''} ${r.trigger.giftName || ''}`, run: () => {
+      openRules.add(r.id); renderRules(); goTo('actions', `[data-id="${CSS.escape(r.id)}"]`);
+    } });
+  }
+  for (const r of config.sounds.rules) {
+    const snd = sounds.find((x) => x.src === r.sound)?.name || r.sound.split('/').pop();
+    out.push({ kind: 'Sound actions', icon: 'sound', title: `${triggerText(r.trigger)} → ${snd}`, sub: r.enabled ? 'On' : 'Off', where: 'Sounds', kw: `sound action ${r.trigger.type} ${snd}`, run: () => goTo('sounds', `[data-id="${CSS.escape(r.id)}"]`) });
+  }
+  for (const x of sounds) out.push({ kind: 'Sound library', icon: 'play', title: x.name, sub: x.kind === 'custom' ? 'Uploaded sound · click to preview' : 'Built-in sound · click to preview', where: 'Sounds', kw: 'sound preview play', run: () => preview(x.src) });
+  const settings = [
+    ['Text-to-speech', 'Read chat out loud', 'sounds', '#ttsEnabled', 'tts voice speak read chat'],
+    ['Voice', 'Text-to-speech voice', 'sounds', '#ttsVoice', 'tts'],
+    ['Master volume', 'Volume of all sound actions', 'sounds', '#master', 'loud quiet'],
+    ['Play sounds in this tab', 'Hear sounds on this computer', 'sounds', '#playHere', 'preview listen'],
+    ['Subathon timer', 'Start, pause, add time', 'goals', '#clock', 'countdown'],
+    ['Time per gift / follow', 'How much time each event adds', 'goals', '#timerForm', 'subathon seconds coin'],
+    ['Goals', 'Like, follow, coin and share targets', 'goals', '#goals', 'target goal bar'],
+    ['Auto reconnect', 'Keep retrying if the LIVE drops', 'settings', '#autoReconnect', 'retry offline'],
+    ['API key', 'Euler Stream sign key', 'settings', '#signApiKey', 'euler sign rate limit'],
+    ['Activity filters', 'Show or hide likes, joins …', 'live', '#filters', 'feed log']
+  ];
+  for (const [title, sub, page, sel, kw] of settings) out.push({ kind: 'Settings', icon: 'sliders', title, sub, where: PAGE_INFO[page][0], kw, run: () => goTo(page, sel) });
+  const actions = [
+    ['Send a test follow', sim('follow')], ['Send a test gift', sim('gift')], ['Send a big test gift', sim('gift', { giftName: 'Galaxy' })],
+    ['Send test likes', sim('like')], ['Send a test chat', sim('chat')], ['Send a test share', sim('share')], ['Send a test subscribe', sim('subscribe')],
+    [timer.running ? 'Pause the timer' : 'Start the timer', () => api('POST', '/api/timer', { action: timer.running ? 'pause' : 'start' })],
+    ['Add 5 minutes to the timer', () => api('POST', '/api/timer', { action: 'add', seconds: 300 })],
+    ['New alert', () => { showPage('actions'); $('#addRule').click(); }],
+    ['New sound action', () => { $('#addSound').click(); goTo('sounds', () => document.querySelector('#soundRules .snd:last-child')); }],
+    ['Upload a sound', () => { showPage('sounds'); $('#upload').click(); }],
+    ['Reset stats', () => $('#resetStats').click()],
+    [status === 'disconnected' ? 'Connect to a LIVE' : 'Disconnect', () => (status === 'disconnected' ? $('#username').focus() : $('#connectBtn').click())]
+  ];
+  for (const [title, run] of actions) out.push({ kind: 'Quick actions', icon: 'play', title, sub: '', kw: 'do run test action', run });
+  return out;
+}
+
+const q = $('#q'), results = $('#results');
+let hits = [], sel = 0;
+
+function score(e, words, query) {
+  const t = e.title.toLowerCase();
+  const hay = `${t} ${(e.sub || '').toLowerCase()} ${(e.kw || '').toLowerCase()} ${(e.where || '').toLowerCase()} ${e.kind.toLowerCase()}`;
+  if (!words.every((w) => hay.includes(w))) return 0;
+  return 1 + (t.startsWith(query) ? 6 : 0) + (t.includes(query) ? 3 : 0) + words.filter((w) => t.includes(w)).length + (e.kind === 'Pages' ? 0.5 : 0);
+}
+
+function mark(text, word) {
+  const i = word ? text.toLowerCase().indexOf(word) : -1;
+  if (i < 0) return text;
+  return [text.slice(0, i), el('mark', {}, text.slice(i, i + word.length)), text.slice(i + word.length)];
+}
+
+function runSearch() {
+  if (!config) return;
+  const query = q.value.trim().toLowerCase();
+  const words = query.split(/\s+/).filter(Boolean);
+  const entries = searchEntries();
+  if (!words.length) {
+    hits = [...entries.filter((e) => e.kind === 'Pages'), ...entries.filter((e) => e.kind === 'Quick actions').slice(0, 4)];
+  } else {
+    hits = entries.map((e) => [score(e, words, query), e]).filter(([sc]) => sc > 0).sort((a, b) => b[0] - a[0]).slice(0, 12).map(([, e]) => e);
+    // keep each kind together, best group first
+    const kinds = [...new Set(hits.map((h) => h.kind))];
+    hits = kinds.flatMap((k) => hits.filter((h) => h.kind === k));
+  }
+  sel = 0;
+  drawResults(words[0]);
+}
+
+function drawResults(word) {
+  results.hidden = false;
+  q.setAttribute('aria-expanded', 'true');
+  if (!hits.length) { results.replaceChildren(el('div', { class: 'none' }, `Nothing matches "${q.value.trim()}". Try "gift", "timer" or "sound".`)); return; }
+  const nodes = [];
+  let last = '';
+  hits.forEach((h, i) => {
+    if (h.kind !== last) { nodes.push(el('div', { class: 'grp' }, q.value.trim() ? h.kind : i === 0 ? 'Jump to' : 'Quick actions')); last = h.kind; }
+    nodes.push(el('div', { class: `hit${i === sel ? ' sel' : ''}`, role: 'option', 'aria-selected': String(i === sel),
+      onmousemove: () => { if (sel !== i) { sel = i; drawResults(word); } },
+      onmousedown: (e) => { e.preventDefault(); choose(i); } },
+      icon(h.icon),
+      el('div', { style: 'min-width:0' }, el('div', { class: 't' }, mark(h.title, word)), h.sub ? el('div', { class: 's' }, h.sub) : null),
+      h.where ? el('span', { class: 'where' }, h.where) : el('span')));
+  });
+  results.replaceChildren(...nodes);
+  results.querySelector('.hit.sel')?.scrollIntoView({ block: 'nearest' });
+}
+
+function closeSearch() { results.hidden = true; q.setAttribute('aria-expanded', 'false'); }
+function choose(i) {
+  const h = hits[i];
+  if (!h) return;
+  q.value = '';
+  closeSearch();
+  q.blur();
+  h.run();
+}
+
+q.addEventListener('input', runSearch);
+q.addEventListener('focus', runSearch);
+q.addEventListener('blur', () => setTimeout(closeSearch, 120));
+q.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowDown') { e.preventDefault(); sel = Math.min(hits.length - 1, sel + 1); drawResults(q.value.trim().toLowerCase().split(/\s+/)[0]); }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); sel = Math.max(0, sel - 1); drawResults(q.value.trim().toLowerCase().split(/\s+/)[0]); }
+  else if (e.key === 'Enter') { e.preventDefault(); choose(sel); }
+  else if (e.key === 'Escape') { q.value = ''; closeSearch(); q.blur(); }
+});
+document.addEventListener('keydown', (e) => {
+  const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName);
+  if ((e.key === '/' && !typing) || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k')) { e.preventDefault(); q.focus(); q.select(); }
+});
+
 // ── boot ─────────────────────────────────────────────────
 (async function init() {
   [config] = await Promise.all([api('GET', '/api/config'), loadSounds(), loadGifts()]);
@@ -597,4 +781,5 @@ async function loadGifts() {
   drawGoalMini();
   renderOverlays();
   renderSettings();
+  drawSteps();
 })();
