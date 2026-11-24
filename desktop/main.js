@@ -35,6 +35,7 @@ async function start() {
   }
 
   const url = `http://127.0.0.1:${PORT}/`;
+  const os = process.platform === 'darwin' ? 'mac' : process.platform === 'win32' ? 'win' : 'linux';
   Menu.setApplicationMenu(process.platform === 'darwin' ? Menu.buildFromTemplate([
     { role: 'appMenu' }, { role: 'editMenu' }, { role: 'viewMenu' }, { role: 'windowMenu' }
   ]) : null);
@@ -48,21 +49,28 @@ async function start() {
     backgroundColor: '#000000',
     icon: path.join(__dirname, 'icon.png'),
     autoHideMenuBar: true,
+    // No white system title bar: the page draws a black one, and Windows keeps its own min/max/close buttons on top.
+    titleBarStyle: os === 'mac' ? 'hiddenInset' : 'hidden',
+    ...(os === 'mac' ? {} : { titleBarOverlay: { color: '#000000', symbolColor: '#ffffff', height: 36 } }),
     show: false,
-    webPreferences: { contextIsolation: true, sandbox: true }
+    webPreferences: { contextIsolation: true, sandbox: true, nodeIntegration: false, webviewTag: false }
   });
+  // The dashboard never needs the camera, microphone, location or notifications.
+  win.webContents.session.setPermissionRequestHandler((_wc, _perm, done) => done(false));
   win.once('ready-to-show', () => win.show());
 
   // Links to other sites (GitHub, docs) and "open overlay in new tab" go to the normal browser.
+  // Only real web links are handed to the system; nothing like file:// or custom app schemes.
+  const openOutside = (target) => { if (/^https?:\/\//i.test(target)) shell.openExternal(target); };
   win.webContents.setWindowOpenHandler(({ url: target }) => {
-    shell.openExternal(target);
+    openOutside(target);
     return { action: 'deny' };
   });
   win.webContents.on('will-navigate', (e, target) => {
-    if (!target.startsWith(url)) { e.preventDefault(); shell.openExternal(target); }
+    if (!target.startsWith(url)) { e.preventDefault(); openOutside(target); }
   });
   win.on('closed', () => { win = null; });
-  win.loadURL(url);
+  win.loadURL(`${url}?app=${os}`);
 }
 
 app.on('window-all-closed', () => app.quit());

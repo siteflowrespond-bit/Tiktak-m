@@ -5,6 +5,17 @@ let config = null;
 let sounds = []; // sound library [{ kind, name, src }]
 let gifts = []; // gift catalogue [{ name, diamonds }]
 
+// In the desktop app the window has no system title bar: draw our own black one to drag the window by.
+(function appBar() {
+  const m = /[?&]app=(win|mac|linux)\b/.exec(location.search);
+  if (!m) return;
+  document.documentElement.classList.add('in-app', `in-app-${m[1]}`);
+  const bar = document.createElement('div');
+  bar.className = 'appbar';
+  bar.innerHTML = '<img src="/logo.svg" alt=""><span>flock<b>.tt</b></span>';
+  document.body.prepend(bar);
+})();
+
 // ── helpers ──────────────────────────────────────────────
 async function api(method, url, body, raw) {
   const res = await fetch(url, {

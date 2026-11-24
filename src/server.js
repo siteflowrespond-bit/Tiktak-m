@@ -17,7 +17,27 @@ const HOST = process.env.HOST || '127.0.0.1';
 let config = loadConfig();
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
+
+// ---- Security ----
+// flock.tt listens on this computer only. Any website open in your browser can still try to talk to
+// http://127.0.0.1:8787, so requests must come from flock.tt itself (or from OBS / LIVE Studio, which send no Origin).
+const LOOPBACK = new Set(['127.0.0.1', 'localhost', '[::1]', '::1']);
+const LAN_MODE = !LOOPBACK.has(HOST);
+const hostOf = (h = '') => h.replace(/:\d+$/, '').toLowerCase();
+function trustedHost(hostHeader) {
+  // Blocks DNS rebinding (evil.example resolving to 127.0.0.1). In LAN mode the user chose to open it up.
+  return LAN_MODE || LOOPBACK.has(hostOf(hostHeader));
+}
+function trustedOrigin(origin, hostHeader) {
+  if (!origin) return true; // OBS, LIVE Studio and same-origin GETs
+  if (origin === 'null') return false;
+  try { return new URL(origin).host.toLowerCase() === String(hostHeader || '').toLowerCase(); } catch { return false; }
+}
+
+const io = new Server(server, {
+  maxHttpBufferSize: 1e5,
+  allowRequest: (req, cb) => cb(null, trustedHost(req.headers.host) && trustedOrigin(req.headers.origin, req.headers.host))
+});
 
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
 const SOUND_DIRS = { builtin: path.join(PUBLIC_DIR, 'sounds', 'builtin'), custom: path.join(DATA_DIR, 'sounds', 'custom') };
@@ -29,6 +49,35 @@ try {
   if (fs.existsSync(old) && !fs.readdirSync(SOUND_DIRS.custom).length) for (const f of fs.readdirSync(old)) fs.copyFileSync(path.join(old, f), path.join(SOUND_DIRS.custom, f));
 } catch { /* read-only install folder: nothing to move */ }
 
+app.disable('x-powered-by');
+app.use((req, res, next) => {
+  if (!trustedHost(req.headers.host)) return res.status(421).send('Misdirected request');
+  res.set({
+    'X-Content-Type-Options': 'nosniff',
+    'Referrer-Policy': 'no-referrer',
+    'Cross-Origin-Resource-Policy': 'same-origin'
+  });
+  // The dashboard can't be framed by other sites (clickjacking). Overlays stay embeddable.
+  if (!req.path.startsWith('/overlays/') && !req.path.startsWith('/sounds/')) res.set('X-Frame-Options', 'SAMEORIGIN');
+  if (req.path.startsWith('/api/')) {
+    res.set('Cache-Control', 'no-store');
+    const writes = req.method !== 'GET' && req.method !== 'HEAD';
+    if (writes && (!trustedOrigin(req.headers.origin, req.headers.host) || req.headers['sec-fetch-site'] === 'cross-site')) {
+      return res.status(403).json({ error: 'Blocked: this request did not come from flock.tt' });
+    }
+  }
+  next();
+});
+// A runaway script (or a flood) gets slowed down instead of freezing the app.
+const hits = new Map();
+setInterval(() => hits.clear(), 60_000).unref();
+app.use('/api/', (req, res, next) => {
+  const key = req.socket.remoteAddress || '?';
+  const n = (hits.get(key) || 0) + 1;
+  hits.set(key, n);
+  if (n > 1200) return res.status(429).json({ error: 'Too many requests, slow down' });
+  next();
+});
 app.use(express.json({ limit: '1mb' }));
 app.use('/sounds/custom', express.static(SOUND_DIRS.custom));
 app.use(express.static(PUBLIC_DIR));

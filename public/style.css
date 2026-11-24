@@ -539,3 +539,18 @@ input[type=checkbox], input[type=range] { accent-color: #fff; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* ── desktop app title bar (black, replaces the white Windows one) ── */
+.appbar { display: none; }
+.in-app .appbar { display: flex; position: fixed; top: 0; left: 0; right: 0; z-index: 1000; height: 36px; align-items: center; gap: 9px; padding: 0 150px 0 14px;
+  background: #000; border-bottom: 1px solid #1c1c1c; color: #fff; font: 600 13px var(--sans); letter-spacing: -.02em; -webkit-app-region: drag; user-select: none; }
+.in-app-mac .appbar { padding-left: 84px; justify-content: center; }
+.appbar img { width: 18px; height: 18px; border-radius: 4px; }
+.appbar b { font-weight: 600; color: #8a8a8a; }
+.in-app body { padding-top: 36px; box-sizing: border-box; }
+.in-app .app { min-height: calc(100vh - 36px); }
+.in-app .side { top: 36px; height: calc(100vh - 36px); }
+.in-app .top { top: 36px; }
+.in-app .ed-lib, .in-app .ed-insp { top: 108px; max-height: calc(100vh - 126px); }
+.in-app body.ed-full .ed-stage-wrap, .in-app body.ed-full .ed-lib, .in-app body.ed-full .ed-insp { max-height: calc(100vh - 98px); }
+.in-app body.ed-full .ed-stage-wrap { height: calc(100vh - 98px); }
