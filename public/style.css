@@ -1,6 +1,6 @@
-/* murmura dashboard */
+/* flockt dashboard */
 :root {
-  /* ── Murmura Dusk ──
+  /* ── Flockt Dusk ──
      The sky at the moment a murmuration rises: twilight navy above, afterglow peach at the horizon.
      One signature colour (afterglow) for live, primary actions and focus; event colours are dusk tones
      tuned to the same brightness so they read as one family on navy. */
@@ -400,7 +400,7 @@ body.ed-bare .ed { grid-template-columns: 1fr !important; }
 #obsDetail.err { color: var(--amber); }
 @media (max-width: 560px) { .obsr-line .row > .grow, .obsr-line .row > div[style*="flex:0 0 160px"] { flex: 1 1 100% !important; } }
 
-/* ═══════════════════ Murmura brand layer ═══════════════════ */
+/* ═══════════════════ Flockt brand layer ═══════════════════ */
 body {
   font-family: var(--sans);
   background:

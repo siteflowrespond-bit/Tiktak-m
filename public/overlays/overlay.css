@@ -1,4 +1,4 @@
-/* Murmura overlay theme. Pick one per overlay link with ?theme=dusk|mint|candy|mono (dusk is the default).
+/* Flockt overlay theme. Pick one per overlay link with ?theme=dusk|mint|candy|mono (dusk is the default).
    Backgrounds stay transparent for TikTok LIVE Studio / OBS. */
 @import url("https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700&family=Manrope:wght@500;600;700;800&display=swap");
 
@@ -50,7 +50,7 @@ body { font-family: var(--tt-font); color: #fff; -webkit-font-smoothing: antiali
 .avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: var(--tt-a); flex: none; color: #fff; text-shadow: none;
   display: inline-flex; align-items: center; justify-content: center; font-weight: 800; box-shadow: 0 0 0 2px rgba(255,255,255,.85); }
 
-/* the Murmura panel: frosted ink with a small accent "tick" at the top-left */
+/* the Flockt panel: frosted ink with a small accent "tick" at the top-left */
 .panel { position: relative; background: var(--tt-panel); color: var(--tt-text); border-radius: 14px; border: 1px solid var(--tt-line);
   box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 14px 34px -16px rgba(0,0,0,.7); }
 /* signature: three birds flying off the top-left corner of every panel */
