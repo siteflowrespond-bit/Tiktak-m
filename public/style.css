@@ -324,3 +324,25 @@ label.check { display: inline-flex; align-items: center; gap: 8px; cursor: point
 .ed-banner { display: flex; align-items: center; gap: 12px; justify-content: space-between; flex-wrap: wrap; padding: 12px 14px; margin-bottom: 14px; }
 @media (max-width: 1150px) { .ed { grid-template-columns: 200px minmax(0, 1fr); } .ed-insp { grid-column: 1 / -1; position: static; max-height: none; } }
 @media (max-width: 760px) { .ed { grid-template-columns: 1fr; } .ed-lib { position: static; max-height: 260px; } .ed-stage-wrap { height: 70vh; min-height: 420px; } }
+
+/* editor: use the full width of the window */
+.content:has(#page-layout.active) { max-width: none; }
+.ed-zone.ed-safe { background: none; border: 2px dashed rgba(255,200,87,.45); color: rgba(255,200,87,.7); }
+.ed-zone.ed-mid { background: none; border: 0; border-left: 1px dashed rgba(255,255,255,.18); border-top: 1px dashed rgba(255,255,255,.18); padding: 0; }
+#edPreview.on { background: var(--text); color: #111; }
+/* preview: show the canvas exactly as viewers see it */
+.ed-preview .ed-w { outline: none; }
+.ed-preview .ed-w .tag, .ed-preview .ed-w .h, .ed-preview .ed-zone, .ed-preview .ed-guide { display: none !important; }
+.ed-preview .ed-w.hidden-w { display: none; }
+.ed-preview { background: #000 !important; }
+/* full screen editor */
+body.ed-full .side, body.ed-full .top, body.ed-full .demo-note, body.ed-full .ed-link, body.ed-full .ed-help { display: none !important; }
+body.ed-full .app { grid-template-columns: 1fr; }
+body.ed-full .content { padding: 8px 10px; max-width: none; }
+body.ed-full .ed-bar { margin-bottom: 8px; }
+body.ed-full .ed { grid-template-columns: 200px minmax(0, 1fr) 250px; }
+body.ed-full .ed-stage-wrap { height: calc(100vh - 62px); min-height: 0; }
+body.ed-full .ed-lib, body.ed-full .ed-insp { top: 8px; max-height: calc(100vh - 62px); }
+body.ed-bare .ed-lib, body.ed-bare .ed-insp { display: none; }
+body.ed-bare .ed { grid-template-columns: 1fr !important; }
+@media (max-width: 1150px) { body.ed-full .ed { grid-template-columns: 180px minmax(0, 1fr); } body.ed-full .ed-insp { display: none; } }

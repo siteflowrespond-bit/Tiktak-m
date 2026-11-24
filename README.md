@@ -53,9 +53,13 @@ Instead of adding a separate source for every overlay, open **Layout editor**:
 3. The shaded areas show roughly where TikTok's own buttons and comments cover the screen, so you can keep things out of the way.
 4. Press **Save** and add the one link, `/overlays/scene.html?layout=main`, to TikTok LIVE Studio or OBS. Later changes show up on stream as soon as you save, with no need to touch the source again.
 
+**Landscape:** pick *Landscape · 1920 × 1080* to build for a horizontal stream. Switching keeps every overlay's size and moves it to the same spot on the new shape; full-screen effects refill the canvas. An empty layout offers a ready-made starter set for its orientation, and the guides switch to a 5% safe area.
+
+**Full screen:** press **Full screen** (or F) to give the whole window to the canvas. H hides the side panels, P shows a clean preview exactly as viewers will see it, Esc leaves full screen.
+
 You can keep several layouts (for example one for chatting and one for games) and switch between them by changing the link.
 
-Shortcuts: arrow keys nudge (Shift = 10 px), Delete removes, Ctrl+D duplicates, Ctrl+Z undoes, Ctrl+S saves, Esc deselects. Hold Alt while dragging to turn off snapping.
+Shortcuts: arrow keys nudge (Shift = 10 px), Delete removes, Ctrl+D duplicates, Ctrl+Z undoes, Ctrl+S saves, Esc deselects, F full screen, H panels, P preview. Hold Alt while dragging to turn off snapping.
 
 ## Sounds
 

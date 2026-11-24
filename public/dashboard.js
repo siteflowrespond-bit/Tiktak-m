@@ -78,7 +78,7 @@ function showPage(page) {
 }
 $('#nav').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) showPage(b.dataset.page); });
 try { showPage(localStorage.getItem('page')); } catch { showPage('live'); }
-$('#foot').textContent = 'v0.7 · / to search';
+$('#foot').textContent = 'v0.8 · / to search';
 
 // ── connection ───────────────────────────────────────────
 let status = 'disconnected';

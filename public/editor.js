@@ -8,6 +8,8 @@ const ED_SIZES = {
   'topgift.html': [420, 420], 'emojis.html': [1080, 900], 'celebrate.html': [1080, 1920], 'stats.html': [900, 140], 'gifters.html': [520, 330],
   'counter.html': [420, 130], 'timer.html': [600, 240], 'goal.html': [900, 110]
 };
+// Overlays that are effects over the whole picture.
+const ED_FULL = new Set(['celebrate.html']);
 // Approximate areas the TikTok LIVE app draws on top of a phone stream (1080 x 1920).
 const TIKTOK_ZONES = [
   { x: 0, y: 0, w: 1080, h: 210, label: 'Profile, viewers, close' },
@@ -51,10 +53,11 @@ function edRenderBar() {
 $e('#edLayout').addEventListener('change', (e) => { ed.id = e.target.value; ed.sel = null; ed.history = []; edClearFrames(); edRender(); });
 $e('#edNew').addEventListener('click', () => {
   const n = edLayouts().length + 1;
-  const l = { id: `layout-${Date.now().toString(36)}`, name: `Layout ${n}`, width: 1080, height: 1920, widgets: [] };
+  const cur = edCur();
+  const l = { id: `layout-${Date.now().toString(36)}`, name: `Layout ${n}`, width: cur.width, height: cur.height, widgets: [] };
   edLayouts().push(l);
   ed.id = l.id; ed.sel = null; ed.history = []; edClearFrames(); edDirty(); edRender();
-  toast('New layout. Add overlays from the list on the left.');
+  toast('New layout. Add overlays from the list, or use "Add a starter set".');
 });
 $e('#edRename').addEventListener('click', () => { ed.sel = null; edRender(); const i = $e('#edName'); i?.focus(); i?.select(); });
 $e('#edDelete').addEventListener('click', () => {
@@ -66,12 +69,59 @@ $e('#edDelete').addEventListener('click', () => {
 $e('#edSize').addEventListener('change', (e) => {
   const [W, H] = e.target.value.split('x').map(Number);
   const l = edCur();
+  if (W === l.width && H === l.height) return;
   edSnapshot();
-  const fx = W / l.width, fy = H / l.height;
-  for (const w of l.widgets) { w.x = Math.round(w.x * fx); w.w = Math.round(w.w * fx); w.y = Math.round(w.y * fy); w.h = Math.round(w.h * fy); }
-  l.width = W; l.height = H;
+  edResizeCanvas(l, W, H);
   edDirty(); edRender();
+  toast(W > H ? 'Landscape. Overlays kept their size and moved to the same spots.' : 'Portrait. Overlays kept their size and moved to the same spots.');
 });
+
+/** Change the canvas size without stretching overlays: keep their size, move their centres proportionally. */
+function edResizeCanvas(l, W, H) {
+  const u = Math.min(W, H) / Math.min(l.width, l.height);
+  for (const w of l.widgets) {
+    if (w.x <= 0 && w.y <= 0 && w.w >= l.width && w.h >= l.height) { Object.assign(w, { x: 0, y: 0, w: W, h: H }); continue; }
+    const cx = ((w.x + w.w / 2) / l.width) * W, cy = ((w.y + w.h / 2) / l.height) * H;
+    const nw = Math.min(W, Math.round(w.w * u)), nh = Math.min(H, Math.round(w.h * u));
+    w.w = nw; w.h = nh;
+    w.x = Math.round(Math.max(0, Math.min(W - nw, cx - nw / 2)));
+    w.y = Math.round(Math.max(0, Math.min(H - nh, cy - nh / 2)));
+  }
+  l.width = W; l.height = H;
+}
+
+// Ready-made arrangements for each orientation.
+const ED_STARTERS = {
+  portrait: [
+    ['Celebrations', 'celebrate.html?min=100', 0, 0, 1080, 1920],
+    ['Like goal', 'goal.html?goal=likes', 90, 240, 900, 110],
+    ['Alerts', 'alerts.html', 0, 470, 1080, 480],
+    ['Gift combos', 'combos.html', 20, 960, 640, 320],
+    ['Gift jar', 'jar.html?goal=1000', 700, 840, 360, 460]
+  ],
+  landscape: [
+    ['Celebrations', 'celebrate.html?min=100', 0, 0, 1920, 1080],
+    ['Stats bar', 'stats.html', 30, 24, 900, 140],
+    ['Like goal', 'goal.html?goal=likes', 990, 30, 900, 110],
+    ['Alerts', 'alerts.html', 420, 300, 1080, 480],
+    ['Gift combos', 'combos.html', 30, 720, 640, 330],
+    ['Chat', 'chat.html?max=6', 30, 300, 560, 420],
+    ['Gift jar', 'jar.html?goal=1000', 1520, 560, 380, 500]
+  ]
+};
+function edStarter() {
+  const l = edCur();
+  edSnapshot();
+  const set = l.width > l.height ? ED_STARTERS.landscape : ED_STARTERS.portrait;
+  const base = l.width > l.height ? [1920, 1080] : [1080, 1920];
+  const kx = l.width / base[0], ky = l.height / base[1];
+  for (const [name, src, x, y, w, h] of set) {
+    l.widgets.push({ id: edUid(), name, src, x: Math.round(x * kx), y: Math.round(y * ky), w: Math.round(w * kx), h: Math.round(h * ky), hidden: false });
+  }
+  ed.sel = null;
+  edDirty(); edRender();
+}
+
 $e('#edGuides').addEventListener('change', () => edRenderStage());
 $e('#edUndo').addEventListener('click', edUndo);
 $e('#edCopy').addEventListener('click', () => { copyText($e('#edUrl').value, $e('#edUrl')); try { localStorage.setItem('usedOverlay', '1'); } catch {} });
@@ -96,11 +146,13 @@ function edAdd(item) {
   const l = edCur();
   const src = item.path.replace(/^\/overlays\//, '');
   let [w, h] = ED_SIZES[fileOf(src)] || [600, 400];
-  const k = l.width / 1080;
-  w = Math.min(l.width, Math.round(w * k)); h = Math.min(l.height, Math.round(h * (l.height / 1920)));
+  const u = Math.min(l.width, l.height) / 1080; // sizes are designed for the short side being 1080
+  w = Math.min(l.width, Math.round(w * u)); h = Math.min(l.height, Math.round(h * u));
+  if (ED_FULL.has(fileOf(src))) { w = l.width; h = l.height; }
   edSnapshot();
   const n = l.widgets.length;
-  const x = Math.round((l.width - w) / 2 + ((n % 5) - 2) * 20), y = Math.round(Math.max(0, (l.height - h) / 2 - l.height * 0.12 + ((n % 5) - 2) * 20));
+  const lift = l.height > l.width ? l.height * 0.12 : 0;
+  const x = Math.round((l.width - w) / 2 + ((n % 5) - 2) * 20), y = Math.round(Math.max(0, (l.height - h) / 2 - lift + ((n % 5) - 2) * 20));
   const wd = { id: edUid(), name: item.name, src, x: Math.max(0, Math.min(l.width - w, x)), y: Math.max(0, Math.min(l.height - h, y)), w, h, hidden: false };
   l.widgets.push(wd);
   ed.sel = wd.id;
@@ -153,6 +205,12 @@ function edRenderStage() {
   if ($e('#edGuides').checked && l.height > l.width) {
     const kx = l.width / 1080, ky = l.height / 1920;
     for (const z of TIKTOK_ZONES) st.append(el('div', { class: 'ed-zone', style: `left:${z.x * kx}px;top:${z.y * ky}px;width:${z.w * kx}px;height:${z.h * ky}px` }, z.label));
+  } else if ($e('#edGuides').checked) {
+    // Landscape: a 5% safe margin (TVs and players can crop the edges) and the centre lines.
+    const mx = Math.round(l.width * 0.05), my = Math.round(l.height * 0.05);
+    st.append(el('div', { class: 'ed-zone ed-safe', style: `left:${mx}px;top:${my}px;width:${l.width - mx * 2}px;height:${l.height - my * 2}px` }, 'Safe area: keep text inside'));
+    st.append(el('div', { class: 'ed-zone ed-mid', style: `left:${l.width / 2}px;top:0;width:0;height:${l.height}px` }));
+    st.append(el('div', { class: 'ed-zone ed-mid', style: `left:0;top:${l.height / 2}px;width:${l.width}px;height:0` }));
   }
   edFit();
 }
@@ -166,7 +224,8 @@ function edRenderInsp() {
     name.addEventListener('input', () => { l.name = name.value || 'Untitled'; $e('#edLayout').selectedOptions[0].textContent = l.name; edDirty(); });
     parts.push(el('div', { class: 'panel-head' }, el('h2', {}, 'Layout')),
       el('div', { class: 'panel-body' }, el('label', { class: 'f' }, el('span', {}, 'Name'), name),
-        el('p', { class: 'note', style: 'margin:10px 0 0' }, l.widgets.length ? 'Click an overlay on the canvas to edit it.' : 'Add overlays from the list on the left.')));
+        el('p', { class: 'note', style: 'margin:10px 0 0' }, l.widgets.length ? 'Click an overlay on the canvas to edit it.' : 'Add overlays from the list on the left, or start from a ready-made set.'),
+        l.widgets.length ? null : el('button', { class: 'btn red sm', style: 'margin-top:10px', onclick: edStarter }, icon('plus'), `Add a starter set (${l.width > l.height ? 'landscape' : 'portrait'})`)));
   } else {
     const num = (key, label) => {
       const i = el('input', { type: 'number', value: w[key] });
@@ -309,6 +368,13 @@ document.addEventListener('keydown', (e) => {
   const mod = e.ctrlKey || e.metaKey;
   if (mod && e.key.toLowerCase() === 'z') { e.preventDefault(); edUndo(); return; }
   if (mod && e.key.toLowerCase() === 's') { e.preventDefault(); $e('#edSave').click(); return; }
+  if (!mod && !e.altKey) {
+    const k = e.key.toLowerCase();
+    if (k === 'f') { e.preventDefault(); $e('#edFull').click(); return; }
+    if (k === 'p') { e.preventDefault(); $e('#edPreview').click(); return; }
+    if (k === 'h') { e.preventDefault(); $e('#edPanels').click(); return; }
+  }
+  if (e.key === 'Escape' && !edSel() && document.body.classList.contains('ed-full')) { edSetFull(false); return; }
   const w = edSel(); if (!w) return;
   if (mod && e.key.toLowerCase() === 'd') { e.preventDefault(); edDuplicate(); return; }
   if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); edDelete(); return; }
@@ -324,6 +390,34 @@ document.addEventListener('keydown', (e) => {
 });
 
 function edRender() { edRenderBar(); edRenderStage(); edRenderInsp(); }
+
+// ── full screen, panels and preview ──
+function edSetFull(on) {
+  document.body.classList.toggle('ed-full', on);
+  $e('#edFull').replaceChildren(icon(on ? 'shrink' : 'expand'), on ? 'Exit full screen' : 'Full screen');
+  try {
+    if (on && !document.fullscreenElement) document.documentElement.requestFullscreen?.().catch(() => {});
+    if (!on && document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
+  } catch {}
+  requestAnimationFrame(edFit);
+}
+function edSetPanels(show) {
+  document.body.classList.toggle('ed-bare', !show);
+  $e('#edPanels').replaceChildren(icon('panels'), show ? 'Hide panels' : 'Show panels');
+  requestAnimationFrame(edFit);
+}
+function edSetPreview(on) {
+  $e('#edStage').classList.toggle('ed-preview', on);
+  $e('#edPreview').classList.toggle('on', on);
+  if (on) { ed.sel = null; edRenderStage(); edRenderInsp(); }
+}
+$e('#edFull').addEventListener('click', () => edSetFull(!document.body.classList.contains('ed-full')));
+$e('#edPanels').addEventListener('click', () => edSetPanels(document.body.classList.contains('ed-bare')));
+$e('#edPreview').addEventListener('click', () => edSetPreview(!$e('#edStage').classList.contains('ed-preview')));
+document.addEventListener('fullscreenchange', () => {
+  // leaving the browser's full screen (Esc) also leaves the editor's full screen mode
+  if (!document.fullscreenElement && document.body.classList.contains('ed-full')) edSetFull(false);
+});
 
 function edOpenLayout(id) { ed.id = id; ed.sel = null; ed.history = []; edClearFrames(); edRender(); }
 
