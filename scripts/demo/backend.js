@@ -1,4 +1,4 @@
-/* Demo backend: runs the real Flockt engine in the browser instead of on a server.
+/* Demo backend: runs the real flock.tt engine in the browser instead of on a server.
    Replaces fetch('/api/...') and io() so the dashboard works without Node.
    Engine, simulator and default config code are inserted by scripts/build-demo.js. */
 (function () {
@@ -57,10 +57,10 @@
   const fakeObs = {
     status: 'disconnected', detail: '', current: 'Main',
     scenes: [
-      { name: 'Main', sources: ['Webcam', 'Flockt layout', 'Confetti video', 'Mic'] },
-      { name: 'Just chatting', sources: ['Webcam (big)', 'Flockt layout'] },
-      { name: 'Gaming', sources: ['Game capture', 'Webcam (small)', 'Flockt layout'] },
-      { name: 'Party', sources: ['Disco lights', 'Webcam', 'Flockt layout'] },
+      { name: 'Main', sources: ['Webcam', 'flock.tt layout', 'Confetti video', 'Mic'] },
+      { name: 'Just chatting', sources: ['Webcam (big)', 'flock.tt layout'] },
+      { name: 'Gaming', sources: ['Game capture', 'Webcam (small)', 'flock.tt layout'] },
+      { name: 'Party', sources: ['Disco lights', 'Webcam', 'flock.tt layout'] },
       { name: 'Be right back', sources: ['BRB screen', 'Music'] }
     ],
     inputs: ['Mic', 'Desktop audio', 'Music']

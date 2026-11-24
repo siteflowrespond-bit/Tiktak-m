@@ -1,4 +1,4 @@
-# Flockt
+# flock.tt
 
 A TikTok LIVE interaction toolkit in the spirit of TikFinity. It runs on your own computer and does four things:
 
@@ -20,7 +20,7 @@ Open **http://localhost:8787**, type your TikTok username, and click **Connect**
 
 ## Look and themes
 
-The look is **Flockt Dusk**, taken from the sky at the moment a murmuration of starlings rises: twilight navy above, an *afterglow* peach at the horizon (the signature colour for live, buttons and focus), and dusk tones for events: sunlit gold (coins), rosé (likes), tide blue (shares), lavender (subscribes) and sage (connected). Headlines and numbers use Unbounded, text uses Manrope, data uses IBM Plex Mono. The logo is a flock of birds swooping across a dusk sky; it drifts while you're live. Overlay panels carry three small birds on their top-left corner.
+The look is **flock.tt Dusk**, taken from the sky at the moment a murmuration of starlings rises: twilight navy above, an *afterglow* peach at the horizon (the signature colour for live, buttons and focus), and dusk tones for events: sunlit gold (coins), rosé (likes), tide blue (shares), lavender (subscribes) and sage (connected). Headlines and numbers use Unbounded, text uses Manrope, data uses IBM Plex Mono. The logo is a flock of birds swooping across a dusk sky; it drifts while you're live. Overlay panels carry three small birds on their top-left corner.
 
 Every overlay comes in four themes. Add `?theme=` to its link, pick one on the Overlays page, or set it per overlay (or for a whole layout) in the Layout editor:
 
@@ -78,16 +78,16 @@ Shortcuts: arrow keys nudge (Shift = 10 px), Delete removes, Ctrl+D duplicates, 
 
 ## OBS
 
-Flockt can control OBS Studio (version 28 or newer) through OBS's built-in WebSocket server.
+flock.tt can control OBS Studio (version 28 or newer) through OBS's built-in WebSocket server.
 
 1. In OBS: **Tools → WebSocket Server Settings**, tick **Enable WebSocket server** (port 4455), click **Show Connect Info** and copy the password.
-2. In Flockt: open **OBS**, paste the password and click **Connect to OBS**. Tick "Connect when Flockt starts" to do this automatically.
-3. Add **OBS actions**: when something happens (a gift, a coin range, a follow, a share, likes, a chat command, a join or a subscribe), Flockt can
+2. In flock.tt: open **OBS**, paste the password and click **Connect to OBS**. Tick "Connect when flock.tt starts" to do this automatically.
+3. Add **OBS actions**: when something happens (a gift, a coin range, a follow, a share, likes, a chat command, a join or a subscribe), flock.tt can
    - switch to a scene, and optionally switch back after some seconds
    - show, hide or toggle a source, and optionally undo it after some seconds
    - mute, unmute or toggle an audio source
 
-The **Scenes** panel lets you switch scenes by hand, and **What OBS did** lists every change Flockt made. The OBS password stays on your computer: it's saved in `data/config.json` and never sent to the browser or the overlays.
+The **Scenes** panel lets you switch scenes by hand, and **What OBS did** lists every change flock.tt made. The OBS password stays on your computer: it's saved in `data/config.json` and never sent to the browser or the overlays.
 
 OBS on another computer? Use its address, e.g. `ws://192.168.1.20:4455`, and make sure your firewall allows the port.
 
