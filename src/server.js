@@ -7,6 +7,7 @@ import { Server } from 'socket.io';
 import { loadConfig, saveConfig } from './config.js';
 import { TikTokSource } from './tiktok.js';
 import { Engine } from './engine.js';
+import { ObsLink } from './obs.js';
 import { simulate, SIM_GIFTS } from './simulate.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -40,14 +41,22 @@ engine.on('tts', (t) => io.emit('tts', t));
 engine.on('sound', (snd) => io.emit('sound', snd));
 engine.on('timer', (t) => io.emit('timer', t));
 
+// ---- OBS ----
+const obs = new ObsLink();
+obs.on('status', (st) => { io.emit('obsStatus', st); log(`OBS: ${st.status} ${st.detail || ''}`); });
+obs.on('log', (entry) => io.emit('obsLog', entry));
+engine.on('obs', ({ action, why }) => obs.run(action, why).catch((e) => obs.log(`Could not run "${why}": ${e.message}`)));
+if (config.obs?.autoConnect) obs.connect(config.obs).catch(() => {});
+
 function log(msg) {
   console.log(`[${new Date().toLocaleTimeString()}] ${msg}`);
 }
 
 function publicConfig() {
-  // Never ship the API key to overlays.
+  // Never ship secrets (API key, OBS password) to the browser or overlays.
   const { signApiKey, ...rest } = config;
-  return { ...rest, hasSignApiKey: Boolean(signApiKey) };
+  const { password, ...obsRest } = config.obs || {};
+  return { ...rest, obs: obsRest, hasSignApiKey: Boolean(signApiKey), hasObsPassword: Boolean(password) };
 }
 
 io.on('connection', (socket) => {
@@ -55,6 +64,7 @@ io.on('connection', (socket) => {
   socket.emit('config', publicConfig());
   socket.emit('stats', engine.snapshot());
   socket.emit('timer', engine.timerState());
+  socket.emit('obsStatus', { status: obs.status, detail: obs.detail });
 });
 
 // ---- REST API used by the dashboard ----
@@ -98,6 +108,22 @@ app.post('/api/play-sound', (req, res) => {
   res.json({ ok: true });
 });
 
+// ---- OBS ----
+app.get('/api/obs', async (req, res) => {
+  try { res.json({ status: obs.status, detail: obs.detail, ...(await obs.inventory()) }); } catch (e) { res.json({ status: obs.status, detail: e.message, scenes: [], inputs: [] }); }
+});
+app.post('/api/obs/connect', async (req, res) => {
+  const { url, password, autoConnect } = req.body || {};
+  config.obs = { ...config.obs, url: url || config.obs.url, autoConnect: autoConnect ?? config.obs.autoConnect, password: password || config.obs.password || '' };
+  saveConfig(config);
+  io.emit('config', publicConfig());
+  try { await obs.connect(config.obs); res.json({ ok: true, ...(await obs.inventory()) }); } catch (e) { res.status(502).json({ error: e.message }); }
+});
+app.post('/api/obs/disconnect', async (req, res) => { await obs.disconnect(); res.json({ ok: true }); });
+app.post('/api/obs/run', async (req, res) => {
+  try { await obs.run(req.body?.action || {}, 'test'); res.json({ ok: true }); } catch (e) { res.status(400).json({ error: e.message }); }
+});
+
 // ---- Subathon timer ----
 app.post('/api/timer', (req, res) => {
   const { action, seconds } = req.body || {};
@@ -110,6 +136,8 @@ app.put('/api/config', (req, res) => {
   const incoming = req.body || {};
   const signApiKey = incoming.signApiKey ? incoming.signApiKey : config.signApiKey;
   delete incoming.hasSignApiKey;
+  delete incoming.hasObsPassword;
+  if (incoming.obs) incoming.obs = { ...config.obs, ...incoming.obs, password: incoming.obs.password || config.obs?.password || '' };
   config = { ...config, ...incoming, signApiKey };
   saveConfig(config);
   io.emit('config', publicConfig());

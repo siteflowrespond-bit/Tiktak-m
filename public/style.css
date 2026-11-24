@@ -346,3 +346,31 @@ body.ed-full .ed-lib, body.ed-full .ed-insp { top: 8px; max-height: calc(100vh -
 body.ed-bare .ed-lib, body.ed-bare .ed-insp { display: none; }
 body.ed-bare .ed { grid-template-columns: 1fr !important; }
 @media (max-width: 1150px) { body.ed-full .ed { grid-template-columns: 180px minmax(0, 1fr); } body.ed-full .ed-insp { display: none; } }
+
+/* OBS */
+.how-obs { margin-top: 12px; font-size: 13px; color: var(--dim); }
+.how-obs summary { cursor: pointer; color: var(--text); }
+.how-obs ol { margin: 8px 0 0; padding-left: 20px; line-height: 1.7; }
+.how-obs code { background: var(--raised); padding: 1px 5px; border-radius: 3px; color: var(--text); }
+.scenes { display: flex; flex-wrap: wrap; gap: 6px; }
+.scenes .btn.live { background: var(--red); border-color: var(--red); color: #fff; }
+.obs-log { max-height: 340px; overflow-y: auto; font-size: 13px; }
+.obs-log .e { display: grid; grid-template-columns: 50px 1fr; gap: 8px; padding: 5px 14px; border-bottom: 1px solid #1e1e1e; }
+.obs-log .e .t { font: 12px var(--mono); color: var(--faint); }
+.obs-log .e.err { color: var(--amber); }
+.obsr { padding: 12px 14px; border-bottom: 1px solid var(--line); display: grid; gap: 8px; }
+.obsr:last-child { border-bottom: 0; }
+.obsr.off > :not(.obsr-top) { opacity: .45; }
+.obsr-top { display: flex; gap: 10px; align-items: center; }
+.obsr-top input[type=text] { font-weight: 600; flex: 1; min-width: 0; }
+.obsr-line { display: grid; grid-template-columns: 90px minmax(0, 1fr); gap: 8px; align-items: center; }
+.obsr-line > span { color: var(--dim); font-size: 12.5px; }
+.obsr-line .row { flex-wrap: nowrap; }
+.obsr-line .row > * { min-width: 0; }
+.obsr input[type=number] { width: 72px; flex: none; }
+.obs-off-note { padding: 10px 14px; background: rgba(255,200,87,.07); border-bottom: 1px solid var(--line); color: var(--amber); font-size: 13px; }
+@media (max-width: 560px) { .obsr-line { grid-template-columns: 1fr; } .obsr-line .row { flex-wrap: wrap; } }
+#obsPill.connected { background: var(--green); border-color: var(--green); color: #111; }
+#obsPill.connected i { background: #111; animation: none; }
+#obsDetail.err { color: var(--amber); }
+@media (max-width: 560px) { .obsr-line .row > .grow, .obsr-line .row > div[style*="flex:0 0 160px"] { flex: 1 1 100% !important; } }

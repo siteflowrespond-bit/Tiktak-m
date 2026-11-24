@@ -61,6 +61,21 @@ You can keep several layouts (for example one for chatting and one for games) an
 
 Shortcuts: arrow keys nudge (Shift = 10 px), Delete removes, Ctrl+D duplicates, Ctrl+Z undoes, Ctrl+S saves, Esc deselects, F full screen, H panels, P preview. Hold Alt while dragging to turn off snapping.
 
+## OBS
+
+Tiktak can control OBS Studio (version 28 or newer) through OBS's built-in WebSocket server.
+
+1. In OBS: **Tools → WebSocket Server Settings**, tick **Enable WebSocket server** (port 4455), click **Show Connect Info** and copy the password.
+2. In Tiktak: open **OBS**, paste the password and click **Connect to OBS**. Tick "Connect when Tiktak starts" to do this automatically.
+3. Add **OBS actions**: when something happens (a gift, a coin range, a follow, a share, likes, a chat command, a join or a subscribe), Tiktak can
+   - switch to a scene, and optionally switch back after some seconds
+   - show, hide or toggle a source, and optionally undo it after some seconds
+   - mute, unmute or toggle an audio source
+
+The **Scenes** panel lets you switch scenes by hand, and **What OBS did** lists every change Tiktak made. The OBS password stays on your computer: it's saved in `data/config.json` and never sent to the browser or the overlays.
+
+OBS on another computer? Use its address, e.g. `ws://192.168.1.20:4455`, and make sure your firewall allows the port.
+
 ## Sounds
 
 The **Sounds** page maps events to sounds: a specific gift, a coin range, follows, shares, likes, chat commands, joins or subscribes. Each sound action has its own volume and cooldown. Gift sounds can play once per gift in a combo (5 Roses = 5 pops, capped at 10).
@@ -100,7 +115,7 @@ TikTok LIVE ──► src/tiktok.js ──► src/engine.js ──► Socket.IO 
 
 - Keystroke and mouse actions for games (gift → key press)
 - Wheel of fortune and polls
-- Minecraft, Streamer.bot and OBS WebSocket integrations
+- Minecraft and Streamer.bot integrations
 - Viewer points and a leaderboard that persist across streams
 - Overlay style editor (fonts, colors and positions)
 - Saved overlay presets per game or stream type

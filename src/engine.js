@@ -74,6 +74,7 @@ export class Engine extends EventEmitter {
     if (evt.type === 'giftStreak') return; // actions run once, when the combo ends
     this.#runAlertRules(evt);
     this.#runSoundRules(evt);
+    this.#runObsRules(evt);
     this.#chatTts(evt);
   }
 
@@ -108,6 +109,14 @@ export class Engine extends EventEmitter {
       if (!rule.enabled || !rule.sound || !matches(rule.trigger, evt) || !this.#cooldownOk(rule.id, rule.cooldown)) continue;
       const times = rule.repeat && evt.gift ? Math.min(evt.gift.count, 10) : 1;
       this.emit('sound', { src: rule.sound, volume: (Number(rule.volume) || 1) * sounds.volume, times });
+    }
+  }
+
+  #runObsRules(evt) {
+    const rules = this.getConfig().obs?.rules || [];
+    for (const rule of rules) {
+      if (!rule.enabled || !rule.action?.type || !matches(rule.trigger, evt) || !this.#cooldownOk(rule.id, rule.cooldown)) continue;
+      this.emit('obs', { action: rule.action, why: `${rule.name || 'OBS action'}: ${evt.user?.nickname || evt.type}` });
     }
   }
 

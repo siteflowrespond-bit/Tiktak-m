@@ -68,7 +68,7 @@ const EVENTS = {
 };
 
 // ── navigation ───────────────────────────────────────────
-const TITLES = { live: 'Live', layout: 'Layout editor', actions: 'Alerts', sounds: 'Sounds', goals: 'Goals & timer', overlays: 'Overlays', settings: 'Settings' };
+const TITLES = { live: 'Live', layout: 'Layout editor', obs: 'OBS', actions: 'Alerts', sounds: 'Sounds', goals: 'Goals & timer', overlays: 'Overlays', settings: 'Settings' };
 function showPage(page) {
   if (!TITLES[page]) page = 'live';
   document.querySelectorAll('#nav button').forEach((b) => b.classList.toggle('active', b.dataset.page === page));
@@ -78,7 +78,7 @@ function showPage(page) {
 }
 $('#nav').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) showPage(b.dataset.page); });
 try { showPage(localStorage.getItem('page')); } catch { showPage('live'); }
-$('#foot').textContent = 'v0.8 · / to search';
+$('#foot').textContent = 'v0.9 · / to search';
 
 // ── connection ───────────────────────────────────────────
 let status = 'disconnected';
@@ -628,6 +628,7 @@ const PAGE_INFO = {
   live: ['Live', 'Activity, stats, test events', 'live', 'home dashboard activity feed log chat viewers'],
   overlays: ['Overlays', 'Links for TikTok LIVE Studio and OBS', 'layers', 'widgets browser source link obs studio'],
   layout: ['Layout editor', 'Arrange overlays and use one link', 'grid', 'scene editor canvas arrange position drag one link combine'],
+  obs: ['OBS', 'Connect OBS, switch scenes, show sources', 'obs', 'obs studio websocket scene source mute camera remote streamlabs'],
   actions: ['Alerts', 'Pop-ups when viewers do things', 'zap', 'alert actions events notifications popup'],
   sounds: ['Sounds', 'Sound actions, library, text-to-speech', 'sound', 'audio sfx soundboard volume tts voice'],
   goals: ['Goals & timer', 'Goal bars and the subathon timer', 'clock', 'goal target subathon countdown timer'],
@@ -655,6 +656,7 @@ function searchEntries() {
       goTo('overlays', () => document.querySelector(`[data-ov="${CSS.escape(o.path)}"]`));
     } });
   }
+  for (const r of config.obs?.rules || []) out.push({ kind: 'OBS actions', icon: 'obs', title: r.name || `${triggerText(r.trigger)} → OBS`, sub: `${triggerText(r.trigger)} → ${typeof obsActionText === 'function' ? obsActionText(r.action || {}) : ''}`, where: 'OBS', kw: 'obs scene source', run: () => goTo('obs', `[data-id="${CSS.escape(r.id)}"]`) });
   for (const l of config.layouts || []) out.push({ kind: 'Layouts', icon: 'grid', title: l.name, sub: `${l.widgets.length} overlays · ${l.width} × ${l.height}`, where: 'Layout editor', kw: 'layout scene one link', run: () => { if (typeof edOpenLayout === 'function') edOpenLayout(l.id); showPage('layout'); } });
   for (const r of config.rules) {
     out.push({ kind: 'Alerts', icon: 'zap', title: r.name || 'Untitled alert', sub: `${triggerText(r.trigger)} → ${r.alert?.text || 'no text'}`, where: 'Alerts', kw: `alert ${r.trigger.type} ${r.trigger.command || ''} ${r.trigger.giftName || ''}`, run: () => {
@@ -687,6 +689,8 @@ function searchEntries() {
     ['New alert', () => { showPage('actions'); $('#addRule').click(); }],
     ['New sound action', () => { $('#addSound').click(); goTo('sounds', () => document.querySelector('#soundRules .snd:last-child')); }],
     ['Upload a sound', () => { showPage('sounds'); $('#upload').click(); }],
+    ['Connect to OBS', () => goTo('obs', '#obsUrl')],
+    ['New OBS action', () => { showPage('obs'); $('#obsAdd').click(); }],
     ['Reset stats', () => $('#resetStats').click()],
     [status === 'disconnected' ? 'Connect to a LIVE' : 'Disconnect', () => (status === 'disconnected' ? $('#username').focus() : $('#connectBtn').click())]
   ];
@@ -788,4 +792,5 @@ document.addEventListener('keydown', (e) => {
   renderSettings();
   drawSteps();
   if (typeof initEditor === 'function') initEditor();
+  if (typeof initObs === 'function') initObs();
 })();

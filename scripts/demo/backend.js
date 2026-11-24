@@ -38,7 +38,7 @@
 
   for (const evt of ['event', 'stats', 'alert', 'tts', 'sound', 'timer']) engine.on(evt, (d) => broadcast(evt, d));
   const setStatus = (s) => { status = s; broadcast('status', s); };
-  const publicConfig = () => { const { signApiKey, ...rest } = config; return { ...rest, hasSignApiKey: false }; };
+  const publicConfig = () => { const { signApiKey, ...rest } = config; const { password, ...obs } = config.obs || {}; return { ...rest, obs, hasSignApiKey: false, hasObsPassword: false }; };
 
   window.io = () => ({
     on(evt, fn) {
@@ -48,9 +48,40 @@
       if (evt === 'stats') fn(engine.snapshot());
       if (evt === 'timer') fn(engine.timerState());
       if (evt === 'config') fn(publicConfig());
+      if (evt === 'obsStatus') fn({ status: fakeObs.status, detail: fakeObs.detail });
     },
     emit() {}
   });
+
+  // ── pretend OBS (the demo can't reach a real OBS) ──
+  const fakeObs = {
+    status: 'disconnected', detail: '', current: 'Main',
+    scenes: [
+      { name: 'Main', sources: ['Webcam', 'Tiktak layout', 'Confetti video', 'Mic'] },
+      { name: 'Just chatting', sources: ['Webcam (big)', 'Tiktak layout'] },
+      { name: 'Gaming', sources: ['Game capture', 'Webcam (small)', 'Tiktak layout'] },
+      { name: 'Party', sources: ['Disco lights', 'Webcam', 'Tiktak layout'] },
+      { name: 'Be right back', sources: ['BRB screen', 'Music'] }
+    ],
+    inputs: ['Mic', 'Desktop audio', 'Music']
+  };
+  const obsStatus = (status, detail = '') => { Object.assign(fakeObs, { status, detail }); broadcast('obsStatus', { status, detail }); };
+  const obsLog = (text) => broadcast('obsLog', { text, ts: Date.now() });
+  function fakeRun(a, why = '') {
+    if (fakeObs.status !== 'connected') throw new Error('OBS is not connected');
+    const tail = why ? ` (${why})` : '';
+    const secs = Number(a.seconds) || 0;
+    if (a.type === 'scene') {
+      const before = fakeObs.current;
+      fakeObs.current = a.scene; obsLog(`Switched to scene "${a.scene}"${tail}`);
+      if (secs && before !== a.scene) setTimeout(() => { fakeObs.current = before; obsLog(`Back to scene "${before}"`); }, secs * 1000);
+    } else if (['show', 'hide', 'toggle'].includes(a.type)) {
+      const on = a.type !== 'hide';
+      obsLog(`${on ? 'Showed' : 'Hid'} "${a.source}" in "${a.scene}"${tail}`);
+      if (secs && a.type !== 'toggle') setTimeout(() => obsLog(`${on ? 'Hid' : 'Showed'} "${a.source}" again`), secs * 1000);
+    } else obsLog(`${a.type === 'unmute' ? 'Unmuted' : 'Muted'} "${a.input}"${tail}`);
+  }
+  engine.on('obs', ({ action, why }) => { try { fakeRun(action, why); } catch (e) { /* not connected */ } });
 
   // ── fake live traffic ──
   let traffic = 0;
@@ -101,11 +132,24 @@
     if (path === '/api/config' && method === 'GET') return json(publicConfig());
     if (path === '/api/config' && method === 'PUT') {
       const incoming = { ...body }; delete incoming.hasSignApiKey; delete incoming.signApiKey;
+      if (incoming.obs) incoming.obs = { ...config.obs, ...incoming.obs };
       Object.assign(config, incoming);
       broadcast('config', publicConfig());
       return json(publicConfig());
     }
     if (path === '/api/gifts') return json(SIM_GIFTS);
+    if (path === '/api/obs' && method === 'GET') return json({ status: fakeObs.status, detail: fakeObs.detail, ...(fakeObs.status === 'connected' ? { scenes: fakeObs.scenes, inputs: fakeObs.inputs, current: fakeObs.current } : { scenes: [], inputs: [] }) });
+    if (path === '/api/obs/connect') {
+      if (body.url) config.obs.url = body.url;
+      if (body.autoConnect !== undefined) config.obs.autoConnect = body.autoConnect;
+      obsStatus('connecting');
+      await new Promise((r) => setTimeout(r, 600));
+      obsStatus('connected', 'Pretend OBS for the demo · nothing really changes');
+      obsLog('Connected to OBS (demo)');
+      return json({ ok: true });
+    }
+    if (path === '/api/obs/disconnect') { obsStatus('disconnected'); return json({ ok: true }); }
+    if (path === '/api/obs/run') { try { fakeRun(body.action || {}, 'test'); return json({ ok: true }); } catch (e) { return json({ error: e.message }, 400); } }
     if (path === '/api/sounds' && method === 'GET') return json(library);
     if (path === '/api/sounds' && method === 'POST') {
       const name = (url.searchParams.get('name') || 'sound').replace(/\.[^.]+$/, '');

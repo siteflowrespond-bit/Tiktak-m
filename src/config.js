@@ -38,6 +38,14 @@ export const DEFAULT_CONFIG = {
       { id: 's-drum', enabled: true, trigger: { type: 'command', command: '!drum' }, sound: '/sounds/builtin/drumroll.wav', volume: 0.9, repeat: false, cooldown: 30 }
     ]
   },
+  // OBS Studio remote control (OBS 28+ has the WebSocket server built in)
+  obs: {
+    url: 'ws://127.0.0.1:4455',
+    password: '',
+    autoConnect: false,
+    // { id, enabled, name, trigger, action: { type: scene|show|hide|toggle|mute|unmute|togglemute, scene, source, input, seconds }, cooldown }
+    rules: []
+  },
   // Layouts: several overlays arranged on one canvas, shown through a single link (overlays/scene.html)
   layouts: [
     {
