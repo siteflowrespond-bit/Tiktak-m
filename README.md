@@ -19,7 +19,7 @@ Install it, open flock.tt, type your TikTok username and press **Connect**. Keep
 
 The installers aren't code-signed yet, so the first launch shows a warning:
 - **Windows:** "Windows protected your PC" → **More info** → **Run anyway**.
-- **Mac:** right-click the app → **Open** → **Open**.
+- **Mac:** drag flock.tt into Applications, then right-click it → **Open** → **Open**. To stream from a Mac, use OBS (add the overlay link as a Browser source).
 
 Settings and uploaded sounds are kept in your user folder (`%APPDATA%\flock.tt` on Windows, `~/Library/Application Support/flock.tt` on Mac), so updating or reinstalling keeps them.
 

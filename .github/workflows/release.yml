@@ -1,7 +1,7 @@
 name: Build desktop app
 
-# Builds the Windows installer and the Mac app, and attaches them to a GitHub Release
-# named after the version in package.json (e.g. v1.0.0).
+# Builds the Windows installer and the Mac app, then publishes a GitHub Release
+# named after the version in package.json (e.g. v1.0.0) with both files attached.
 # Run it from the Actions tab ("Run workflow"), or push a tag like v1.0.1.
 
 on:
@@ -20,9 +20,12 @@ jobs:
         include:
           - os: windows-latest
             target: --win
+            file: release/flocktt-setup.exe
           - os: macos-latest
             target: --mac
+            file: release/flocktt-mac.dmg
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -30,7 +33,37 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx electron-builder ${{ matrix.target }} --publish always
+      - run: npx electron-builder ${{ matrix.target }} --publish never
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.os }}
+          path: ${{ matrix.file }}
+          if-no-files-found: error
+
+  release:
+    # publish whatever built, so a slow or failed Mac build never blocks the Windows download
+    needs: build
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - id: version
+        run: echo "tag=v$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - run: ls -la dist
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          target_commitish: ${{ github.sha }}
+          name: flock.tt ${{ steps.version.outputs.tag }}
+          body: |
+            **Windows:** download `flocktt-setup.exe` and run it. If Windows shows "Windows protected your PC", click **More info** → **Run anyway**.
+            **Mac:** download `flocktt-mac.dmg`, drag flock.tt into Applications, then right-click it → **Open** the first time. Stream with OBS on Mac.
+          files: dist/*
+          fail_on_unmatched_files: false
+          make_latest: true
