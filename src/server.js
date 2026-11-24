@@ -4,7 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import express from 'express';
 import { Server } from 'socket.io';
-import { loadConfig, saveConfig } from './config.js';
+import { loadConfig, saveConfig, DATA_DIR } from './config.js';
 import { TikTokSource } from './tiktok.js';
 import { Engine } from './engine.js';
 import { ObsLink } from './obs.js';
@@ -20,11 +20,17 @@ const server = http.createServer(app);
 const io = new Server(server);
 
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
-const SOUND_DIRS = { builtin: path.join(PUBLIC_DIR, 'sounds', 'builtin'), custom: path.join(PUBLIC_DIR, 'sounds', 'custom') };
+const SOUND_DIRS = { builtin: path.join(PUBLIC_DIR, 'sounds', 'builtin'), custom: path.join(DATA_DIR, 'sounds', 'custom') };
 const AUDIO_EXT = /\.(mp3|wav|ogg|m4a|webm)$/i;
 fs.mkdirSync(SOUND_DIRS.custom, { recursive: true });
+// Uploads used to live in public/sounds/custom; move any old ones to the data folder once.
+try {
+  const old = path.join(PUBLIC_DIR, 'sounds', 'custom');
+  if (fs.existsSync(old) && !fs.readdirSync(SOUND_DIRS.custom).length) for (const f of fs.readdirSync(old)) fs.copyFileSync(path.join(old, f), path.join(SOUND_DIRS.custom, f));
+} catch { /* read-only install folder: nothing to move */ }
 
 app.use(express.json({ limit: '1mb' }));
+app.use('/sounds/custom', express.static(SOUND_DIRS.custom));
 app.use(express.static(PUBLIC_DIR));
 
 const tiktok = new TikTokSource();
@@ -193,7 +199,18 @@ app.post('/api/test-alert', (req, res) => {
   res.json({ ok: true });
 });
 
-server.listen(PORT, HOST, () => {
-  log(`flock.tt running → http://localhost:${PORT}`);
-  log('Open the dashboard in your browser, then add overlay links to TikTok LIVE Studio or OBS.');
+/** Resolves once the server is listening; rejects (e.g. EADDRINUSE) if it can't start. Used by the desktop app. */
+export const ready = new Promise((resolve, reject) => {
+  server.once('error', reject);
+  server.listen(PORT, HOST, () => {
+    log(`flock.tt running → http://localhost:${PORT}`);
+    log('Open the dashboard in your browser, then add overlay links to TikTok LIVE Studio or OBS.');
+    resolve({ port: PORT, host: HOST });
+  });
 });
+ready.catch((err) => {
+  if (process.versions.electron) return; // the desktop app shows its own message
+  console.error(err.code === 'EADDRINUSE' ? `Port ${PORT} is already in use. Is flock.tt already running?` : err.message);
+  process.exit(1);
+});
+export { PORT };

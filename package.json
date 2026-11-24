@@ -2,14 +2,18 @@
   "name": "flock.tt",
   "private": true,
   "version": "1.0.0",
-  "description": "TikTok LIVE interactive toolkit: live event dashboard, gift/follow alerts, goals, chat & TTS overlays for TikTok LIVE Studio / OBS.",
+  "description": "flock.tt: alerts, sounds, animated overlays and OBS control for TikTok LIVE. A live you won't forget.",
   "type": "module",
-  "main": "src/server.js",
+  "main": "desktop/main.js",
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
     "demo:build": "node scripts/build-demo.js",
-    "site:build": "node scripts/build-site.js"
+    "site:build": "node scripts/build-site.js",
+    "app": "electron .",
+    "dist": "electron-builder",
+    "dist:win": "electron-builder --win",
+    "dist:mac": "electron-builder --mac"
   },
   "engines": {
     "node": ">=18"
@@ -21,5 +25,76 @@
     "socket.io": "^4.8.4",
     "tiktok-live-connector": "^2.5.0"
   },
-  "homepage": "https://flocktt.xyz"
+  "homepage": "https://flocktt.xyz",
+  "author": "flock.tt",
+  "build": {
+    "appId": "xyz.flocktt.app",
+    "productName": "flock.tt",
+    "executableName": "flocktt",
+    "copyright": "flock.tt",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "desktop/**",
+      "src/**",
+      "public/**",
+      "package.json",
+      "!public/sounds/custom/**"
+    ],
+    "asar": true,
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "flocktt-setup.exe",
+      "shortcutName": "flock.tt",
+      "uninstallDisplayName": "flock.tt"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "universal"
+          ]
+        }
+      ],
+      "category": "public.app-category.entertainment",
+      "icon": "build/icon.png",
+      "identity": null,
+      "artifactName": "flocktt-mac.dmg"
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "AudioVideo",
+      "artifactName": "flocktt-linux.AppImage"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "siteflowrespond-bit",
+        "repo": "Tiktak-m",
+        "releaseType": "release"
+      }
+    ]
+  },
+  "devDependencies": {
+    "electron": "^45.4.1",
+    "electron-builder": "^26.18.0"
+  }
 }

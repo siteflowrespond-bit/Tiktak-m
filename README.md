@@ -11,16 +11,34 @@ A TikTok LIVE interaction toolkit in the spirit of TikFinity. It runs on your ow
 - **Serves overlays** for TikTok LIVE Studio or OBS: alerts, chat box, goal bars, top gifters and a "latest follower/gift" ticker.
 - **Includes a simulator**, so you can test everything without going LIVE.
 
-## Quick start
+## Download
+
+**Windows:** [flocktt-setup.exe](https://github.com/siteflowrespond-bit/Tiktak-m/releases/latest/download/flocktt-setup.exe) · **Mac:** [flocktt-mac.dmg](https://github.com/siteflowrespond-bit/Tiktak-m/releases/latest/download/flocktt-mac.dmg)
+
+Install it, open flock.tt, type your TikTok username and press **Connect**. Keep the app open while you stream: TikTok LIVE Studio and OBS load the overlays from it.
+
+The installers aren't code-signed yet, so the first launch shows a warning:
+- **Windows:** "Windows protected your PC" → **More info** → **Run anyway**.
+- **Mac:** right-click the app → **Open** → **Open**.
+
+Settings and uploaded sounds are kept in your user folder (`%APPDATA%\flock.tt` on Windows, `~/Library/Application Support/flock.tt` on Mac), so updating or reinstalling keeps them.
+
+## Run from source
 
 Requires [Node.js](https://nodejs.org) 18 or newer.
 
 ```bash
 npm install
-npm start
+npm start        # server only; open http://localhost:8787 in a browser
+npm run app      # the desktop app window
+npm run dist     # build an installer for this computer into release/
 ```
 
-Open **http://localhost:8787**, type your TikTok username, and click **Connect**. The Live page has a three-step checklist for first-time setup. Press `/` (or Ctrl+K) anywhere to search for an overlay, alert, sound, setting or quick action. You have to be LIVE for the connection to succeed. If auto-reconnect is on, it keeps retrying every 30s until you go live.
+Open **http://localhost:8787**, type your TikTok username, and click **Connect**. The Live page has a three-step checklist for first-time setup. Press `/` (or Ctrl+K) anywhere to search for an overlay, alert, sound, setting or quick action.
+
+## Releasing a new version
+
+Bump `version` in `package.json`, push, then run **Build desktop app** from the Actions tab (or push a tag like `v1.0.1`). It builds the Windows installer and Mac app on GitHub and attaches them to a release; the download links above always point at the newest one.
 
 ## Look and themes
 

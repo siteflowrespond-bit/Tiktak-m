@@ -64,6 +64,7 @@
     .btn.ghost::before { background: var(--white); }
     .btn.ghost:hover { color: var(--black); }
     .btn svg { width: 18px; height: 18px; }
+    .note a { color: var(--white); }
 
     /* hero: dusk sky, live flock */
     .hero { position: relative; overflow: hidden; min-height: 640px; padding-top: env(safe-area-inset-top, 0px);
@@ -166,7 +167,7 @@
         <a href="#start">Get started</a>
         <a href="https://github.com/siteflowrespond-bit/Tiktak-m" target="_blank" rel="noopener">GitHub</a>
       </nav>
-      <a class="btn ghost" href="demo/">Try the demo</a>
+      <a class="btn ghost" href="https://github.com/siteflowrespond-bit/Tiktak-m/releases/latest/download/flocktt-setup.exe">Download</a>
     </div>
   </header>
 
@@ -178,12 +179,10 @@
       <h1>A live you <em>won't forget.</em></h1>
       <p class="lede">flock.tt turns gifts, likes, follows and chat into alerts, sounds, animated overlays and OBS scene changes, so your whole audience can feel every moment.</p>
       <div class="ctas">
-        <a class="btn primary" href="demo/">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>Try the live demo
-        </a>
-        <a class="btn ghost" href="#start">Set it up</a>
+        <a class="btn primary" href="https://github.com/siteflowrespond-bit/Tiktak-m/releases/latest/download/flocktt-setup.exe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 19h16"/></svg>Download for Windows</a>
+        <a class="btn ghost" href="demo/">Try the demo</a>
       </div>
-      <p class="note">Free. Runs on your own computer. No account needed.</p>
+      <p class="note">Free for Windows 10 and 11. Also on <a href="https://github.com/siteflowrespond-bit/Tiktak-m/releases/latest/download/flocktt-mac.dmg">Mac</a>. No account needed.</p>
     </div>
   </div>
 
@@ -265,23 +264,20 @@
   <section id="start" style="padding-top: 0">
     <div class="wrap">
       <div class="kicker">Get started</div>
-      <h2>Live in about five minutes.</h2>
+      <h2>Download, connect, go live.</h2>
       <div class="steps">
         <div class="step">
-          <h3>Install</h3>
-          <p>You need <a href="https://nodejs.org" target="_blank" rel="noopener">Node.js</a> 18 or newer. Then download flock.tt and run:</p>
-          <pre><span class="c"># in the flock.tt folder</span>
-npm install
-npm start</pre>
+          <h3>Download</h3>
+          <p>Get the installer and open it. Windows may show "Windows protected your PC" because the app is new: click <b>More info</b>, then <b>Run anyway</b>.</p>
+          <a class="btn primary" href="https://github.com/siteflowrespond-bit/Tiktak-m/releases/latest/download/flocktt-setup.exe" style="margin-top:4px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 19h16"/></svg>flocktt-setup.exe</a>
         </div>
         <div class="step">
           <h3>Connect</h3>
-          <p>Open <code>localhost:8787</code>, type your TikTok username and press Connect. It works while you're live.</p>
-          <pre>http://localhost:8787</pre>
+          <p>Open flock.tt from the Start menu, type your TikTok username and press Connect. It works while you're live.</p>
         </div>
         <div class="step">
           <h3>Add one link</h3>
-          <p>Build a layout, copy its link, and add it in TikTok LIVE Studio as a <b>Link</b> source, or in OBS as a <b>Browser</b> source.</p>
+          <p>Build a layout, copy its link, and add it in TikTok LIVE Studio as a <b>Link</b> source, or in OBS as a <b>Browser</b> source. Keep flock.tt open while you stream.</p>
           <pre>…/overlays/scene.html?layout=main</pre>
         </div>
       </div>
@@ -290,11 +286,11 @@ npm start</pre>
 
   <div class="cta">
     <div class="wrap">
-      <h2>See it before you go live.</h2>
-      <p>The demo runs entirely in your browser with pretend viewers, so you can click through everything.</p>
+      <h2>A live you won't forget.</h2>
+      <p>Free for Windows and Mac. Or try the demo in your browser first, with pretend viewers.</p>
       <div class="ctas">
-        <a class="btn primary" href="demo/"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>Open the demo</a>
-        <a class="btn ghost" href="https://github.com/siteflowrespond-bit/Tiktak-m" target="_blank" rel="noopener">Get the code</a>
+        <a class="btn primary" href="https://github.com/siteflowrespond-bit/Tiktak-m/releases/latest/download/flocktt-setup.exe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 19h16"/></svg>Download for Windows</a>
+        <a class="btn ghost" href="demo/">Open the demo</a>
       </div>
     </div>
   </div>
