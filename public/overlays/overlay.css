@@ -1,26 +1,26 @@
-/* Tiktak overlay theme. Pick one per overlay link with ?theme=ember|mint|candy|mono (ember is the default).
+/* Murmura overlay theme. Pick one per overlay link with ?theme=dusk|mint|candy|mono (dusk is the default).
    Backgrounds stay transparent for TikTok LIVE Studio / OBS. */
-@import url("https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700&family=Manrope:wght@500;600;700;800&display=swap");
 
 :root {
-  --tt-panel: rgba(24, 17, 44, .86);
-  --tt-line: rgba(255, 255, 255, .10);
+  --tt-panel: rgba(12, 22, 40, .86);
+  --tt-line: rgba(238, 243, 255, .11);
   --tt-text: #ffffff;
-  --tt-dim: rgba(244, 240, 255, .72);
-  --tt-track: rgba(255, 255, 255, .14);
-  --tt-a: #ff6a3d;        /* signature accent */
-  --tt-ember: #ff6a3d;
-  --tt-butter: #ffcd57;
-  --tt-mint: #3fe0b0;
-  --tt-lilac: #a98bff;
-  --tt-rose: #ff5c93;
-  --tt-sky: #5ac4ff;
-  --tt-team-a: #ff6a3d;
-  --tt-team-b: #5ac4ff;
-  --tt-glow: rgba(255, 106, 61, .45);
+  --tt-dim: rgba(238, 243, 255, .72);
+  --tt-track: rgba(238, 243, 255, .14);
+  --tt-a: #ff9469;        /* afterglow: signature accent */
+  --tt-ember: #ff9469;
+  --tt-butter: #ffd27a;
+  --tt-mint: #7fe0b8;
+  --tt-lilac: #b6a4ff;
+  --tt-rose: #ff86b4;
+  --tt-sky: #63cde8;
+  --tt-team-a: #ff9469;
+  --tt-team-b: #63cde8;
+  --tt-glow: rgba(255, 148, 105, .45);
   --tt-shadow: 0 1px 2px rgba(0,0,0,.85), 0 0 12px rgba(0,0,0,.45);
-  --tt-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
-  --tt-font: "Figtree", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+  --tt-display: "Unbounded", "Segoe UI", system-ui, sans-serif;
+  --tt-font: "Manrope", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
 }
 :root[data-theme="mint"] {
   --tt-panel: rgba(6, 30, 30, .86);
@@ -50,8 +50,14 @@ body { font-family: var(--tt-font); color: #fff; -webkit-font-smoothing: antiali
 .avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: var(--tt-a); flex: none; color: #fff; text-shadow: none;
   display: inline-flex; align-items: center; justify-content: center; font-weight: 800; box-shadow: 0 0 0 2px rgba(255,255,255,.85); }
 
-/* the Tiktak panel: frosted ink with a small accent "tick" at the top-left */
+/* the Murmura panel: frosted ink with a small accent "tick" at the top-left */
 .panel { position: relative; background: var(--tt-panel); color: var(--tt-text); border-radius: 14px; border: 1px solid var(--tt-line);
   box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 14px 34px -16px rgba(0,0,0,.7); }
-.panel::before { content: ""; position: absolute; left: 16px; top: -1px; width: 28px; height: 3px; border-radius: 0 0 3px 3px; background: var(--tt-a); box-shadow: 0 0 10px var(--tt-glow); }
+/* signature: three birds flying off the top-left corner of every panel */
+.panel::before { content: ""; position: absolute; left: 14px; top: -4px; width: 22px; height: 8px; pointer-events: none;
+  background:
+    radial-gradient(circle at 3px 5px, var(--tt-a) 0 2.4px, transparent 2.9px),
+    radial-gradient(circle at 10px 3px, var(--tt-a) 0 1.8px, transparent 2.3px),
+    radial-gradient(circle at 16px 1.6px, var(--tt-a) 0 1.3px, transparent 1.8px);
+  filter: drop-shadow(0 0 5px var(--tt-glow)); }
 :root[data-theme="candy"] .panel, :root[data-theme="candy"] .panel * { text-shadow: none; }

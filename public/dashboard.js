@@ -55,7 +55,7 @@ function copyText(text, fallbackInput) {
   const fail = () => { fallbackInput?.focus(); fallbackInput?.select(); toast('Press Ctrl+C to copy'); };
   try { navigator.clipboard.writeText(text).then(done, fail); } catch { fail(); }
 }
-const THEMES = [['ember', 'Ember'], ['mint', 'Mint'], ['candy', 'Candy (light)'], ['mono', 'Mono']];
+const THEMES = [['dusk', 'Dusk'], ['mint', 'Mint'], ['candy', 'Candy (light)'], ['mono', 'Mono']];
 /** Set or remove one query parameter on an overlay link like "jar.html?goal=1000". */
 function withParam(src, key, value) {
   const [path, q = ''] = src.split('?');
@@ -602,12 +602,12 @@ function renderOverlays() {
   const all = groups.flatMap((g) => g.items);
   const tabs = [['start', 'Start here', STARTER.length], ['all', 'All', all.length], ...groups.map((g) => [g.id, g.title, g.items.length])];
   if (!tabs.some(([id]) => id === ovTab)) ovTab = 'start';
-  let ovTheme = 'ember';
-  try { ovTheme = localStorage.getItem('ovTheme') || 'ember'; } catch {}
+  let ovTheme = 'dusk';
+  try { ovTheme = localStorage.getItem('ovTheme') || 'dusk'; } catch {}
   const themeSel = el('select', { id: 'ovTheme', title: 'Colour theme for the overlay links below', style: 'width:auto;margin-left:auto' }, THEMES.map(([v, l]) => el('option', { value: v }, `Theme: ${l}`)));
   themeSel.value = ovTheme;
   themeSel.addEventListener('change', () => { try { localStorage.setItem('ovTheme', themeSel.value); } catch {} renderOverlays(); });
-  const themed = (p) => (ovTheme === 'ember' ? p : withParam(p, 'theme', ovTheme));
+  const themed = (p) => (ovTheme === 'dusk' ? p : withParam(p, 'theme', ovTheme));
   $('#ovTabs').replaceChildren(...tabs.map(([id, label, n]) => el('button', {
     class: id === ovTab ? 'active' : '', role: 'tab', 'aria-selected': String(id === ovTab),
     onclick: () => { ovTab = id; try { localStorage.setItem('ovTab', id); } catch {} renderOverlays(); }

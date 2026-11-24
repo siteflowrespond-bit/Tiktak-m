@@ -10,16 +10,16 @@
   .column .stat { flex-direction: row; justify-content: space-between; align-items: baseline; gap: 24px; padding: 6px 12px; }
   .column .stat + .stat { border-top: 1px solid var(--tt-line); }
   .k { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; opacity: .7; }
-  .v { font-size: 32px; font-weight: 800; line-height: 1.05; letter-spacing: -1px; }
+  .v { font-size: 25px; font-weight: 700; line-height: 1.1; letter-spacing: -.5px; }
   .k::before { content: ""; width: 7px; height: 7px; border-radius: 2px; background: var(--c, var(--tt-a)); box-shadow: 0 0 8px var(--c, var(--tt-a)); }
-  .column .v { font-size: 24px; }
+  .column .v { font-size: 20px; }
   .v.tick { animation: tick .4s ease; }
   @keyframes tick { 40% { color: var(--tt-a); } }
   /* rotate: one stat at a time */
   .stats.rotate { min-width: 200px; }
   .rotate .stat { display: none; align-items: center; text-align: center; }
   .rotate .stat.on { display: flex; animation: swap .4s ease; }
-  .rotate .v { font-size: 40px; }
+  .rotate .v { font-size: 32px; }
   @keyframes swap { from { opacity: 0; transform: translateY(8px); } }
 </style></head>
 <body>

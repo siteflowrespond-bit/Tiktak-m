@@ -1,4 +1,4 @@
-// Builds a static, server-free demo of Tiktak into demo-dist/.
+// Builds a static, server-free demo of Murmura into demo-dist/.
 // The real dashboard and overlays are used as-is; the Node backend is replaced
 // by scripts/demo/backend.js, which runs the same engine in the browser.
 // Run: npm run demo:build   (then open demo-dist/index.html through any static server)
@@ -31,7 +31,7 @@ write('overlays/demo-socket.js', read('scripts/demo/socket.js'));
 let page = fs.readFileSync(path.join(PUB, 'index.html'), 'utf8')
   .replace(/<!doctype html>\s*/i, '').replace(/<\/?html[^>]*>\s*/g, '').replace(/<\/?head>\s*/g, '').replace(/<\/?body>\s*/g, '')
   .replace(/<meta charset[^>]*>\s*/, '').replace(/<meta name="viewport"[^>]*>\s*/, '')
-  .replace('<title>tiktak</title>', '<title>Tiktak</title>')
+  .replace('<title>murmura</title>', '<title>Murmura</title>')
   .replaceAll('href="/style.css"', 'href="style.css"').replaceAll('/logo.svg', 'logo.svg')
   .replace('<script src="/socket.io/socket.io.js"></script>', '<script src="demo-backend.js"></script>')
   .replace('<script src="/dashboard.js"></script>', '<script src="dashboard.js"></script>')

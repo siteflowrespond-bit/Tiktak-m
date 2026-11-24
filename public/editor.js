@@ -223,12 +223,12 @@ function edRenderInsp() {
     const name = el('input', { id: 'edName', value: l.name });
     name.addEventListener('input', () => { l.name = name.value || 'Untitled'; $e('#edLayout').selectedOptions[0].textContent = l.name; edDirty(); });
     const all = el('select', {}, el('option', { value: '' }, 'Mixed / keep'), THEMES.map(([v, lab]) => el('option', { value: v }, lab)));
-    const used = new Set(l.widgets.map((w) => new URLSearchParams(w.src.split('?')[1] || '').get('theme') || 'ember'));
+    const used = new Set(l.widgets.map((w) => new URLSearchParams(w.src.split('?')[1] || '').get('theme') || 'dusk'));
     all.value = used.size === 1 ? [...used][0] : '';
     all.addEventListener('change', () => {
       if (!all.value) return;
       edSnapshot();
-      for (const w of l.widgets) w.src = withParam(w.src, 'theme', all.value === 'ember' ? '' : all.value);
+      for (const w of l.widgets) w.src = withParam(w.src, 'theme', all.value === 'dusk' ? '' : all.value);
       edDirty(); edRenderStage();
       toast(`Every overlay in this layout now uses ${all.selectedOptions[0].textContent}`);
     });
@@ -263,8 +263,8 @@ function edRenderInsp() {
       el('button', { class: 'btn sm', onclick: () => { edSnapshot(); Object.assign(w, { x: 0, y: 0, w: l.width, h: l.height }); edDirty(); edRender(); } }, 'Fill the whole screen'),
       el('label', { class: 'f' }, el('span', {}, 'Colour theme'), (() => {
         const sel = el('select', {}, THEMES.map(([v, lab]) => el('option', { value: v }, lab)));
-        sel.value = new URLSearchParams(query).get('theme') || 'ember';
-        sel.addEventListener('change', () => { edSnapshot(); w.src = withParam(w.src, 'theme', sel.value === 'ember' ? '' : sel.value); edDirty(); edRenderStage(); edRenderInsp(); });
+        sel.value = new URLSearchParams(query).get('theme') || 'dusk';
+        sel.addEventListener('change', () => { edSnapshot(); w.src = withParam(w.src, 'theme', sel.value === 'dusk' ? '' : sel.value); edDirty(); edRenderStage(); edRenderInsp(); });
         return sel;
       })()),
       el('label', { class: 'f' }, el('span', {}, `Options for ${file} (press Enter)`), opts),

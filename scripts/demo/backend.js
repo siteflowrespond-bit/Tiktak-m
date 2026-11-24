@@ -1,4 +1,4 @@
-/* Demo backend: runs the real Tiktak engine in the browser instead of on a server.
+/* Demo backend: runs the real Murmura engine in the browser instead of on a server.
    Replaces fetch('/api/...') and io() so the dashboard works without Node.
    Engine, simulator and default config code are inserted by scripts/build-demo.js. */
 (function () {
@@ -19,7 +19,7 @@
   // ── socket bus (dashboard + overlay iframes + overlay tabs) ──
   const local = new Map();
   let channel = null;
-  try { channel = new BroadcastChannel('tiktak-demo'); } catch {}
+  try { channel = new BroadcastChannel('murmura-demo'); } catch {}
   const frames = new Set();
   function broadcast(evt, data) {
     (local.get(evt) || []).forEach((fn) => { try { fn(data); } catch (e) { console.error(e); } });
@@ -33,7 +33,7 @@
     send('timer', engine.timerState());
   }
   // overlay iframes subscribe directly through the parent window
-  window.__tiktakBus = { subscribe(fn) { frames.add(fn); snapshotFor(fn); return () => frames.delete(fn); } };
+  window.__murmuraBus = { subscribe(fn) { frames.add(fn); snapshotFor(fn); return () => frames.delete(fn); } };
   if (channel) channel.onmessage = (m) => { if (m.data?.hello) snapshotFor((evt, data) => channel.postMessage({ evt, data })); };
 
   for (const evt of ['event', 'stats', 'alert', 'tts', 'sound', 'timer']) engine.on(evt, (d) => broadcast(evt, d));
@@ -57,10 +57,10 @@
   const fakeObs = {
     status: 'disconnected', detail: '', current: 'Main',
     scenes: [
-      { name: 'Main', sources: ['Webcam', 'Tiktak layout', 'Confetti video', 'Mic'] },
-      { name: 'Just chatting', sources: ['Webcam (big)', 'Tiktak layout'] },
-      { name: 'Gaming', sources: ['Game capture', 'Webcam (small)', 'Tiktak layout'] },
-      { name: 'Party', sources: ['Disco lights', 'Webcam', 'Tiktak layout'] },
+      { name: 'Main', sources: ['Webcam', 'Murmura layout', 'Confetti video', 'Mic'] },
+      { name: 'Just chatting', sources: ['Webcam (big)', 'Murmura layout'] },
+      { name: 'Gaming', sources: ['Game capture', 'Webcam (small)', 'Murmura layout'] },
+      { name: 'Party', sources: ['Disco lights', 'Webcam', 'Murmura layout'] },
       { name: 'Be right back', sources: ['BRB screen', 'Music'] }
     ],
     inputs: ['Mic', 'Desktop audio', 'Music']

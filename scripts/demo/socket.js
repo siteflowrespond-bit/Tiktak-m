@@ -7,14 +7,14 @@ window.io = function io() {
   let bus = null;
   for (let w = window; w !== w.parent && !bus;) {
     w = w.parent;
-    try { bus = w.__tiktakBus || null; } catch { break; }
+    try { bus = w.__murmuraBus || null; } catch { break; }
   }
   if (bus) {
     // subscribe after the overlay script has registered its handlers
     setTimeout(() => bus.subscribe(deliver), 0);
   } else {
     try {
-      const ch = new BroadcastChannel('tiktak-demo');
+      const ch = new BroadcastChannel('murmura-demo');
       ch.onmessage = (m) => deliver(m.data.evt, m.data.data);
       setTimeout(() => ch.postMessage({ hello: true }), 0);
     } catch {}

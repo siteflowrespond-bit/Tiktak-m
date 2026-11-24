@@ -9,7 +9,7 @@
   .team.b { align-items: flex-end; text-align: right; }
   .tname { font-size: 15px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; }
   .a .tname { color: var(--a); } .b .tname { color: var(--b); }
-  .score { font-family: var(--tt-display); font-size: 44px; font-weight: 800; line-height: 1; letter-spacing: -1.5px; }
+  .score { font-family: var(--tt-display); font-size: 32px; font-weight: 700; line-height: 1.05; letter-spacing: -1px; }
   .score.bump { animation: bump .35s ease; }
   @keyframes bump { 40% { transform: scale(1.18); } }
   .clock { font: 800 26px var(--tt-display); padding: 4px 14px; border-radius: 999px; background: var(--tt-panel); color: var(--tt-text); border: 1px solid var(--tt-line); }
@@ -25,7 +25,7 @@
   .hint { text-align: center; margin-top: 6px; font-size: 14px; font-weight: 600; opacity: .9; }
   .float { position: fixed; font-weight: 900; font-size: 20px; pointer-events: none; animation: up 1.2s ease-out forwards; }
   @keyframes up { from { opacity: 1; transform: translate(-50%, 0) } to { opacity: 0; transform: translate(-50%, -46px) } }
-  .win { position: fixed; left: 50%; top: 45%; transform: translate(-50%, -50%) scale(.4); opacity: 0; font-family: var(--tt-display); font-size: 68px; font-weight: 800; letter-spacing: 2px; transition: transform .5s cubic-bezier(.2,1.6,.4,1), opacity .3s; text-transform: uppercase; }
+  .win { position: fixed; left: 50%; top: 45%; transform: translate(-50%, -50%) scale(.4); opacity: 0; font-family: var(--tt-display); font-size: 52px; font-weight: 700; letter-spacing: 2px; transition: transform .5s cubic-bezier(.2,1.6,.4,1), opacity .3s; text-transform: uppercase; }
   .win.on { transform: translate(-50%, -50%) scale(1); opacity: 1; }
 </style></head>
 <body>

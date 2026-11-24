@@ -51,7 +51,7 @@ $o('#obsConnect').addEventListener('click', async () => {
     obsLoad();
   } catch (e) { toast(e.message, true); } finally { btn.disabled = false; }
 });
-$o('#obsAuto').addEventListener('change', () => saveConfig({ obs: { autoConnect: $o('#obsAuto').checked } }, $o('#obsAuto').checked ? 'Tiktak will connect to OBS when it starts' : 'Auto-connect turned off'));
+$o('#obsAuto').addEventListener('change', () => saveConfig({ obs: { autoConnect: $o('#obsAuto').checked } }, $o('#obsAuto').checked ? 'Murmura will connect to OBS when it starts' : 'Auto-connect turned off'));
 $o('#obsRefresh').addEventListener('click', obsLoad);
 
 socket.on('obsStatus', (st) => {

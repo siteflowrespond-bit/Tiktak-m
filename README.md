@@ -1,4 +1,4 @@
-# Tiktak
+# Murmura
 
 A TikTok LIVE interaction toolkit in the spirit of TikFinity. It runs on your own computer and does four things:
 
@@ -20,18 +20,18 @@ Open **http://localhost:8787**, type your TikTok username, and click **Connect**
 
 ## Look and themes
 
-Tiktak's own look is **Tiktak Night**: an ink-violet base with *ember* orange as the signature colour, plus butter (coins), rose (likes), sky (shares), lilac (subscribes) and mint (connected). Type is Bricolage Grotesque for headlines and numbers, Figtree for text and JetBrains Mono for data. The logo is a metronome that swings while you're live.
+The look is **Murmura Dusk**, taken from the sky at the moment a murmuration of starlings rises: twilight navy above, an *afterglow* peach at the horizon (the signature colour for live, buttons and focus), and dusk tones for events: sunlit gold (coins), rosé (likes), tide blue (shares), lavender (subscribes) and sage (connected). Headlines and numbers use Unbounded, text uses Manrope, data uses IBM Plex Mono. The logo is a flock of birds swooping across a dusk sky; it drifts while you're live. Overlay panels carry three small birds on their top-left corner.
 
 Every overlay comes in four themes. Add `?theme=` to its link, pick one on the Overlays page, or set it per overlay (or for a whole layout) in the Layout editor:
 
 | Theme | Feel |
 |---|---|
-| `ember` (default) | Ink panels, ember and butter accents |
+| `dusk` (default) | Navy panels, afterglow and gold accents |
 | `mint` | Deep teal panels, mint and lime accents |
 | `candy` | Light, bright panels with pink and sky accents |
 | `mono` | Black and white |
 
-Fonts load from Google Fonts; without internet the overlays fall back to system fonts.
+Fonts load from Google Fonts; without internet everything falls back to system fonts.
 
 ## Overlays
 
@@ -78,16 +78,16 @@ Shortcuts: arrow keys nudge (Shift = 10 px), Delete removes, Ctrl+D duplicates, 
 
 ## OBS
 
-Tiktak can control OBS Studio (version 28 or newer) through OBS's built-in WebSocket server.
+Murmura can control OBS Studio (version 28 or newer) through OBS's built-in WebSocket server.
 
 1. In OBS: **Tools → WebSocket Server Settings**, tick **Enable WebSocket server** (port 4455), click **Show Connect Info** and copy the password.
-2. In Tiktak: open **OBS**, paste the password and click **Connect to OBS**. Tick "Connect when Tiktak starts" to do this automatically.
-3. Add **OBS actions**: when something happens (a gift, a coin range, a follow, a share, likes, a chat command, a join or a subscribe), Tiktak can
+2. In Murmura: open **OBS**, paste the password and click **Connect to OBS**. Tick "Connect when Murmura starts" to do this automatically.
+3. Add **OBS actions**: when something happens (a gift, a coin range, a follow, a share, likes, a chat command, a join or a subscribe), Murmura can
    - switch to a scene, and optionally switch back after some seconds
    - show, hide or toggle a source, and optionally undo it after some seconds
    - mute, unmute or toggle an audio source
 
-The **Scenes** panel lets you switch scenes by hand, and **What OBS did** lists every change Tiktak made. The OBS password stays on your computer: it's saved in `data/config.json` and never sent to the browser or the overlays.
+The **Scenes** panel lets you switch scenes by hand, and **What OBS did** lists every change Murmura made. The OBS password stays on your computer: it's saved in `data/config.json` and never sent to the browser or the overlays.
 
 OBS on another computer? Use its address, e.g. `ws://192.168.1.20:4455`, and make sure your firewall allows the port.
 
