@@ -38,6 +38,22 @@ export const DEFAULT_CONFIG = {
       { id: 's-drum', enabled: true, trigger: { type: 'command', command: '!drum' }, sound: '/sounds/builtin/drumroll.wav', volume: 0.9, repeat: false, cooldown: 30 }
     ]
   },
+  // Layouts: several overlays arranged on one canvas, shown through a single link (overlays/scene.html)
+  layouts: [
+    {
+      id: 'main',
+      name: 'My stream',
+      width: 1080,
+      height: 1920,
+      widgets: [
+        { id: 'w-celebrate', name: 'Celebrations', src: 'celebrate.html?min=100', x: 0, y: 0, w: 1080, h: 1920, hidden: false },
+        { id: 'w-goal', name: 'Like goal', src: 'goal.html?goal=likes', x: 90, y: 240, w: 900, h: 110, hidden: false },
+        { id: 'w-alerts', name: 'Alerts', src: 'alerts.html', x: 0, y: 470, w: 1080, h: 480, hidden: false },
+        { id: 'w-combos', name: 'Gift combos', src: 'combos.html', x: 20, y: 960, w: 640, h: 320, hidden: false },
+        { id: 'w-jar', name: 'Gift jar', src: 'jar.html?goal=1000', x: 700, y: 840, w: 360, h: 460, hidden: false }
+      ]
+    }
+  ],
   // Subathon timer: events add time while it's running
   timer: {
     startMinutes: 60,

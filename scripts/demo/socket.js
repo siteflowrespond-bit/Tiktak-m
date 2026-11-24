@@ -3,8 +3,12 @@
 window.io = function io() {
   const handlers = {};
   const deliver = (evt, data) => (handlers[evt] || []).forEach((fn) => fn(data));
+  // find the demo dashboard among our ancestors (overlays can sit inside a layout inside the dashboard)
   let bus = null;
-  try { bus = window.parent !== window && window.parent.__tiktakBus; } catch {}
+  for (let w = window; w !== w.parent && !bus;) {
+    w = w.parent;
+    try { bus = w.__tiktakBus || null; } catch { break; }
+  }
   if (bus) {
     // subscribe after the overlay script has registered its handlers
     setTimeout(() => bus.subscribe(deliver), 0);

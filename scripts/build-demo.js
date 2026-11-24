@@ -35,6 +35,7 @@ let page = fs.readFileSync(path.join(PUB, 'index.html'), 'utf8')
   .replaceAll('href="/style.css"', 'href="style.css"').replaceAll('/logo.svg', 'logo.svg')
   .replace('<script src="/socket.io/socket.io.js"></script>', '<script src="demo-backend.js"></script>')
   .replace('<script src="/dashboard.js"></script>', '<script src="dashboard.js"></script>')
+  .replace('<script src="/editor.js"></script>', '<script src="editor.js"></script>')
   .replace('<div class="content">', `<div class="content">
       <div class="demo-note">Demo: the viewers, gifts and chat here are made up and nothing connects to TikTok. Click <b>Disconnect</b> to stop the traffic, or use <b>Test events</b>. Turn on sound under <b>Sounds</b> → "Also play sounds in this tab".</div>`);
 write('index.html', page);
@@ -43,7 +44,7 @@ write('index.html', page);
 let css = fs.readFileSync(path.join(PUB, 'style.css'), 'utf8');
 css += `\n/* demo only */\n.demo-note { margin-bottom: 16px; padding: 10px 14px; border: 1px dashed var(--line-2); border-radius: 6px; color: var(--dim); font-size: 13px; }\n.demo-note b { color: var(--text); font-weight: 600; }\n`;
 write('style.css', css);
-for (const f of ['dashboard.js', 'logo.svg']) fs.copyFileSync(path.join(PUB, f), path.join(OUT, f));
+for (const f of ['dashboard.js', 'editor.js', 'logo.svg']) fs.copyFileSync(path.join(PUB, f), path.join(OUT, f));
 for (const f of fs.readdirSync(path.join(PUB, 'overlays'))) {
   let s = fs.readFileSync(path.join(PUB, 'overlays', f), 'utf8');
   if (f.endsWith('.html')) s = s.replace('<script src="/socket.io/socket.io.js"></script>', '<script src="demo-socket.js"></script>');

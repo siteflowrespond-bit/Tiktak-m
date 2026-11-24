@@ -68,7 +68,7 @@ const EVENTS = {
 };
 
 // ── navigation ───────────────────────────────────────────
-const TITLES = { live: 'Live', actions: 'Alerts', sounds: 'Sounds', goals: 'Goals & timer', overlays: 'Overlays', settings: 'Settings' };
+const TITLES = { live: 'Live', layout: 'Layout editor', actions: 'Alerts', sounds: 'Sounds', goals: 'Goals & timer', overlays: 'Overlays', settings: 'Settings' };
 function showPage(page) {
   if (!TITLES[page]) page = 'live';
   document.querySelectorAll('#nav button').forEach((b) => b.classList.toggle('active', b.dataset.page === page));
@@ -78,7 +78,7 @@ function showPage(page) {
 }
 $('#nav').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) showPage(b.dataset.page); });
 try { showPage(localStorage.getItem('page')); } catch { showPage('live'); }
-$('#foot').textContent = 'v0.6 · / to search';
+$('#foot').textContent = 'v0.7 · / to search';
 
 // ── connection ───────────────────────────────────────────
 let status = 'disconnected';
@@ -565,7 +565,10 @@ function renderOverlays() {
   else sections = groups.filter((g) => g.id === ovTab);
 
   const base = new URL('.', location.href).href; // works at / and inside a sub-folder
-  $('#overlays').replaceChildren(...sections.flatMap((sec) => [
+  const banner = el('div', { class: 'panel ed-banner' },
+    el('div', {}, el('b', {}, 'Tip: use one link for your whole stream. '), el('span', { class: 'muted' }, 'Put several overlays together in the Layout editor and add just that link.')),
+    el('button', { class: 'btn red sm', onclick: () => showPage('layout') }, icon('grid'), 'Open Layout editor'));
+  $('#overlays').replaceChildren(banner, ...sections.flatMap((sec) => [
     el('div', { class: 'ov-group' }, sec.title),
     el('div', { class: 'ovs' }, sec.items.map(({ name, desc, path: p, opt }) => {
       const url = base + p.slice(1);
@@ -608,7 +611,7 @@ const setFlag = (k) => { try { localStorage.setItem(k, '1'); } catch {} };
 function drawSteps() {
   const steps = [
     { done: status === 'connected', title: 'Connect to your LIVE', text: 'Type your TikTok username at the top and press Connect.', btn: ['Go to username', () => $('#username').focus()] },
-    { done: flag('usedOverlay'), title: 'Add an overlay', text: 'Copy a link from Overlays into TikTok LIVE Studio or OBS.', btn: ['Open overlays', () => showPage('overlays')] },
+    { done: flag('usedOverlay'), title: 'Add your overlay', text: 'Arrange overlays in the Layout editor, then add its one link to TikTok LIVE Studio or OBS.', btn: ['Open Layout editor', () => showPage('layout')] },
     { done: flag('tested'), title: 'Test it', text: 'Send a fake follow and watch your overlay react.', btn: ['Send a test follow', () => { api('POST', '/api/simulate', { type: 'follow' }); setFlag('tested'); drawSteps(); }] }
   ];
   const allDone = steps.every((x) => x.done);
@@ -624,6 +627,7 @@ document.addEventListener('click', (e) => { if (e.target.closest('[data-sim]')) 
 const PAGE_INFO = {
   live: ['Live', 'Activity, stats, test events', 'live', 'home dashboard activity feed log chat viewers'],
   overlays: ['Overlays', 'Links for TikTok LIVE Studio and OBS', 'layers', 'widgets browser source link obs studio'],
+  layout: ['Layout editor', 'Arrange overlays and use one link', 'grid', 'scene editor canvas arrange position drag one link combine'],
   actions: ['Alerts', 'Pop-ups when viewers do things', 'zap', 'alert actions events notifications popup'],
   sounds: ['Sounds', 'Sound actions, library, text-to-speech', 'sound', 'audio sfx soundboard volume tts voice'],
   goals: ['Goals & timer', 'Goal bars and the subathon timer', 'clock', 'goal target subathon countdown timer'],
@@ -651,6 +655,7 @@ function searchEntries() {
       goTo('overlays', () => document.querySelector(`[data-ov="${CSS.escape(o.path)}"]`));
     } });
   }
+  for (const l of config.layouts || []) out.push({ kind: 'Layouts', icon: 'grid', title: l.name, sub: `${l.widgets.length} overlays · ${l.width} × ${l.height}`, where: 'Layout editor', kw: 'layout scene one link', run: () => { if (typeof edOpenLayout === 'function') edOpenLayout(l.id); showPage('layout'); } });
   for (const r of config.rules) {
     out.push({ kind: 'Alerts', icon: 'zap', title: r.name || 'Untitled alert', sub: `${triggerText(r.trigger)} → ${r.alert?.text || 'no text'}`, where: 'Alerts', kw: `alert ${r.trigger.type} ${r.trigger.command || ''} ${r.trigger.giftName || ''}`, run: () => {
       openRules.add(r.id); renderRules(); goTo('actions', `[data-id="${CSS.escape(r.id)}"]`);
@@ -782,4 +787,5 @@ document.addEventListener('keydown', (e) => {
   renderOverlays();
   renderSettings();
   drawSteps();
+  if (typeof initEditor === 'function') initEditor();
 })();

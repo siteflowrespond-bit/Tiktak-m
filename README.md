@@ -26,6 +26,7 @@ Copy a URL from the **Overlays** page. In TikTok LIVE Studio, add it as a *Link*
 |---|---|---|
 | Alerts (also plays sounds + TTS) | `/overlays/alerts.html` | `volume=0.5`, `tts=0`, `sounds=0`, `style=plain`, `accent=%23ff0000` |
 | Sound player (audio only) | `/overlays/sounds.html` | `volume=0.5`. Use instead of Alerts, not together |
+| Layout (several overlays in one) | `/overlays/scene.html?layout=main` | `layout=` the layout's id |
 | Gift jar | `/overlays/jar.html` | `goal=1000`, `title=...`, `max=260` (coins on screen) |
 | Spin wheel | `/overlays/wheel.html` | `items=A,B,C`, `min=100` or `gift=Rose` or `cmd=!spin`, `cooldown=30`, `hide=1`, `sound=0` |
 | Team battle | `/overlays/battle.html` | `a=Red&b=Blue`, `ga=Rose&gb=TikTok`, `time=180`, `likes=1`, `ca=`/`cb=` colors |
@@ -42,6 +43,19 @@ Copy a URL from the **Overlays** page. In TikTok LIVE Studio, add it as a *Link*
 | Live stats | `/overlays/stats.html` | `show=viewers,likes,coins,follows,shares,comments,gifts,subs,time`, `layout=row\|column\|rotate`, `every=5`, `bg=0` |
 | Subathon timer | `/overlays/timer.html` | `label=...`, `bg=0` |
 | Goal bar | `/overlays/goal.html?goal=likes` | `goal=likes\|follows\|coins\|shares` |
+
+## Layout editor (one link for everything)
+
+Instead of adding a separate source for every overlay, open **Layout editor**:
+
+1. Click overlays in the list on the left to add them to the canvas (1080 × 1920 for a phone stream, or 1920 × 1080).
+2. Drag to move, drag a corner to resize (Shift keeps the shape), and set each overlay's options in the panel on the right.
+3. The shaded areas show roughly where TikTok's own buttons and comments cover the screen, so you can keep things out of the way.
+4. Press **Save** and add the one link, `/overlays/scene.html?layout=main`, to TikTok LIVE Studio or OBS. Later changes show up on stream as soon as you save, with no need to touch the source again.
+
+You can keep several layouts (for example one for chatting and one for games) and switch between them by changing the link.
+
+Shortcuts: arrow keys nudge (Shift = 10 px), Delete removes, Ctrl+D duplicates, Ctrl+Z undoes, Ctrl+S saves, Esc deselects. Hold Alt while dragging to turn off snapping.
 
 ## Sounds
 

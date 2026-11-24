@@ -1,0 +1,59 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Layout</title>
+<link rel="stylesheet" href="overlay.css">
+<style>
+  #stage { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+  #stage iframe { position: absolute; border: 0; background: transparent; color-scheme: normal; }
+  #msg { position: fixed; left: 12px; top: 12px; font-size: 14px; }
+</style></head>
+<body>
+<div id="stage"></div>
+<div id="msg" class="shadow"></div>
+<script src="/socket.io/socket.io.js"></script>
+<script src="common.js"></script>
+<script>
+  // One link for a whole layout built in the Layout editor.  ?layout=main
+  // Size the browser source to the layout (1080 x 1920 for portrait); it also scales to fit any size.
+  const wanted = params.get('layout');
+  const stage = document.getElementById('stage');
+  const frames = new Map(); // widget id -> iframe
+  let layout = null;
+
+  function fit() {
+    if (!layout) return;
+    const s = Math.min(innerWidth / layout.width, innerHeight / layout.height);
+    stage.style.width = `${layout.width}px`;
+    stage.style.height = `${layout.height}px`;
+    stage.style.transform = `translate(${(innerWidth - layout.width * s) / 2}px, ${(innerHeight - layout.height * s) / 2}px) scale(${s})`;
+  }
+  addEventListener('resize', fit);
+
+  function apply(l) {
+    layout = l;
+    document.getElementById('msg').textContent = l ? '' : `No layout called "${wanted}". Check the link in the Layout editor.`;
+    if (!l) return;
+    const keep = new Set();
+    l.widgets.forEach((w, i) => {
+      if (w.hidden) return;
+      keep.add(w.id);
+      let f = frames.get(w.id);
+      if (!f) {
+        f = document.createElement('iframe');
+        f.setAttribute('allowtransparency', 'true');
+        f.title = w.name || w.src;
+        frames.set(w.id, f);
+        stage.append(f);
+      }
+      if (f.dataset.src !== w.src) { f.dataset.src = w.src; f.src = w.src; }
+      Object.assign(f.style, { left: `${w.x}px`, top: `${w.y}px`, width: `${w.w}px`, height: `${w.h}px`, zIndex: String(i + 1) });
+    });
+    for (const [id, f] of frames) if (!keep.has(id)) { f.remove(); frames.delete(id); }
+    fit();
+  }
+
+  io().on('config', (c) => {
+    const list = c.layouts || [];
+    apply(wanted ? list.find((l) => l.id === wanted) : list[0]);
+  });
+</script>
+</body></html>
