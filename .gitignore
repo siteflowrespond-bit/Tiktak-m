@@ -3,3 +3,4 @@ data/
 public/sounds/custom/
 .env
 demo-dist/
+site-dist/

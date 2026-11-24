@@ -1,5 +1,7 @@
 # flock.tt
 
+**Website and live demo: [flocktt.xyz](https://flocktt.xyz)**
+
 A TikTok LIVE interaction toolkit in the spirit of TikFinity. It runs on your own computer and does four things:
 
 - **Connects to any TikTok LIVE** by username and shows chat, gifts, likes, follows, shares and joins as they happen.
@@ -107,6 +109,10 @@ Settings are saved to `data/config.json`, which is git-ignored. Environment vari
 
 - `PORT` (default `8787`)
 - `HOST` (default `127.0.0.1`). Set it to `0.0.0.0` to open the overlays from another device on your network.
+
+## Website
+
+The site at **flocktt.xyz** (the homepage in `site/` plus the browser demo at `/demo/`) is built by `npm run site:build` into `site-dist/` and published to GitHub Pages by `.github/workflows/pages.yml` on every push.
 
 ## How it works
 
