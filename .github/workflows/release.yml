@@ -21,7 +21,7 @@ jobs:
           - os: windows-latest
             target: --win
             file: release/flocktt-setup.exe
-          - os: macos-latest
+          - os: macos-15
             target: --mac
             file: release/flocktt-mac.dmg
     runs-on: ${{ matrix.os }}
