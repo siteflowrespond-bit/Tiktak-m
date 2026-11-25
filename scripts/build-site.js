@@ -1,3 +1,4 @@
+// flock.tt (c) 2026 siteflowrespond-bit. Owner proof sha256:99891628516a57a623400d9ccde22b170ecfac1527631e923149d480260a9270
 // Builds the public website into site-dist/: the homepage (site/) at the root and the demo at /demo/.
 // Deployed to https://flocktt.xyz by .github/workflows/pages.yml.  Run: npm run site:build
 import fs from 'node:fs';

@@ -1,3 +1,4 @@
+// flock.tt (c) 2026 siteflowrespond-bit. Owner proof sha256:99891628516a57a623400d9ccde22b170ecfac1527631e923149d480260a9270
 // Fake events so you can build and test overlays without being LIVE.
 const NAMES = ['luna_star', 'gamer_max', 'pixelpanda', 'coffee.queen', 'noahbeats', 'mia.dance', 'tacotuesday', 'zoe_draws'];
 const GIFTS = [

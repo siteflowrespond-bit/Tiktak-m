@@ -1,3 +1,4 @@
+// flock.tt (c) 2026 siteflowrespond-bit. Owner proof sha256:99891628516a57a623400d9ccde22b170ecfac1527631e923149d480260a9270
 // Generates the built-in sound effects as small WAV files (no external assets needed).
 // Run: node scripts/make-sounds.js
 import fs from 'node:fs';

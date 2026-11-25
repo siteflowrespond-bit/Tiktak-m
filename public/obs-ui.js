@@ -1,3 +1,4 @@
+// flock.tt (c) 2026 siteflowrespond-bit. Owner proof sha256:99891628516a57a623400d9ccde22b170ecfac1527631e923149d480260a9270
 /* OBS page: connection, scene buttons, "when X happens do Y in OBS" actions and an activity log.
    Uses helpers from dashboard.js (config, api, el, icon, toast, saveConfig, markUnsaved, socket, triggerSelect, triggerDetails, triggerText). */
 /* global config, api, el, icon, toast, saveConfig, markUnsaved, socket, triggerSelect, triggerDetails, triggerText */

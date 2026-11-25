@@ -1,3 +1,4 @@
+// flock.tt (c) 2026 siteflowrespond-bit. Owner proof sha256:99891628516a57a623400d9ccde22b170ecfac1527631e923149d480260a9270
 // flock.tt desktop app: runs the flock.tt server inside the app and shows the dashboard in a window.
 // Overlay links keep working in TikTok LIVE Studio / OBS while the app is open.
 import { app, BrowserWindow, shell, dialog, Menu } from 'electron';

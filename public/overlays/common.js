@@ -1,3 +1,4 @@
+// flock.tt (c) 2026 siteflowrespond-bit. Owner proof sha256:99891628516a57a623400d9ccde22b170ecfac1527631e923149d480260a9270
 /* Helpers shared by every overlay page. */
 window.params = new URLSearchParams(location.search);
 // ?theme=white (default is black)

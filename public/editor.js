@@ -1,3 +1,4 @@
+// flock.tt (c) 2026 siteflowrespond-bit. Owner proof sha256:99891628516a57a623400d9ccde22b170ecfac1527631e923149d480260a9270
 /* Layout editor: arrange overlays on one canvas, shown on stream through overlays/scene.html.
    Uses helpers from dashboard.js (config, api, el, icon, toast, saveConfig, markUnsaved, overlayCatalog, copyText). */
 /* global config, el, icon, toast, saveConfig, markUnsaved, overlayCatalog, copyText */

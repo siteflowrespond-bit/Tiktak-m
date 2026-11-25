@@ -1,3 +1,4 @@
+// flock.tt (c) 2026 siteflowrespond-bit. Owner proof sha256:99891628516a57a623400d9ccde22b170ecfac1527631e923149d480260a9270
 // Homepage scripts (kept in a file so the page can forbid inline scripts).
 // Phones and Macs can't run the Windows installer yet: tell them what to do instead.
 (function () {

@@ -1,3 +1,4 @@
+// flock.tt (c) 2026 siteflowrespond-bit. Owner proof sha256:99891628516a57a623400d9ccde22b170ecfac1527631e923149d480260a9270
 /* Demo backend: runs the real flock.tt engine in the browser instead of on a server.
    Replaces fetch('/api/...') and io() so the dashboard works without Node.
    Engine, simulator and default config code are inserted by scripts/build-demo.js. */

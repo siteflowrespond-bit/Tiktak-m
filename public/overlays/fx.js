@@ -1,3 +1,4 @@
+// flock.tt (c) 2026 siteflowrespond-bit. Owner proof sha256:99891628516a57a623400d9ccde22b170ecfac1527631e923149d480260a9270
 /* Shared particle effects for overlays: confetti, fireworks, sparks.
    Usage: const fx = createFx(); fx.confetti(x, y, { count, spread, power }); fx.firework(x, y); */
 window.createFx = function createFx(zIndex = 50) {

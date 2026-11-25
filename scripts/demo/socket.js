@@ -1,3 +1,4 @@
+// flock.tt (c) 2026 siteflowrespond-bit. Owner proof sha256:99891628516a57a623400d9ccde22b170ecfac1527631e923149d480260a9270
 /* Demo stand-in for socket.io inside overlays: listens to the demo dashboard
    through the parent window (when embedded) or a BroadcastChannel (when opened in its own tab). */
 window.io = function io() {

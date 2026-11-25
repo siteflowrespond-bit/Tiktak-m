@@ -1,3 +1,4 @@
+// flock.tt (c) 2026 siteflowrespond-bit. Owner proof sha256:99891628516a57a623400d9ccde22b170ecfac1527631e923149d480260a9270
 /* Plays sound actions sent by the server. Include after socket.io + common.js and call playSounds(socket). */
 window.playSounds = function playSounds(socket, { masterVolume = 1, maxAtOnce = 4 } = {}) {
   const playing = new Set();
