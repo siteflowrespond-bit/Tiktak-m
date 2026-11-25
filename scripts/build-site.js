@@ -1,5 +1,5 @@
 // Builds the public website into site-dist/: the homepage (site/) at the root and the demo at /demo/.
-// Deployed to https://flocktt.xyz by .github/workflows/pages.yml.  Run: npm run site:build
+// Not deployed anywhere automatically; upload site-dist/ to a static host.  Run: npm run site:build
 import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
