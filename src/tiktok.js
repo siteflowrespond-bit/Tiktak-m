@@ -104,7 +104,11 @@ export class TikTokSource extends EventEmitter {
       this.emit('log', `TikTok error: ${e?.info || ''} ${e?.exception?.message || ''}`);
     });
 
-    conn.on(WebcastEvent.CHAT, (d) => out({ type: 'chat', user: normUser(d.user), comment: d.comment || '' }));
+    conn.on(WebcastEvent.CHAT, (d) => {
+      const id = d.userIdentity || {};
+      const user = { ...normUser(d.user), isFollower: Boolean(id.isFollowerOfAnchor || id.isMutualFollowingWithAnchor), isSubscriber: Boolean(id.isSubscriberOfAnchor), isModerator: Boolean(id.isModeratorOfAnchor), isGifter: Boolean(id.isGiftGiverOfAnchor), isHost: Boolean(id.isAnchor) };
+      out({ type: 'chat', user, comment: d.comment || '' });
+    });
 
     conn.on(WebcastEvent.GIFT, (d) => {
       const details = d.giftDetails || {};

@@ -8,10 +8,14 @@
 <script src="/socket.io/socket.io.js"></script>
 <script src="common.js"></script>
 <script src="sound.js"></script>
+<script src="tts.js"></script>
 <script>
   // Invisible: only plays sound actions. Use this if you don't use the Alerts overlay
   // (the Alerts overlay already plays them, so don't add both). ?volume=0.5
-  playSounds(io(), { masterVolume: Number(params.get('volume') ?? 1) });
+  // Also speaks text-to-speech (?tts=0 to turn that off).
+  const socket = io(), volume = Number(params.get('volume') ?? 1);
+  playSounds(socket, { masterVolume: volume });
+  if (params.get('tts') !== '0') startTts(socket, { volume });
   window.addEventListener('sound-blocked', () => { document.getElementById('unlock').hidden = false; });
   document.getElementById('unlock').onclick = (e) => { e.target.hidden = true; };
 </script>

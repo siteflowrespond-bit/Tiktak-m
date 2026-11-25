@@ -37,7 +37,7 @@
   window.__flocktBus = { subscribe(fn) { frames.add(fn); snapshotFor(fn); return () => frames.delete(fn); } };
   if (channel) channel.onmessage = (m) => { if (m.data?.hello) snapshotFor((evt, data) => channel.postMessage({ evt, data })); };
 
-  for (const evt of ['event', 'stats', 'alert', 'tts', 'sound', 'timer']) engine.on(evt, (d) => broadcast(evt, d));
+  for (const evt of ['event', 'stats', 'alert', 'tts', 'ttsSkipped', 'sound', 'timer']) engine.on(evt, (d) => broadcast(evt, d));
   const setStatus = (s) => { status = s; broadcast('status', s); };
   const publicConfig = () => { const { signApiKey, ...rest } = config; const { password, ...obs } = config.obs || {}; return { ...rest, obs, hasSignApiKey: false, hasObsPassword: false }; };
 
@@ -173,6 +173,8 @@
     if (path === '/api/disconnect') { stopLive(); return json({ ok: true }); }
     if (path === '/api/simulate') { const e = simulate(body.type, body); if (!e) return json({ error: 'Unknown event type' }, 400); feed(e); return json(e); }
     if (path === '/api/reset-stats') { engine.resetStats(); return json({ ok: true }); }
+    if (path === '/api/tts/say') { const text = String(body.text || '').trim().slice(0, 300); if (!text) return json({ error: 'Type something to say' }, 400); broadcast('tts', { text, kind: 'test' }); return json({ ok: true }); }
+    if (path === '/api/tts/control') { if (!['skip', 'clear'].includes(body.action)) return json({ error: 'Unknown action' }, 400); broadcast('ttsControl', { action: body.action }); return json({ ok: true }); }
     if (path === '/api/test-alert') {
       const { text = 'Test alert!', image = '', sound = '', duration = 4, tts = '' } = body;
       if (text) broadcast('alert', { text, image, sound: abs(sound), duration: Number(duration) || 4 });

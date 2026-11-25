@@ -100,7 +100,7 @@ export class Engine extends EventEmitter {
           duration: Number(rule.alert.duration) || 4
         });
       }
-      if (rule.tts) this.emit('tts', { text: fill(rule.tts, vars) });
+      if (rule.tts && this.getConfig().tts?.alerts !== false) this.emit('tts', { text: fill(rule.tts, vars), kind: 'alert' });
     }
   }
 
@@ -124,14 +124,10 @@ export class Engine extends EventEmitter {
   #chatTts(evt) {
     const { tts } = this.getConfig();
     if (!tts.enabled || evt.type !== 'chat') return;
-    let text = evt.comment.trim();
-    if (tts.mode === 'command') {
-      const prefix = tts.prefix.toLowerCase();
-      if (!text.toLowerCase().startsWith(prefix)) return;
-      text = text.slice(prefix.length).trim();
-    }
-    if (!text) return;
-    this.emit('tts', { text: `${evt.user.nickname} says ${text.slice(0, tts.maxLength)}` });
+    const why = ttsBlocked(tts, evt, this.gifters, this.ttsLast || (this.ttsLast = new Map()));
+    if (why) { this.emit('ttsSkipped', { user: evt.user?.nickname, why }); return; }
+    const text = ttsText(tts, evt);
+    if (text) this.emit('tts', { text, kind: 'chat' });
   }
 
   // ───── subathon timer ─────
@@ -177,6 +173,47 @@ export class Engine extends EventEmitter {
     }
     this.emit('timer', { ...this.timerState(), added: seconds });
   }
+}
+
+// ───── chat text-to-speech rules ─────
+const LINK = /(https?:\/\/|www\.|\b[a-z0-9-]+\.(com|net|org|xyz|io|gg|ly|tv|me|co|app|link|shop|live)\b)/i;
+
+/** Why a chat message shouldn't be read out, or '' if it should. */
+export function ttsBlocked(tts, evt, gifters, lastByUser, now = Date.now()) {
+  const u = evt.user || {};
+  const raw = String(evt.comment || '').trim();
+  if (tts.mode === 'command' && !raw.toLowerCase().startsWith(String(tts.prefix || '!tts').toLowerCase())) return 'no command';
+  const boss = u.isHost || u.isModerator;
+  if (!boss) {
+    const who = tts.who || 'everyone';
+    if (who === 'followers' && !(u.isFollower || u.isSubscriber)) return 'not a follower';
+    if (who === 'subscribers' && !u.isSubscriber) return 'not a subscriber';
+    if (who === 'gifters' && !(u.isGifter || gifters?.has(u.id))) return 'has not sent a gift';
+    if (who === 'moderators') return 'not a moderator';
+  }
+  if (tts.skipLinks && LINK.test(raw)) return 'link';
+  const words = String(tts.blockedWords || '').split(/[,\n]/).map((w) => w.trim().toLowerCase()).filter(Boolean);
+  if (words.length && words.some((w) => raw.toLowerCase().includes(w))) return 'blocked word';
+  // spam: once repeated letters are squashed ("aaaaa" -> "a"), there must be a real word left
+  if (tts.skipSpam && !/\p{L}{2,}/u.test(raw.replace(/^!\S+/, '').replace(/(.)\1{2,}/gu, '$1'))) return 'no words';
+  const cd = (Number(tts.userCooldown) || 0) * 1000;
+  if (cd && !boss) {
+    const key = u.id || u.username || u.nickname;
+    if (now - (lastByUser.get(key) || 0) < cd) return 'cooldown';
+    lastByUser.set(key, now);
+  }
+  return '';
+}
+
+/** The words to speak for a chat message. */
+export function ttsText(tts, evt) {
+  let text = String(evt.comment || '').trim();
+  if (tts.mode === 'command') text = text.slice(String(tts.prefix || '!tts').length).trim();
+  if (tts.skipSpam) text = text.replace(/(.)\1{3,}/gu, '$1$1$1').replace(/[\p{Extended_Pictographic}\uFE0F\u200D]/gu, '').replace(/\s+/g, ' ').trim();
+  const max = Number(tts.maxLength) || 150;
+  if (text.length > max) { text = text.slice(0, max); const sp = text.lastIndexOf(' '); if (sp > max * 0.6) text = text.slice(0, sp); }
+  if (!text) return '';
+  return tts.readName !== false ? `${evt.user?.nickname || 'Someone'} says ${text}` : text;
 }
 
 function bump(map, user, key, amount) {

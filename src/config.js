@@ -19,7 +19,18 @@ export const DEFAULT_CONFIG = {
     prefix: '!tts',
     voice: '',
     rate: 1,
-    maxLength: 150
+    pitch: 1,
+    volume: 1,
+    maxLength: 150,
+    // who may use it: 'everyone' | 'followers' | 'subscribers' | 'gifters' | 'moderators' (moderators and you always can)
+    who: 'everyone',
+    readName: true, // "luna says hello" vs "hello"
+    skipLinks: true,
+    skipSpam: true, // collapses "aaaaaaa" and skips messages with no words in them
+    blockedWords: '',
+    userCooldown: 10, // seconds between messages from the same viewer
+    maxQueue: 5, // chat messages waiting at once; more are dropped so it never falls behind
+    alerts: true // also speak the "Say out loud" lines on alerts
   },
   goals: {
     likes: { enabled: true, label: 'Like goal', target: 10000 },

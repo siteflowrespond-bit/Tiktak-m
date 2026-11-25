@@ -118,6 +118,7 @@ engine.on('event', (evt) => io.emit('event', evt));
 engine.on('stats', (stats) => io.emit('stats', stats));
 engine.on('alert', (a) => io.emit('alert', a));
 engine.on('tts', (t) => io.emit('tts', t));
+engine.on('ttsSkipped', (t) => io.emit('ttsSkipped', t));
 engine.on('sound', (snd) => io.emit('sound', snd));
 engine.on('timer', (t) => io.emit('timer', t));
 
@@ -265,6 +266,20 @@ app.post('/api/simulate', (req, res) => {
 });
 
 app.post('/api/reset-stats', (req, res) => { engine.resetStats(); res.json({ ok: true }); });
+
+// ---- Text-to-speech: test on stream, skip, clear ----
+app.post('/api/tts/say', (req, res) => {
+  const text = String(req.body?.text || '').trim().slice(0, 300);
+  if (!text) return res.status(400).json({ error: 'Type something to say' });
+  io.emit('tts', { text, kind: 'test' });
+  res.json({ ok: true });
+});
+app.post('/api/tts/control', (req, res) => {
+  const action = req.body?.action;
+  if (!['skip', 'clear'].includes(action)) return res.status(400).json({ error: 'Unknown action' });
+  io.emit('ttsControl', { action });
+  res.json({ ok: true });
+});
 
 app.post('/api/test-alert', (req, res) => {
   const { text = 'Test alert!', image = '', sound = '', duration = 4, tts = '' } = req.body || {};

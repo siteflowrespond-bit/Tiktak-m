@@ -29,6 +29,7 @@
 <script src="/socket.io/socket.io.js"></script>
 <script src="common.js"></script>
 <script src="sound.js"></script>
+<script src="tts.js"></script>
 <script>
   // ?volume=0.5  ?tts=0  ?sounds=0 (don't play sound actions)  ?style=plain  ?accent=%2325f4ee
   const socket = io();
@@ -46,7 +47,7 @@
 
   socket.on('config', (c) => { cfg = c; });
   socket.on('alert', (a) => { queue.push(a); next(); });
-  socket.on('tts', ({ text }) => speak(text));
+  if (ttsOn) startTts(socket, { volume });
 
   function next() {
     if (busy || !queue.length) return;
@@ -67,16 +68,5 @@
     }, (a.duration || 4) * 1000);
   }
 
-  function speak(text) {
-    if (!ttsOn || !window.speechSynthesis) return;
-    const u = new SpeechSynthesisUtterance(text);
-    if (cfg) {
-      const v = speechSynthesis.getVoices().find((x) => x.name === cfg.tts.voice);
-      if (v) u.voice = v;
-      u.rate = cfg.tts.rate || 1;
-    }
-    u.volume = volume;
-    speechSynthesis.speak(u);
-  }
 </script>
 </body></html>

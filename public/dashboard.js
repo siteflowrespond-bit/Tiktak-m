@@ -94,7 +94,7 @@ const EVENTS = {
 };
 
 // ── navigation ───────────────────────────────────────────
-const TITLES = { live: 'Live', layout: 'Layout editor', obs: 'OBS', actions: 'Alerts', sounds: 'Sounds', goals: 'Goals & timer', overlays: 'Overlays', settings: 'Settings' };
+const TITLES = { live: 'Live', layout: 'Layout editor', obs: 'OBS', actions: 'Alerts', sounds: 'Sounds', voice: 'Voice', goals: 'Goals & timer', overlays: 'Overlays', settings: 'Settings' };
 function showPage(page) {
   if (!TITLES[page]) page = 'live';
   document.querySelectorAll('#nav button').forEach((b) => b.classList.toggle('active', b.dataset.page === page));
@@ -499,39 +499,82 @@ socket.on('sound', ({ src, volume = 1, times = 1 }) => {
   for (let i = 0; i < times; i++) setTimeout(() => { const a = new Audio(src); a.volume = Math.min(1, volume); a.play().catch(() => {}); }, i * 140);
 });
 
-// ── text-to-speech ───────────────────────────────────────
+// ── Voice page (text-to-speech) ─────────────────────────
 const synth = window.speechSynthesis;
+const V = (id) => $(`#${id}`);
 function loadVoices() {
   if (!synth || !config) return;
-  $('#ttsVoice').replaceChildren(el('option', { value: '' }, 'System default'), ...synth.getVoices().map((v) => el('option', { value: v.name }, `${v.name} (${v.lang})`)));
-  $('#ttsVoice').value = config.tts.voice || '';
+  const voices = synth.getVoices();
+  const keep = config.tts.voice || '';
+  V('vVoice').replaceChildren(el('option', { value: '' }, 'System default'),
+    ...voices.map((v) => el('option', { value: v.name }, `${v.name.replace(/^Microsoft /, '')} · ${v.lang}`)),
+    ...(keep && !voices.some((v) => v.name === keep) ? [el('option', { value: keep }, `${keep} (not on this computer)`)] : []));
+  V('vVoice').value = keep;
 }
 synth?.addEventListener?.('voiceschanged', loadVoices);
+const pct = (n) => `${Math.round(n * 100)}%`;
+function voiceLabels() {
+  V('vRateVal').textContent = `${V('vRate').value}×`;
+  V('vPitchVal').textContent = `${V('vPitch').value}×`;
+  V('vVolumeVal').textContent = pct(Number(V('vVolume').value));
+  V('vEnabledText').textContent = V('vEnabled').checked ? 'On' : 'Off';
+  V('vPrefixF').style.display = V('vMode').value === 'command' ? '' : 'none';
+}
+const pick = (sel, value, fallback) => { const o = [...sel.options].some((x) => x.value === String(value)); sel.value = o ? String(value) : String(fallback); };
 function renderTts() {
   const t = config.tts;
-  $('#ttsEnabled').checked = t.enabled;
-  $('#ttsMode').value = t.mode;
-  $('#ttsPrefix').value = t.prefix;
-  $('#ttsMax').value = t.maxLength;
-  $('#ttsRate').value = t.rate;
-  $('#ttsRateVal').textContent = `${t.rate}×`;
+  V('vEnabled').checked = t.enabled;
+  V('vMode').value = t.mode;
+  V('vPrefix').value = t.prefix;
+  V('vWho').value = t.who || 'everyone';
+  pick(V('vMax'), t.maxLength, 150);
+  V('vReadName').checked = t.readName !== false;
+  V('vAlerts').checked = t.alerts !== false;
+  V('vSkipLinks').checked = t.skipLinks !== false;
+  V('vSkipSpam').checked = t.skipSpam !== false;
+  pick(V('vCooldown'), t.userCooldown ?? 10, 10);
+  pick(V('vQueue'), t.maxQueue ?? 5, 5);
+  V('vBlocked').value = t.blockedWords || '';
+  V('vRate').value = t.rate ?? 1;
+  V('vPitch').value = t.pitch ?? 1;
+  V('vVolume').value = t.volume ?? 1;
   loadVoices();
+  voiceLabels();
 }
-$('#ttsRate').addEventListener('input', (e) => { $('#ttsRateVal').textContent = `${e.target.value}×`; });
-function say(text) {
-  if (!synth) return;
+['vRate', 'vPitch', 'vVolume', 'vEnabled', 'vMode'].forEach((id) => V(id).addEventListener('input', voiceLabels));
+V('vMode').addEventListener('change', voiceLabels);
+function voiceForm() {
+  return {
+    enabled: V('vEnabled').checked, mode: V('vMode').value, prefix: V('vPrefix').value.trim() || '!tts',
+    who: V('vWho').value, maxLength: Number(V('vMax').value) || 150, readName: V('vReadName').checked, alerts: V('vAlerts').checked,
+    skipLinks: V('vSkipLinks').checked, skipSpam: V('vSkipSpam').checked, userCooldown: Number(V('vCooldown').value) || 0,
+    maxQueue: Number(V('vQueue').value) || 5, blockedWords: V('vBlocked').value.trim(),
+    voice: V('vVoice').value, rate: Number(V('vRate').value) || 1, pitch: Number(V('vPitch').value) || 1, volume: Number(V('vVolume').value)
+  };
+}
+function say(text, t = voiceForm()) {
+  if (!synth) return toast('This computer has no text-to-speech', true);
+  synth.cancel();
   const u = new SpeechSynthesisUtterance(text);
-  const v = synth.getVoices().find((x) => x.name === $('#ttsVoice').value);
-  if (v) u.voice = v;
-  u.rate = Number($('#ttsRate').value) || 1;
+  const v = synth.getVoices().find((x) => x.name === t.voice);
+  try { if (v) u.voice = v; } catch { /* keep the default voice */ }
+  u.rate = t.rate; u.pitch = t.pitch; u.volume = t.volume;
   synth.speak(u);
 }
-$('#ttsTest').addEventListener('click', () => say('test viewer says hello, this is what text to speech sounds like.'));
-$('#saveTts').addEventListener('click', (e) => saveConfig({ tts: {
-  enabled: $('#ttsEnabled').checked, mode: $('#ttsMode').value, prefix: $('#ttsPrefix').value || '!tts',
-  maxLength: Number($('#ttsMax').value) || 150, voice: $('#ttsVoice').value, rate: Number($('#ttsRate').value) || 1
-} }, 'Text-to-speech saved', e.currentTarget));
-socket.on('tts', ({ text }) => { if (playHere()) say(text); });
+V('vHear').addEventListener('click', () => say(V('vTry').value || 'hello'));
+V('vOnStream').addEventListener('click', () => api('POST', '/api/tts/say', { text: V('vTry').value || 'hello' }).then(() => toast('Sent to your overlay'), (e) => toast(e.message, true)));
+V('vSkip').addEventListener('click', () => api('POST', '/api/tts/control', { action: 'skip' }).then(() => toast('Skipped')));
+V('vClear').addEventListener('click', () => api('POST', '/api/tts/control', { action: 'clear' }).then(() => toast('Queue cleared')));
+V('voiceToOverlays').addEventListener('click', () => showPage('overlays'));
+V('saveVoice').addEventListener('click', (e) => saveConfig({ tts: voiceForm() }, 'Voice settings saved', e.currentTarget));
+function voiceLog(kind, text) {
+  const log = V('vLog');
+  if (log.firstElementChild?.tagName === 'P') log.replaceChildren();
+  log.prepend(el('div', { class: kind === 'read' ? 'read' : '' }, el('time', {}, new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })), el('span', { class: 'tag' }, kind === 'read' ? 'read' : 'skipped'), el('span', { class: 't' }, text)));
+  while (log.children.length > 30) log.lastElementChild.remove();
+}
+socket.on('tts', (m) => { voiceLog('read', m.text); if (playHere()) say(m.text, config.tts); });
+socket.on('ttsSkipped', ({ user, why }) => voiceLog('skip', `${user || 'Someone'}: ${why}`));
 
 // ── subathon timer ───────────────────────────────────────
 let timer = { running: false, remaining: 0, endsAt: 0 };
@@ -703,7 +746,8 @@ const PAGE_INFO = {
   layout: ['Layout editor', 'Arrange overlays and use one link', 'grid', 'scene editor canvas arrange position drag one link combine'],
   obs: ['OBS', 'Connect OBS, switch scenes, show sources', 'obs', 'obs studio websocket scene source mute camera remote streamlabs'],
   actions: ['Alerts', 'Pop-ups when viewers do things', 'zap', 'alert actions events notifications popup'],
-  sounds: ['Sounds', 'Sound actions, library, text-to-speech', 'sound', 'audio sfx soundboard volume tts voice'],
+  sounds: ['Sounds', 'Sound actions and library', 'sound', 'audio sfx soundboard volume'],
+  voice: ['Voice', 'Text-to-speech: read chat out loud', 'mic', 'tts text to speech voice speak read chat pitch speed'],
   goals: ['Goals & timer', 'Goal bars and the subathon timer', 'clock', 'goal target subathon countdown timer'],
   settings: ['Settings', 'Connection and API key', 'sliders', 'options reconnect api key euler']
 };
@@ -742,8 +786,10 @@ function searchEntries() {
   }
   for (const x of sounds) out.push({ kind: 'Sound library', icon: 'play', title: x.name, sub: x.kind === 'custom' ? 'Uploaded sound · click to preview' : 'Built-in sound · click to preview', where: 'Sounds', kw: 'sound preview play', run: () => preview(x.src) });
   const settings = [
-    ['Text-to-speech', 'Read chat out loud', 'sounds', '#ttsEnabled', 'tts voice speak read chat'],
-    ['Voice', 'Text-to-speech voice', 'sounds', '#ttsVoice', 'tts'],
+    ['Text-to-speech', 'Read chat out loud', 'voice', '#vEnabled', 'tts voice speak read chat'],
+    ['Voice', 'Pick the text-to-speech voice', 'voice', '#vVoice', 'tts pitch speed volume'],
+    ['Blocked words', 'Words text-to-speech skips', 'voice', '#vBlocked', 'tts filter ban swear'],
+    ['Skip message', 'Skip the message being read', 'voice', '#vSkip', 'tts stop queue'],
     ['Master volume', 'Volume of all sound actions', 'sounds', '#master', 'loud quiet'],
     ['Play sounds in this tab', 'Hear sounds on this computer', 'sounds', '#playHere', 'preview listen'],
     ['Subathon timer', 'Start, pause, add time', 'goals', '#clock', 'countdown'],
