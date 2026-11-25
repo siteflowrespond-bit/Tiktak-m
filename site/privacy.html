@@ -43,6 +43,12 @@
     .table { overflow-x: auto; }
     a { color: #fff; }
     a:focus-visible { outline: 2px solid #fff; outline-offset: 3px; border-radius: 6px; }
+    .toc { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 36px; }
+    .toc a { font-size: 14px; color: var(--dim); text-decoration: none; border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; }
+    .toc a:hover { color: #fff; border-color: #444; }
+    h2[id], section[id] { scroll-margin-top: 20px; }
+    ul.links li { margin: 8px 0; }
+    td:first-child { white-space: normal; min-width: 140px; }
     footer { border-top: 1px solid var(--line); padding: 30px 0; color: var(--faint); font-size: 14px; }
   </style>
 </head>
@@ -58,81 +64,140 @@
     <div class="wrap">
       <div class="eyebrow">Privacy</div>
       <h1>Privacy statement</h1>
-      <p class="updated">Last updated 25 November 2026. Applies to the flock.tt desktop app and the website flocktt.xyz.</p>
+      <p class="updated">Last updated 25 November 2026. Applies to the flock.tt desktop app (Windows) and the website flocktt.xyz, including the browser demo.</p>
 
-      <section class="short">
+      <nav class="toc" aria-label="On this page">
+        <a href="#short">Short version</a><a href="#who">Who we are</a><a href="#stored">What's stored</a><a href="#sent">What's sent</a><a href="#viewers">Your viewers</a><a href="#never">What we never do</a><a href="#security">Security</a><a href="#download">The download</a><a href="#website">This website</a><a href="#age">Age and TikTok rules</a><a href="#choices">Your choices</a><a href="#contact">Contact</a>
+      </nav>
+
+      <section class="short" id="short">
         <h2>The short version</h2>
         <ul>
-          <li>flock.tt runs <strong>entirely on your own computer</strong>. There are no flock.tt servers, accounts or logins.</li>
-          <li>We <strong>don't collect, sell or share</strong> any personal data. No analytics, no tracking, no advertising, no telemetry.</li>
-          <li>The only things the app sends over the internet are what's needed to connect to TikTok LIVE and show your stream's pictures, listed below.</li>
-          <li>Your settings, passwords and uploaded sounds are stored <strong>only on your computer</strong>, and you can delete them at any time.</li>
+          <li>flock.tt runs <strong>entirely on your own computer</strong>. There are no flock.tt servers, accounts or logins, so there's nowhere for us to keep your data.</li>
+          <li>We <strong>don't collect, sell or share</strong> personal data about you or your viewers. No analytics, tracking, advertising, telemetry or cookies.</li>
+          <li>The app only goes online to do what you ask: connect to TikTok LIVE, show your stream's pictures, and talk to OBS.</li>
+          <li>Your settings, passwords and sounds are saved <strong>only on your computer</strong>. You can delete them at any time.</li>
+          <li>TikTok's own rules still apply to you: you must be <strong>18 or older to go LIVE</strong> and to send or receive gifts. See <a href="#age">Age and TikTok rules</a>.</li>
         </ul>
       </section>
 
-      <h2>What the app stores, and where</h2>
-      <p>Everything is saved in one folder on your computer and never uploaded:</p>
-      <ul>
-        <li><strong>Windows:</strong> <code>%APPDATA%\flock.tt</code></li>
-      </ul>
+      <h2 id="who">Who we are</h2>
+      <p>flock.tt is an independent, free tool for TikTok LIVE creators. It is <strong>not made by, endorsed by or affiliated with TikTok or ByteDance</strong>. "TikTok" and "TikTok LIVE" are trademarks of their owners and are used here only to describe what the app works with.</p>
+      <p>Because flock.tt has no servers or accounts, we are not able to see, access or recover anything you do in the app.</p>
+
+      <h2 id="stored">What the app stores, and where</h2>
+      <p>Everything the app saves is kept in one folder on your computer and is never uploaded:</p>
+      <ul><li><strong>Windows:</strong> <code>%APPDATA%\flock.tt</code> (paste it into the Run box, Win + R, to open it)</li></ul>
       <div class="table">
         <table>
-          <tr><th>Stored</th><th>Why</th></tr>
-          <tr><td>Your TikTok username</td><td>So the app can connect to your LIVE.</td></tr>
-          <tr><td>Your rules, goals, layouts and settings</td><td>So your setup is there next time.</td></tr>
-          <tr><td>OBS WebSocket password (optional)</td><td>To control OBS on your computer. It is never shown to the browser or the overlays.</td></tr>
-          <tr><td>Euler Stream API key (optional)</td><td>Only if you add one in Settings, to raise TikTok connection limits.</td></tr>
-          <tr><td>Sounds you upload</td><td>To play them on stream.</td></tr>
-          <tr><td>TikTok's gift list</td><td>Gift names, coin values and links to TikTok's gift pictures, so gifts show the right picture.</td></tr>
-          <tr><td>Small display preferences</td><td>For example which page was open last. Kept in the app's own storage.</td></tr>
+          <tr><th>What</th><th>File</th><th>Why</th></tr>
+          <tr><td>Your TikTok username</td><td><code>config.json</code></td><td>So the app can connect to your LIVE.</td></tr>
+          <tr><td>Rules, goals, timer, layouts, settings</td><td><code>config.json</code></td><td>So your setup is there next time.</td></tr>
+          <tr><td>OBS WebSocket password (optional)</td><td><code>config.json</code></td><td>To control OBS. It stays in the app's back end and is never sent to the dashboard page or the overlays.</td></tr>
+          <tr><td>Euler Stream API key (optional)</td><td><code>config.json</code></td><td>Only if you add one, to raise TikTok connection limits. Never shown to the overlays.</td></tr>
+          <tr><td>Sounds you upload</td><td><code>sounds\custom\</code></td><td>To play them on stream.</td></tr>
+          <tr><td>TikTok's gift list</td><td><code>gift-catalog.json</code></td><td>Gift names, coin values and links to TikTok's gift pictures, so gifts show the right picture. Contains nothing about you.</td></tr>
+          <tr><td>Display preferences</td><td>app storage</td><td>Small things like which page was open last and whether you hid the setup checklist.</td></tr>
         </table>
       </div>
-      <p>Uninstalling flock.tt and deleting that folder removes all of it.</p>
+      <p>These files are stored as plain files on your computer and are protected by your Windows account, like your other documents. Anyone with access to your Windows account could open them, so keep your computer locked.</p>
 
-      <h2>What the app sends over the internet</h2>
+      <h2 id="sent">What the app sends over the internet</h2>
+      <p>The app only connects to the services below, and only when you use the feature that needs them:</p>
+      <div class="table">
+        <table>
+          <tr><th>Service</th><th>When</th><th>What's sent</th></tr>
+          <tr><td>TikTok</td><td>When you press Connect</td><td>The TikTok username you typed, to open that LIVE and receive its public events (chat, gifts, likes, follows, shares, joins and viewer count). This is the same public information anyone watching the LIVE sees. See <a href="https://www.tiktok.com/legal/page/row/privacy-policy/en" rel="noopener">TikTok's Privacy Policy</a>.</td></tr>
+          <tr><td>Euler Stream</td><td>When you press Connect</td><td>TikTok requires connections to be signed. The open-source <a href="https://github.com/zerodytrash/TikTok-Live-Connector" rel="noopener">tiktok-live-connector</a> library sends the connection request, including the username, to the <a href="https://www.eulerstream.com" rel="noopener">Euler Stream</a> signing service, plus your API key if you added one. Their own privacy terms apply.</td></tr>
+          <tr><td>TikTok's image servers</td><td>While you're live</td><td>Overlays load viewers' profile pictures and gift pictures from TikTok's servers, the same way the TikTok app does. Your computer's IP address is visible to those servers, as with any web request.</td></tr>
+          <tr><td>OBS Studio</td><td>If you connect OBS</td><td>Scene and source commands, sent to OBS on your own computer or the address you enter. Normally this never leaves your computer or home network.</td></tr>
+          <tr><td>Google Fonts</td><td>When a screen opens</td><td>The app downloads the Geist font, so Google sees your IP address. See <a href="https://developers.google.com/fonts/faq/privacy" rel="noopener">Google Fonts privacy</a>.</td></tr>
+        </table>
+      </div>
+      <p>The app does <strong>not</strong> check for updates in the background, report crashes, or send usage statistics to anyone. To update, you download the new version yourself.</p>
+
+      <h2 id="viewers">Your viewers</h2>
       <ul>
-        <li><strong>TikTok.</strong> When you press Connect, the app connects to TikTok LIVE for the username you typed, to receive that stream's public events: chat, gifts, likes, follows, shares and joins. This is the same public information anyone watching the LIVE can see. It uses the open-source <a href="https://github.com/zerodytrash/TikTok-Live-Connector" rel="noopener">tiktok-live-connector</a> library. flock.tt is not made by or affiliated with TikTok or ByteDance.</li>
-        <li><strong>Euler Stream.</strong> To connect, TikTok requires the request to be signed. The library sends the connection request, including the TikTok username, to the Euler Stream signing service (eulerstream.com), plus your API key if you added one. Their own privacy policy applies to that service.</li>
-        <li><strong>TikTok's picture servers.</strong> Overlays load viewers' profile pictures and gift pictures straight from TikTok's image servers, the same way the TikTok app does.</li>
-        <li><strong>OBS.</strong> If you connect OBS, the app talks to OBS on your own computer (or the address you enter). This normally never leaves your computer or local network.</li>
-        <li><strong>Google Fonts.</strong> The app's screens load the Geist font from Google Fonts, which means Google sees your IP address when the font is downloaded.</li>
-      </ul>
-      <p>The app does <strong>not</strong> check for updates in the background, report crashes, or send any usage information to anyone.</p>
-
-      <h2>Your viewers</h2>
-      <p>While you're live, flock.tt shows viewers' public TikTok names, profile pictures and messages on your screen and overlays, and can read chat aloud using your computer's built-in voices. This is kept in memory while the app is running and is not saved to disk or sent anywhere.</p>
-
-      <h2>Security</h2>
-      <ul>
-        <li>The app's local server listens only on <code>127.0.0.1</code>, so other devices can't reach it unless you change that on purpose.</li>
-        <li>Other websites open in your browser are blocked from controlling the app.</li>
-        <li>Links in the app only open normal web pages, and the app refuses camera, microphone and location requests.</li>
-      </ul>
-
-      <h2>The download</h2>
-      <ul>
-        <li>The installer (<code>flocktt-setup.exe</code>) is built automatically by GitHub Actions from the app's source code and published on GitHub Releases. The Download button on this site links there.</li>
-        <li>Each release lists the installer's SHA-256 fingerprint, so you can check your download wasn't changed.</li>
-        <li>The installer isn't code-signed yet, so Windows may show "Windows protected your PC" the first time. Click <strong>More info</strong> then <strong>Run anyway</strong>.</li>
-        <li>The installer doesn't add toolbars, other software, background services or start-up items.</li>
+        <li>While you're live, flock.tt shows viewers' <strong>public</strong> TikTok names, profile pictures, comments and gifts on your dashboard and overlays.</li>
+        <li>This is kept <strong>in memory only</strong> while the app is running: the activity feed, top gifters and stats. It is not written to disk and is cleared when you close the app.</li>
+        <li>If you turn on text-to-speech, chat is read aloud with your computer's built-in Windows voices.</li>
+        <li>Anything shown on your overlays is broadcast to your audience as part of your stream, so you are responsible for what you choose to show, under TikTok's <a href="https://www.tiktok.com/community-guidelines/en" rel="noopener">Community Guidelines</a>.</li>
       </ul>
 
-      <h2>This website</h2>
+      <h2 id="never">What we never do</h2>
       <ul>
-        <li>flocktt.xyz is a plain static website hosted on GitHub Pages. It has no forms, accounts, cookies, analytics or ads.</li>
-        <li>GitHub, as the host, may log visitors' IP addresses for security. See GitHub's privacy statement.</li>
+        <li>Ask for or store your TikTok password. flock.tt doesn't log in to your TikTok account at all.</li>
+        <li>Post, comment, follow or send gifts on your behalf.</li>
+        <li>Track you, profile you or show ads.</li>
+        <li>Sell, rent or share data. There's no data on our side to share.</li>
+        <li>Install other software, toolbars, background services or start-up items.</li>
+      </ul>
+
+      <h2 id="security">Security</h2>
+      <ul>
+        <li>The app's local server listens only on <code>127.0.0.1</code>, so other devices can't reach it unless you change that setting on purpose.</li>
+        <li>Other websites open in your browser are blocked from controlling the app. Requests from other sites and from unknown addresses are refused.</li>
+        <li>Your OBS password and API key never leave the app's back end.</li>
+        <li>Links in the app only open normal web pages in your browser, and the app refuses camera, microphone and location requests.</li>
+      </ul>
+
+      <h2 id="download">The download</h2>
+      <ul>
+        <li>The installer, <code>flocktt-setup.exe</code>, is built automatically by GitHub Actions from the app's source code and published on GitHub Releases. The Download button on this site links straight there.</li>
+        <li>The installer isn't code-signed yet, so Windows SmartScreen may show "Windows protected your PC" the first time. Click <strong>More info</strong>, then <strong>Run anyway</strong>.</li>
+        <li><strong>Check your download wasn't changed:</strong> each release on GitHub lists the installer's SHA-256 fingerprint. In PowerShell, run <code>Get-FileHash .\flocktt-setup.exe</code> in your Downloads folder and check that the result matches.</li>
+        <li>Only download flock.tt from <strong>flocktt.xyz</strong>. Copies from anywhere else could have been changed.</li>
+        <li>To uninstall, use Windows <strong>Settings → Apps → Installed apps → flock.tt → Uninstall</strong>.</li>
+      </ul>
+
+      <h2 id="website">This website</h2>
+      <ul>
+        <li>flocktt.xyz is a plain static website hosted on <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" rel="noopener">GitHub Pages</a>. It has no forms, accounts, cookies, analytics or ads.</li>
+        <li>GitHub, as the host, may log visitors' IP addresses for security and to keep the site running.</li>
         <li>The site loads the Geist font from Google Fonts.</li>
-        <li>The <a href="demo/">demo</a> runs entirely in your browser with made-up viewers. Nothing you do in it is sent anywhere.</li>
+        <li>The <a href="demo/">demo</a> runs entirely in your browser with made-up viewers. Nothing you do in it is sent anywhere, and closing the tab clears it.</li>
+      </ul>
+
+      <h2 id="age">Age and TikTok rules</h2>
+      <p>flock.tt doesn't collect anyone's age or personal details, but using it with TikTok means TikTok's rules apply to you. In short:</p>
+      <div class="table">
+        <table>
+          <tr><th>To do this on TikTok</th><th>Minimum age</th></tr>
+          <tr><td>Have a TikTok account</td><td>13 in most countries. <strong>16 in Australia</strong>, under the social media minimum age law in force since 10 December 2025.</td></tr>
+          <tr><td>Host a LIVE (go live)</td><td><strong>18</strong>. Teen accounts (13–17) can watch LIVEs but can't host one. TikTok may ask you to confirm your age.</td></tr>
+          <tr><td>Send or receive LIVE gifts, buy coins, earn diamonds</td><td><strong>18</strong>, or the age of adulthood where you live if that's older. 19 in South Korea.</td></tr>
+        </table>
+      </div>
+      <p>flock.tt is built for creators who are allowed to go LIVE. Please don't use it to get around TikTok's age rules. Check TikTok's own pages, since they can change:</p>
+      <ul class="links">
+        <li><a href="https://www.tiktok.com/en/safety-hc/account-and-user-safety/age-requirements-for-tiktok-live" rel="noopener">Age requirements for TikTok LIVE</a></li>
+        <li><a href="https://www.tiktok.com/safety/en/tools-and-guides/live-safety-guide" rel="noopener">TikTok LIVE Safety Guide</a></li>
+        <li><a href="https://support.tiktok.com/en/live-gifts-wallet/tiktok-live/what-is-tiktok-live" rel="noopener">What is TikTok LIVE?</a></li>
+        <li><a href="https://www.tiktok.com/legal/page/global/virtual-items-policy/en" rel="noopener">TikTok Virtual Items Policy</a> (coins, gifts and diamonds)</li>
+        <li><a href="https://www.tiktok.com/legal/page/global/terms-of-service/en" rel="noopener">TikTok Terms of Service</a></li>
+        <li><a href="https://www.tiktok.com/community-guidelines/en" rel="noopener">TikTok Community Guidelines</a></li>
+        <li><a href="https://www.tiktok.com/legal/page/row/privacy-policy/en" rel="noopener">TikTok Privacy Policy</a></li>
+        <li><a href="https://www.tiktok.com/safety/en/guardians-guide/" rel="noopener">TikTok Guardian's Guide</a> (for parents)</li>
+        <li><a href="https://www.esafety.gov.au/parents/social-media-age-restrictions" rel="noopener">eSafety: social media age restrictions in Australia</a></li>
+      </ul>
+      <p>flock.tt connects through an unofficial, community-made library. TikTok can change how LIVE works at any time, which may stop flock.tt from connecting until it's updated.</p>
+
+      <h2 id="choices">Your choices</h2>
+      <ul>
+        <li><strong>See your data:</strong> open <code>%APPDATA%\flock.tt</code>. Everything flock.tt keeps is there.</li>
+        <li><strong>Remove a password or key:</strong> close flock.tt and delete <code>config.json</code> in that folder. The app starts fresh next time.</li>
+        <li><strong>Delete everything:</strong> uninstall flock.tt, then delete the <code>%APPDATA%\flock.tt</code> folder.</li>
+        <li><strong>Data held by TikTok:</strong> your TikTok account data is controlled by TikTok, not flock.tt. Use TikTok's privacy settings or contact TikTok.</li>
       </ul>
 
       <h2>Children</h2>
-      <p>flock.tt doesn't collect personal information from anyone, including children. TikTok LIVE has its own age rules.</p>
+      <p>flock.tt doesn't knowingly collect personal information from anyone, including children, because it doesn't collect personal information at all. Under-18s can't host a TikTok LIVE, so flock.tt isn't intended for them.</p>
 
       <h2>Changes</h2>
-      <p>If this changes, this page will be updated and the date at the top will change.</p>
+      <p>If anything here changes, this page will be updated and the date at the top will change.</p>
 
-      <h2>Contact</h2>
-      <p>Questions about privacy: open an issue on <a href="https://github.com/siteflowrespond-bit/blatantwhisperer/issues" rel="noopener">GitHub</a>.</p>
+      <h2 id="contact">Contact</h2>
+      <p>Questions about privacy or security: open an issue on <a href="https://github.com/siteflowrespond-bit/blatantwhisperer/issues" rel="noopener">GitHub</a>.</p>
     </div>
   </main>
 
