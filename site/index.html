@@ -115,6 +115,11 @@
     .more div { background: var(--panel); padding: 26px 22px 28px; }
     .more b { display: block; font-family: var(--display); font-weight: 600; font-size: 16px; margin-bottom: 8px; color: var(--white); }
     .more span { color: var(--dim); font-size: 15px; }
+    .privacy-lede { max-width: 40rem; color: var(--dim); font-size: 18px; margin: 18px 0 0; }
+    .privacy-more { margin: 26px 0 0; }
+    .privacy-more a { color: var(--white); font-weight: 600; text-decoration: none; border-bottom: 1px solid var(--line-2); padding-bottom: 2px; }
+    .privacy-more a:hover { border-color: var(--white); }
+    #privacy { border-top: 1px solid var(--line); }
 
     /* themes */
     .themes { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-top: 50px; }
@@ -302,6 +307,21 @@
       </div>
     </div>
   </div>
+
+  <section id="privacy">
+    <div class="wrap">
+      <div class="kicker">Privacy</div>
+      <h2>Your data stays on your computer.</h2>
+      <p class="privacy-lede">flock.tt has no servers, accounts or logins. It doesn't collect, sell or share anything about you or your viewers.</p>
+      <div class="more">
+        <div><b>Nothing collected</b><span>No analytics, tracking, ads or telemetry, in the app or on this website. No cookies.</span></div>
+        <div><b>Stored on your PC</b><span>Your username, settings, sounds and OBS password stay in %APPDATA%\flock.tt. Delete it any time.</span></div>
+        <div><b>What goes online</b><span>Only what TikTok LIVE needs: TikTok itself, the Euler Stream signing service, TikTok's pictures and Google Fonts.</span></div>
+        <div><b>Safe download</b><span>Built by GitHub from the source code, with a SHA-256 fingerprint on every release. No extra software.</span></div>
+      </div>
+      <p class="privacy-more"><a href="privacy.html">Read the full privacy statement →</a></p>
+    </div>
+  </section>
 
   <footer>
     <div class="wrap">
