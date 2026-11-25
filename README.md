@@ -2,6 +2,8 @@
 
 *A live you won't forget.*
 
+**Website and live demo: [flocktt.xyz](https://flocktt.xyz)**
+
 A TikTok LIVE interaction toolkit in the spirit of TikFinity. It runs on your own computer and does four things:
 
 - **Connects to any TikTok LIVE** by username and shows chat, gifts, likes, follows, shares and joins as they happen.
@@ -124,11 +126,11 @@ Settings are saved to `data/config.json`, which is git-ignored. Environment vari
 - Other websites open in your browser can't control it: API calls and live connections from a different site are refused, and requests addressed to any other host name are rejected (this stops DNS-rebinding tricks).
 - The OBS password and Euler Stream key never leave the app; the browser and overlays don't see them.
 - The desktop window can't open files or other apps from links, and it refuses camera, microphone and location requests.
-- The website in `site/` has a strict Content Security Policy that only runs the site's own scripts.
+- The website (flocktt.xyz) is a static site on GitHub Pages behind its CDN, with a strict Content Security Policy that only runs the site's own scripts.
 
 ## Website
 
-The homepage (`site/`) plus the browser demo build into `site-dist/` with `npm run site:build`. It isn't hosted anywhere right now; upload `site-dist/` to any static host to publish it.
+The site at **flocktt.xyz** (the homepage in `site/` plus the browser demo at `/demo/`) is built by `npm run site:build` into `site-dist/` and published to GitHub Pages by `.github/workflows/pages.yml` on every push.
 
 ## How it works
 
