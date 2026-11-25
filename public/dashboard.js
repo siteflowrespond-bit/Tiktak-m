@@ -12,7 +12,12 @@ let gifts = []; // gift catalogue [{ name, diamonds }]
   document.documentElement.classList.add('in-app', `in-app-${m[1]}`);
   const bar = document.createElement('div');
   bar.className = 'appbar';
-  bar.innerHTML = '<img src="/logo.svg" alt=""><span>flock<b>.tt</b></span>';
+  // Reuse the sidebar's inline logo, so there's no separate image file that can fail to load.
+  const mark = document.querySelector('.logo svg.mark')?.cloneNode(true);
+  if (mark) { mark.removeAttribute('class'); mark.setAttribute('class', 'appbar-mark'); bar.append(mark); }
+  const name = document.createElement('span');
+  name.innerHTML = 'flock<b>.tt</b>';
+  bar.append(name);
   document.body.prepend(bar);
 })();
 

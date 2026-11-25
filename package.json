@@ -1,7 +1,7 @@
 {
   "name": "flock.tt",
   "private": true,
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "flock.tt: alerts, sounds, animated overlays and OBS control for TikTok LIVE. A live you won't forget.",
   "type": "module",
   "main": "desktop/main.js",

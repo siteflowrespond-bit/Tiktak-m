@@ -545,7 +545,7 @@ input[type=checkbox], input[type=range] { accent-color: #fff; }
 .in-app .appbar { display: flex; position: fixed; top: 0; left: 0; right: 0; z-index: 1000; height: 36px; align-items: center; gap: 9px; padding: 0 150px 0 14px;
   background: #000; border-bottom: 1px solid #1c1c1c; color: #fff; font: 600 13px var(--sans); letter-spacing: -.02em; -webkit-app-region: drag; user-select: none; }
 .in-app-mac .appbar { padding-left: 84px; justify-content: center; }
-.appbar img { width: 18px; height: 18px; border-radius: 4px; }
+.appbar .appbar-mark { width: 18px; height: 18px; flex: none; display: block; }
 .appbar b { font-weight: 600; color: #8a8a8a; }
 .in-app body { padding-top: 36px; box-sizing: border-box; }
 .in-app .app { min-height: calc(100vh - 36px); }
