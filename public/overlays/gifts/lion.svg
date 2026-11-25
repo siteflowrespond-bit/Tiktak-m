@@ -1,0 +1,15 @@
+<!-- flock.tt (c) 2026 siteflowrespond-bit. Owner proof sha256:99891628516a57a623400d9ccde22b170ecfac1527631e923149d480260a9270 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <radialGradient id="m" cx="50%" cy="45%" r="55%"><stop offset="0" stop-color="#fbbf24"/><stop offset=".7" stop-color="#d97706"/><stop offset="1" stop-color="#92400e"/></radialGradient>
+    <radialGradient id="f" cx="50%" cy="40%" r="60%"><stop offset="0" stop-color="#fde68a"/><stop offset="1" stop-color="#f59e0b"/></radialGradient>
+  </defs>
+  <path d="M64 8 L74 20 L90 14 L94 30 L110 32 L106 48 L120 58 L108 70 L116 84 L100 88 L98 104 L82 100 L72 114 L64 104 L56 114 L46 100 L30 104 L28 88 L12 84 L20 70 L8 58 L22 48 L18 32 L34 30 L38 14 L54 20z" fill="url(#m)"/>
+  <circle cx="64" cy="66" r="34" fill="url(#f)"/>
+  <circle cx="40" cy="40" r="8" fill="#f59e0b"/><circle cx="88" cy="40" r="8" fill="#f59e0b"/>
+  <ellipse cx="51" cy="60" rx="5" ry="6" fill="#3b2410"/><ellipse cx="77" cy="60" rx="5" ry="6" fill="#3b2410"/>
+  <circle cx="53" cy="58" r="1.6" fill="#fff"/><circle cx="79" cy="58" r="1.6" fill="#fff"/>
+  <path d="M56 74 h16 l-8 8z" fill="#7c2d12"/>
+  <path d="M64 82 v6 M64 88 c-4 4 -10 4 -12 0 M64 88 c4 4 10 4 12 0" stroke="#7c2d12" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <path d="M46 26 l18 -14 l18 14 l-6 -2 l-12 8 l-12 -8z" fill="#fde047" stroke="#ca8a04" stroke-width="2" stroke-linejoin="round"/>
+</svg>

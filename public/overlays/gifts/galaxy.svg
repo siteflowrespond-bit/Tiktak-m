@@ -1,0 +1,14 @@
+<!-- flock.tt (c) 2026 siteflowrespond-bit. Owner proof sha256:99891628516a57a623400d9ccde22b170ecfac1527631e923149d480260a9270 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <radialGradient id="c" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#fff"/><stop offset=".25" stop-color="#f0abfc"/><stop offset=".6" stop-color="#7c3aed"/><stop offset="1" stop-color="#1e1b4b" stop-opacity="0"/></radialGradient>
+    <linearGradient id="s" x1="0" x2="1"><stop offset="0" stop-color="#22d3ee"/><stop offset=".5" stop-color="#a855f7"/><stop offset="1" stop-color="#ec4899"/></linearGradient>
+  </defs>
+  <circle cx="64" cy="64" r="58" fill="#0b0820"/>
+  <g transform="rotate(-25 64 64)" fill="none" stroke="url(#s)" stroke-linecap="round">
+    <path d="M64 64 C64 40 92 36 102 56 C110 74 94 98 64 98 C30 98 18 70 26 48" stroke-width="7" opacity=".9"/>
+    <path d="M64 64 C64 88 36 92 26 72 C18 54 34 30 64 30 C98 30 110 58 102 80" stroke-width="7" opacity=".9"/>
+  </g>
+  <circle cx="64" cy="64" r="30" fill="url(#c)"/>
+  <g fill="#fff"><circle cx="24" cy="28" r="2"/><circle cx="104" cy="22" r="2.5"/><circle cx="110" cy="96" r="1.8"/><circle cx="18" cy="96" r="2.2"/><circle cx="88" cy="108" r="1.5"/><circle cx="40" cy="14" r="1.5"/></g>
+</svg>

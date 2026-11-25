@@ -1,0 +1,10 @@
+<!-- flock.tt (c) 2026 siteflowrespond-bit. Owner proof sha256:99891628516a57a623400d9ccde22b170ecfac1527631e923149d480260a9270 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs><linearGradient id="n" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#b8b8b8"/></linearGradient></defs>
+  <circle cx="64" cy="64" r="54" fill="#111" stroke="#333" stroke-width="3"/>
+  <path d="M54 30 L90 22 V76" stroke="url(#n)" stroke-width="8" fill="none" stroke-linejoin="round"/>
+  <path d="M54 30 V86" stroke="url(#n)" stroke-width="8" fill="none"/>
+  <ellipse cx="44" cy="88" rx="13" ry="10" fill="url(#n)" transform="rotate(-18 44 88)"/>
+  <ellipse cx="80" cy="78" rx="13" ry="10" fill="url(#n)" transform="rotate(-18 80 78)"/>
+  <circle cx="98" cy="36" r="3" fill="#fff"/><circle cx="28" cy="50" r="2.5" fill="#fff" opacity=".7"/>
+</svg>

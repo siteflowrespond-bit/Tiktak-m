@@ -48,6 +48,7 @@ css += `\n/* demo only */\n.demo-note { margin-bottom: 16px; padding: 10px 14px;
 write('style.css', css);
 for (const f of ['dashboard.js', 'editor.js', 'obs-ui.js', 'logo.svg']) fs.copyFileSync(path.join(PUB, f), path.join(OUT, f));
 for (const f of fs.readdirSync(path.join(PUB, 'overlays'))) {
+  if (fs.statSync(path.join(PUB, 'overlays', f)).isDirectory()) { fs.cpSync(path.join(PUB, 'overlays', f), path.join(OUT, 'overlays', f), { recursive: true }); continue; }
   let s = fs.readFileSync(path.join(PUB, 'overlays', f), 'utf8');
   if (f.endsWith('.html')) s = s.replace('<script src="/socket.io/socket.io.js"></script>', '<script src="demo-socket.js"></script>');
   write(`overlays/${f}`, s);

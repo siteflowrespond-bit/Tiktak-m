@@ -92,6 +92,8 @@ const engine = new Engine(() => config);
 // test gifts (and any real gift that arrives without a picture) can still show the real picture.
 const GIFT_FILE = path.join(DATA_DIR, 'gift-catalog.json');
 const GIFT_FALLBACK = '/overlays/gift.svg';
+// flock.tt's own drawings for the test gifts (used when TikTok hasn't given us a picture)
+const GIFT_ART = { rose: 'rose', tiktok: 'note', 'finger heart': 'finger-heart', doughnut: 'doughnut', 'hand hearts': 'hand-hearts', galaxy: 'galaxy', lion: 'lion' };
 let giftCatalog = [];
 try { giftCatalog = JSON.parse(fs.readFileSync(GIFT_FILE, 'utf8')).filter((g) => g && g.name); } catch { /* none saved yet */ }
 const giftImages = () => new Map(giftCatalog.filter((g) => g.image).map((g) => [g.name.toLowerCase(), g.image]));
@@ -107,7 +109,9 @@ function rememberGifts(list) {
 /** Gives a gift event a picture: its own, else the saved one for that gift, else a plain gift-box icon. */
 function withGiftImage(evt) {
   if (!evt?.gift || evt.gift.image) return evt;
-  return { ...evt, gift: { ...evt.gift, image: giftImageByName.get(String(evt.gift.name).toLowerCase()) || GIFT_FALLBACK } };
+  const key = String(evt.gift.name).toLowerCase();
+  const art = GIFT_ART[key] && `/overlays/gifts/${GIFT_ART[key]}.svg`;
+  return { ...evt, gift: { ...evt.gift, image: giftImageByName.get(key) || art || GIFT_FALLBACK } };
 }
 
 tiktok.on('event', (evt) => engine.handle(withGiftImage(evt)));

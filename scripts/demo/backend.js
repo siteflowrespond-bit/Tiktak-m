@@ -87,7 +87,11 @@
   // ── fake live traffic ──
   let traffic = 0;
   // Pretend gifts have no TikTok picture: show the plain gift-box icon, like the app does before your first LIVE.
-  const giftPic = (evt) => { if (evt?.gift && !evt.gift.image) evt.gift.image = `${BASE}overlays/gift.svg`; return evt; };
+  const GIFT_ART = { rose: 'rose', tiktok: 'note', 'finger heart': 'finger-heart', doughnut: 'doughnut', 'hand hearts': 'hand-hearts', galaxy: 'galaxy', lion: 'lion' };
+  const giftPic = (evt) => {
+    if (evt?.gift && !evt.gift.image) { const a = GIFT_ART[String(evt.gift.name).toLowerCase()]; evt.gift.image = a ? `${BASE}overlays/gifts/${a}.svg` : `${BASE}overlays/gift.svg`; }
+    return evt;
+  };
   function feed(evt) {
     giftPic(evt);
     if (evt.type === 'gift' && evt.gift.count > 1) {
