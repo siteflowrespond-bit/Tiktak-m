@@ -86,7 +86,10 @@
 
   // ── fake live traffic ──
   let traffic = 0;
+  // Pretend gifts have no TikTok picture: show the plain gift-box icon, like the app does before your first LIVE.
+  const giftPic = (evt) => { if (evt?.gift && !evt.gift.image) evt.gift.image = `${BASE}overlays/gift.svg`; return evt; };
   function feed(evt) {
+    giftPic(evt);
     if (evt.type === 'gift' && evt.gift.count > 1) {
       const total = evt.gift.count;
       for (let i = 1; i < total; i++) setTimeout(() => engine.handle({ ...evt, type: 'giftStreak', gift: { ...evt.gift, count: i, coins: evt.gift.diamonds * i } }), (i - 1) * 220);
@@ -113,7 +116,7 @@
       engine.handle({ type: 'viewers', viewers, ts: Date.now() });
       // a short backlog so the page doesn't open empty
       const seed = ['chat', 'follow', 'chat', 'gift', 'chat', 'like', 'share', 'chat', 'gift', 'chat', 'like', 'chat', 'gift', 'follow'];
-      seed.forEach((t) => { const e = simulate(t, {}); if (e.gift) { e.gift.count = 1; e.gift.coins = e.gift.diamonds; } engine.handle(e); });
+      seed.forEach((t) => { const e = giftPic(simulate(t, {})); if (e.gift) { e.gift.count = 1; e.gift.coins = e.gift.diamonds; } engine.handle(e); });
       clearTimeout(traffic);
       tick();
     }, 700);

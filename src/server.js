@@ -87,7 +87,31 @@ const tiktok = new TikTokSource();
 const engine = new Engine(() => config);
 
 // ---- Wiring: TikTok -> engine -> all browser clients ----
-tiktok.on('event', (evt) => engine.handle(evt));
+// ---- Gift pictures ----
+// TikTok sends each gift's picture link with the room's gift catalogue. Keep the last catalogue on disk so
+// test gifts (and any real gift that arrives without a picture) can still show the real picture.
+const GIFT_FILE = path.join(DATA_DIR, 'gift-catalog.json');
+const GIFT_FALLBACK = '/overlays/gift.svg';
+let giftCatalog = [];
+try { giftCatalog = JSON.parse(fs.readFileSync(GIFT_FILE, 'utf8')).filter((g) => g && g.name); } catch { /* none saved yet */ }
+const giftImages = () => new Map(giftCatalog.filter((g) => g.image).map((g) => [g.name.toLowerCase(), g.image]));
+let giftImageByName = giftImages();
+function rememberGifts(list) {
+  if (!list?.length) return;
+  const byName = new Map(giftCatalog.map((g) => [g.name, g]));
+  for (const g of list) if (g.name) byName.set(g.name, { ...byName.get(g.name), ...g, image: g.image || byName.get(g.name)?.image || '' });
+  giftCatalog = [...byName.values()].sort((a, b) => a.diamonds - b.diamonds);
+  giftImageByName = giftImages();
+  try { fs.writeFileSync(GIFT_FILE, JSON.stringify(giftCatalog)); } catch (e) { log(`Could not save gift pictures: ${e.message}`); }
+}
+/** Gives a gift event a picture: its own, else the saved one for that gift, else a plain gift-box icon. */
+function withGiftImage(evt) {
+  if (!evt?.gift || evt.gift.image) return evt;
+  return { ...evt, gift: { ...evt.gift, image: giftImageByName.get(String(evt.gift.name).toLowerCase()) || GIFT_FALLBACK } };
+}
+
+tiktok.on('event', (evt) => engine.handle(withGiftImage(evt)));
+tiktok.on('status', (st) => { if (st.status === 'connected') rememberGifts(tiktok.gifts); });
 tiktok.on('status', (s) => { io.emit('status', s); log(`status: ${s.status} ${s.detail || ''}`); });
 tiktok.on('log', log);
 engine.on('event', (evt) => io.emit('event', evt));
@@ -127,7 +151,7 @@ io.on('connection', (socket) => {
 app.get('/api/config', (req, res) => res.json(publicConfig()));
 
 // Gift catalogue: the real room's gifts when connected, a sample list otherwise.
-app.get('/api/gifts', (req, res) => res.json(tiktok.gifts?.length ? tiktok.gifts : SIM_GIFTS));
+app.get('/api/gifts', (req, res) => res.json(tiktok.gifts?.length ? tiktok.gifts : giftCatalog.length ? giftCatalog : SIM_GIFTS));
 
 // ---- Sound library ----
 app.get('/api/sounds', (req, res) => {
@@ -225,7 +249,7 @@ app.post('/api/disconnect', async (req, res) => {
 });
 
 app.post('/api/simulate', (req, res) => {
-  const evt = simulate(req.body?.type, req.body || {});
+  const evt = withGiftImage(simulate(req.body?.type, req.body || {}));
   if (!evt) return res.status(400).json({ error: 'Unknown event type' });
   if (evt.type === 'gift' && evt.gift.count > 1) {
     // Play it out like a real combo: x1, x2, x3 … then the final gift event.
