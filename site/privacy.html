@@ -1,0 +1,143 @@
+<!doctype html>
+<!-- flock.tt (c) 2026 siteflowrespond-bit. Owner proof sha256:99891628516a57a623400d9ccde22b170ecfac1527631e923149d480260a9270 -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'none'">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="What flock.tt and flocktt.xyz collect, store and send. Short version: nothing about you leaves your computer except what TikTok LIVE needs to connect.">
+  <title>Privacy · flock.tt</title>
+  <link rel="icon" href="logo.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@500&display=swap">
+  <style>
+    :root { --bg: #000; --text: #fff; --dim: #a5a5a5; --faint: #707070; --line: #222; --panel: #0b0b0b; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.65 "Geist", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    .wrap { max-width: 760px; margin: 0 auto; padding: 0 22px; }
+    header { border-bottom: 1px solid var(--line); }
+    header .wrap { display: flex; align-items: center; justify-content: space-between; height: 68px; }
+    .brand { display: flex; align-items: center; gap: 10px; color: #fff; text-decoration: none; font-weight: 700; font-size: 18px; letter-spacing: -.03em; }
+    .brand img { width: 30px; height: 30px; border-radius: 9px; }
+    .brand b { color: #8a8a8a; font-weight: 700; }
+    header nav a { color: var(--dim); text-decoration: none; padding: 10px 8px; }
+    header nav a:hover { color: #fff; }
+    main { padding: 56px 0 80px; }
+    .eyebrow { font: 500 13px "Geist Mono", monospace; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); }
+    h1 { margin: 10px 0 8px; font-size: clamp(34px, 6vw, 48px); line-height: 1.05; letter-spacing: -.04em; }
+    .updated { color: var(--faint); margin: 0 0 36px; }
+    .short { background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 22px 24px; margin: 0 0 44px; }
+    .short h2 { margin-top: 0; }
+    .short ul { margin: 0; }
+    h2 { font-size: 22px; letter-spacing: -.02em; margin: 44px 0 10px; }
+    p, li { color: #d6d6d6; }
+    ul { padding-left: 22px; }
+    li { margin: 6px 0; }
+    strong { color: #fff; }
+    code { font: 500 14px "Geist Mono", monospace; background: #151515; border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; color: #fff; word-break: break-all; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 15px; }
+    th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { color: var(--faint); font: 500 12px "Geist Mono", monospace; letter-spacing: .08em; text-transform: uppercase; }
+    td:first-child { color: #fff; white-space: nowrap; }
+    .table { overflow-x: auto; }
+    a { color: #fff; }
+    a:focus-visible { outline: 2px solid #fff; outline-offset: 3px; border-radius: 6px; }
+    footer { border-top: 1px solid var(--line); padding: 30px 0; color: var(--faint); font-size: 14px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <a class="brand" href="./"><img src="logo.svg" alt=""><span>flock<b>.tt</b></span></a>
+      <nav><a href="./">Home</a><a href="demo/">Demo</a></nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="wrap">
+      <div class="eyebrow">Privacy</div>
+      <h1>Privacy statement</h1>
+      <p class="updated">Last updated 25 November 2026. Applies to the flock.tt desktop app and the website flocktt.xyz.</p>
+
+      <section class="short">
+        <h2>The short version</h2>
+        <ul>
+          <li>flock.tt runs <strong>entirely on your own computer</strong>. There are no flock.tt servers, accounts or logins.</li>
+          <li>We <strong>don't collect, sell or share</strong> any personal data. No analytics, no tracking, no advertising, no telemetry.</li>
+          <li>The only things the app sends over the internet are what's needed to connect to TikTok LIVE and show your stream's pictures, listed below.</li>
+          <li>Your settings, passwords and uploaded sounds are stored <strong>only on your computer</strong>, and you can delete them at any time.</li>
+        </ul>
+      </section>
+
+      <h2>What the app stores, and where</h2>
+      <p>Everything is saved in one folder on your computer and never uploaded:</p>
+      <ul>
+        <li><strong>Windows:</strong> <code>%APPDATA%\flock.tt</code></li>
+      </ul>
+      <div class="table">
+        <table>
+          <tr><th>Stored</th><th>Why</th></tr>
+          <tr><td>Your TikTok username</td><td>So the app can connect to your LIVE.</td></tr>
+          <tr><td>Your rules, goals, layouts and settings</td><td>So your setup is there next time.</td></tr>
+          <tr><td>OBS WebSocket password (optional)</td><td>To control OBS on your computer. It is never shown to the browser or the overlays.</td></tr>
+          <tr><td>Euler Stream API key (optional)</td><td>Only if you add one in Settings, to raise TikTok connection limits.</td></tr>
+          <tr><td>Sounds you upload</td><td>To play them on stream.</td></tr>
+          <tr><td>TikTok's gift list</td><td>Gift names, coin values and links to TikTok's gift pictures, so gifts show the right picture.</td></tr>
+          <tr><td>Small display preferences</td><td>For example which page was open last. Kept in the app's own storage.</td></tr>
+        </table>
+      </div>
+      <p>Uninstalling flock.tt and deleting that folder removes all of it.</p>
+
+      <h2>What the app sends over the internet</h2>
+      <ul>
+        <li><strong>TikTok.</strong> When you press Connect, the app connects to TikTok LIVE for the username you typed, to receive that stream's public events: chat, gifts, likes, follows, shares and joins. This is the same public information anyone watching the LIVE can see. It uses the open-source <a href="https://github.com/zerodytrash/TikTok-Live-Connector" rel="noopener">tiktok-live-connector</a> library. flock.tt is not made by or affiliated with TikTok or ByteDance.</li>
+        <li><strong>Euler Stream.</strong> To connect, TikTok requires the request to be signed. The library sends the connection request, including the TikTok username, to the Euler Stream signing service (eulerstream.com), plus your API key if you added one. Their own privacy policy applies to that service.</li>
+        <li><strong>TikTok's picture servers.</strong> Overlays load viewers' profile pictures and gift pictures straight from TikTok's image servers, the same way the TikTok app does.</li>
+        <li><strong>OBS.</strong> If you connect OBS, the app talks to OBS on your own computer (or the address you enter). This normally never leaves your computer or local network.</li>
+        <li><strong>Google Fonts.</strong> The app's screens load the Geist font from Google Fonts, which means Google sees your IP address when the font is downloaded.</li>
+      </ul>
+      <p>The app does <strong>not</strong> check for updates in the background, report crashes, or send any usage information to anyone.</p>
+
+      <h2>Your viewers</h2>
+      <p>While you're live, flock.tt shows viewers' public TikTok names, profile pictures and messages on your screen and overlays, and can read chat aloud using your computer's built-in voices. This is kept in memory while the app is running and is not saved to disk or sent anywhere.</p>
+
+      <h2>Security</h2>
+      <ul>
+        <li>The app's local server listens only on <code>127.0.0.1</code>, so other devices can't reach it unless you change that on purpose.</li>
+        <li>Other websites open in your browser are blocked from controlling the app.</li>
+        <li>Links in the app only open normal web pages, and the app refuses camera, microphone and location requests.</li>
+      </ul>
+
+      <h2>The download</h2>
+      <ul>
+        <li>The installer (<code>flocktt-setup.exe</code>) is built automatically by GitHub Actions from the app's source code and published on GitHub Releases. The Download button on this site links there.</li>
+        <li>Each release lists the installer's SHA-256 fingerprint, so you can check your download wasn't changed.</li>
+        <li>The installer isn't code-signed yet, so Windows may show "Windows protected your PC" the first time. Click <strong>More info</strong> then <strong>Run anyway</strong>.</li>
+        <li>The installer doesn't add toolbars, other software, background services or start-up items.</li>
+      </ul>
+
+      <h2>This website</h2>
+      <ul>
+        <li>flocktt.xyz is a plain static website hosted on GitHub Pages. It has no forms, accounts, cookies, analytics or ads.</li>
+        <li>GitHub, as the host, may log visitors' IP addresses for security. See GitHub's privacy statement.</li>
+        <li>The site loads the Geist font from Google Fonts.</li>
+        <li>The <a href="demo/">demo</a> runs entirely in your browser with made-up viewers. Nothing you do in it is sent anywhere.</li>
+      </ul>
+
+      <h2>Children</h2>
+      <p>flock.tt doesn't collect personal information from anyone, including children. TikTok LIVE has its own age rules.</p>
+
+      <h2>Changes</h2>
+      <p>If this changes, this page will be updated and the date at the top will change.</p>
+
+      <h2>Contact</h2>
+      <p>Questions about privacy: open an issue on <a href="https://github.com/siteflowrespond-bit/blatantwhisperer/issues" rel="noopener">GitHub</a>.</p>
+    </div>
+  </main>
+
+  <footer>
+    <div class="wrap">flock.tt · flocktt.xyz · Not affiliated with TikTok or ByteDance.</div>
+  </footer>
+</body>
+</html>
