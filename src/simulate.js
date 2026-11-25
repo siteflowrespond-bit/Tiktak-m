@@ -14,18 +14,18 @@ const COMMENTS = ['hello!!', 'love this stream', '!hello', '!tts this is a test'
 
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
-function fakeUser() {
-  const username = pick(NAMES);
+function fakeUser(name) {
+  const username = name ? String(name).toLowerCase().replace(/[^a-z0-9._]/g, '').slice(0, 24) || pick(NAMES) : pick(NAMES);
   return {
     id: username,
     username,
-    nickname: username.replace(/[._]/g, ' '),
+    nickname: name ? String(name).slice(0, 24) : username.replace(/[._]/g, ' '),
     avatar: ''
   };
 }
 
 export function simulate(type, opts = {}) {
-  const user = fakeUser();
+  const user = fakeUser(opts.nickname);
   const ts = Date.now();
   switch (type) {
     case 'chat':
