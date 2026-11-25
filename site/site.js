@@ -1,15 +1,15 @@
 // Homepage scripts (kept in a file so the page can forbid inline scripts).
-// Put the download for the visitor's computer first and make it the filled button.
+// Phones and Macs can't run the Windows installer yet: tell them what to do instead.
 (function () {
   const ua = navigator.userAgent, plat = navigator.userAgentData?.platform || navigator.platform || '';
-  const mac = /Mac/i.test(plat) || /Macintosh/.test(ua);
-  if (!mac) return;
-  document.querySelectorAll('[data-downloads]').forEach((row) => {
-    const w = row.querySelector('[data-os="win"]'), m = row.querySelector('[data-os="mac"]');
-    if (!w || !m) return;
-    row.insertBefore(m, w);
-    w.classList.replace('primary', 'ghost'); m.classList.replace('ghost', 'primary');
-  });
+  const phone = navigator.userAgentData?.mobile || /Android|iPhone|iPad|iPod|Mobi/i.test(ua) || (/Mac/i.test(plat) && navigator.maxTouchPoints > 1);
+  const mac = !phone && (/Mac/i.test(plat) || /Macintosh/.test(ua));
+  const note = document.querySelector('[data-device-note]');
+  if (!note || (!phone && !mac)) return;
+  note.classList.add('device');
+  note.textContent = phone
+    ? 'flock.tt runs on a Windows PC. Open this page there to download it, or try the demo now.'
+    : 'You\u2019re on a Mac: the Mac version is coming soon. Try the demo in your browser for now.';
 })();
 
 // A murmuration: simple flocking (separation, alignment, cohesion) with a slow wandering attractor.
@@ -32,7 +32,9 @@
   function step() {
     t += 0.004;
     // the flock follows a slow figure-eight over the right side of the sky
-    const ax = W * (0.68 + 0.2 * Math.sin(t)), ay = H * (0.32 + 0.14 * Math.sin(t * 2.1));
+    // on narrow screens the text fills the width, so keep the flock up high and to the right
+    const narrow = W < 700;
+    const ax = W * (0.68 + 0.2 * Math.sin(t)), ay = narrow ? H * (0.1 + 0.05 * Math.sin(t * 2.1)) : H * (0.32 + 0.14 * Math.sin(t * 2.1));
     const R = 34, R2 = R * R, sepR2 = 12 * 12;
     // grid for neighbour lookups
     const grid = new Map();

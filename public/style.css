@@ -554,3 +554,6 @@ input[type=checkbox], input[type=range] { accent-color: #fff; }
 .in-app .ed-lib, .in-app .ed-insp { top: 108px; max-height: calc(100vh - 126px); }
 .in-app body.ed-full .ed-stage-wrap, .in-app body.ed-full .ed-lib, .in-app body.ed-full .ed-insp { max-height: calc(100vh - 98px); }
 .in-app body.ed-full .ed-stage-wrap { height: calc(100vh - 98px); }
+
+/* bigger tap area for the Activity filters on touch screens */
+@media (pointer: coarse) { .filters label { min-height: 32px; padding: 0 4px; } .filters { gap: 6px 10px; } }

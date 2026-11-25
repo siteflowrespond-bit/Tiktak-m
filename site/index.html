@@ -14,6 +14,7 @@
   <meta name="twitter:card" content="summary_large_image">
   <meta name="theme-color" content="#000000">
   <link rel="icon" href="logo.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
@@ -146,7 +147,7 @@
       .row, .row.flip { grid-template-columns: 1fr; gap: 28px; }
       .row.flip .copy { order: 0; }
       .more, .themes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .steps { grid-template-columns: 1fr; gap: 30px; }
+      .steps { grid-template-columns: minmax(0, 1fr); gap: 30px; }
       section { padding: 80px 0; }
       .rows { gap: 70px; }
     }
@@ -156,6 +157,10 @@
       .nav .btn { padding: 10px 16px; }
       body { font-size: 16px; }
     }
+    @media (max-width: 700px) { .hero canvas { opacity: .35; } }
+    .nav nav a { display: inline-block; padding: 10px 8px; }
+    a:focus-visible, button:focus-visible { outline: 2px solid #fff; outline-offset: 3px; border-radius: 10px; }
+    .note.device { color: var(--dim); }
     @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } html { scroll-behavior: auto; } }
   </style>
 </head>
@@ -183,7 +188,7 @@
         <a class="btn primary" data-os="win" href="https://github.com/siteflowrespond-bit/Tiktak-m/releases/latest/download/flocktt-setup.exe"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5 10.5 4.4v7.1H3zM11.5 4.3 21 3v8.5h-9.5zM3 12.5h7.5v7.1L3 18.5zM11.5 12.5H21V21l-9.5-1.3z"/></svg>Download for Windows</a>
         <a class="btn ghost" href="demo/">Try the demo</a>
       </div>
-      <p class="note">Free for Windows 10 and 11. Mac version coming soon.</p>
+      <p class="note" data-device-note>Free for Windows 10 and 11. Mac version coming soon.</p>
     </div>
   </div>
 
