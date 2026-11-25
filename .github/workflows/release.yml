@@ -65,7 +65,7 @@ jobs:
           name: flock.tt ${{ steps.version.outputs.tag }}
           body: |
             **Windows:** download `flocktt-setup.exe` and run it. If Windows shows "Windows protected your PC", click **More info** → **Run anyway**.
-            **Mac:** download `flocktt-mac.dmg`, drag flock.tt into Applications, then right-click it → **Open** the first time. Stream with OBS on Mac.
+            **Mac:** coming soon.
           files: dist/*
           fail_on_unmatched_files: false
           make_latest: true
