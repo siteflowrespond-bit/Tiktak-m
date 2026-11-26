@@ -51,7 +51,9 @@ export class TikTokSource extends EventEmitter {
   }
 
   async #open() {
-    const options = { enableExtendedGiftInfo: true };
+    // The full gift list needs Euler Stream's paid plan, so it isn't fetched during connect (that failed the whole
+    // connection on the free plan). Gift pictures come with every gift event anyway; the list is tried afterwards.
+    const options = { enableExtendedGiftInfo: false };
     if (this.signApiKey) options.signApiKey = this.signApiKey;
     const conn = new TikTokLiveConnection(this.username, options);
     this.conn = conn;
@@ -59,8 +61,12 @@ export class TikTokSource extends EventEmitter {
     this.setStatus('connecting');
     try {
       const state = await conn.connect();
-      this.gifts = parseGiftList(conn.availableGifts);
+      this.gifts = [];
       this.setStatus('connected', `room ${state.roomId}`);
+      conn.fetchAvailableGifts().then((list) => {
+        this.gifts = parseGiftList(list);
+        if (this.gifts.length) this.emit('gifts', this.gifts);
+      }).catch(() => this.emit('log', 'Full gift list not available on this Euler Stream plan; gift pictures will be collected as gifts arrive.'));
       return state;
     } catch (err) {
       const msg = err?.message || String(err);

@@ -115,7 +115,13 @@ function withGiftImage(evt) {
 }
 
 tiktok.on('event', (evt) => engine.handle(withGiftImage(evt)));
-tiktok.on('status', (st) => { if (st.status === 'connected') rememberGifts(tiktok.gifts); });
+tiktok.on('gifts', (list) => rememberGifts(list));
+// Learn each gift's picture from real gift events, so test gifts can show it later too.
+tiktok.on('event', (evt) => {
+  const g = evt.gift;
+  if (!g?.name || !g.image || giftImageByName.get(String(g.name).toLowerCase()) === g.image) return;
+  rememberGifts([{ name: g.name, diamonds: g.diamonds || 0, image: g.image }]);
+});
 tiktok.on('status', (s) => { io.emit('status', s); log(`status: ${s.status} ${s.detail || ''}`); });
 tiktok.on('log', log);
 engine.on('event', (evt) => io.emit('event', evt));

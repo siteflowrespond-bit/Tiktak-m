@@ -2,6 +2,7 @@
 // flock.tt desktop app: runs the flock.tt server inside the app and shows the dashboard in a window.
 // Overlay links keep working in TikTok LIVE Studio / OBS while the app is open.
 import { app, BrowserWindow, shell, dialog, Menu } from 'electron';
+import updaterPkg from 'electron-updater';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -72,6 +73,37 @@ async function start() {
   });
   win.on('closed', () => { win = null; });
   win.loadURL(`${url}?app=${os}`);
+  setupUpdates();
+}
+
+// ---- Automatic updates ----
+// Checks GitHub Releases on launch and every 4 hours, downloads new versions in the background,
+// then offers a restart. If you pick "Later" it installs the next time flock.tt closes.
+function setupUpdates() {
+  if (!app.isPackaged) return; // only the installed app updates itself
+  const { autoUpdater } = updaterPkg;
+  autoUpdater.autoDownload = true;
+  autoUpdater.autoInstallOnAppQuit = true;
+  let offered = '';
+  autoUpdater.on('error', (e) => console.log('[update]', e?.message || e));
+  autoUpdater.on('update-available', (info) => console.log(`[update] downloading ${info.version}`));
+  autoUpdater.on('update-downloaded', async (info) => {
+    if (offered === info.version || !win) return;
+    offered = info.version;
+    const { response } = await dialog.showMessageBox(win, {
+      type: 'info',
+      buttons: ['Restart now', 'Later'],
+      defaultId: 0,
+      cancelId: 1,
+      title: 'Update ready',
+      message: `flock.tt ${info.version} is ready to install`,
+      detail: 'Restart now to update (takes a few seconds), or pick Later and it installs the next time you close flock.tt.\n\nIf you are live, pick Later.'
+    });
+    if (response === 0) setImmediate(() => autoUpdater.quitAndInstall(true, true));
+  });
+  const check = () => autoUpdater.checkForUpdates().catch((e) => console.log('[update]', e?.message || e));
+  check();
+  setInterval(check, 4 * 60 * 60 * 1000);
 }
 
 app.on('window-all-closed', () => app.quit());
