@@ -1,0 +1,61 @@
+<!doctype html>
+<!-- flock.tt (c) 2026 siteflowrespond-bit. Owner proof sha256:99891628516a57a623400d9ccde22b170ecfac1527631e923149d480260a9270 -->
+<html><head><meta charset="utf-8"><title>Wins &amp; losses</title>
+<link rel="stylesheet" href="overlay.css">
+<style>
+  body { display: flex; justify-content: center; }
+  .card { display: inline-flex; flex-direction: column; align-items: center; gap: 6px; margin: 10px; padding: 12px 22px 14px; }
+  .title { font-size: 13px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; opacity: .7; }
+  .row { display: flex; align-items: center; gap: 18px; }
+  .cell { display: flex; flex-direction: column; align-items: center; min-width: 64px; }
+  .n { font-size: 52px; font-weight: 800; line-height: 1; letter-spacing: -2px; font-variant-numeric: tabular-nums; }
+  .k { font-size: 13px; font-weight: 800; letter-spacing: 2px; opacity: .75; margin-top: 4px; }
+  .dash { font-size: 40px; font-weight: 300; opacity: .35; }
+  .streak { font-size: 15px; font-weight: 700; padding: 3px 12px; border-radius: 999px; background: var(--tt-a); color: var(--tt-panel-solid, #000); min-height: 1em; }
+  .streak:empty { display: none; }
+  .streak.lose { background: transparent; color: var(--tt-text); border: 1.5px solid var(--tt-line); }
+  .pop { animation: pop .55s cubic-bezier(.3, 1.8, .5, 1); }
+  @keyframes pop { 0% { transform: scale(1); } 35% { transform: scale(1.35); } 100% { transform: scale(1); } }
+  .flash { position: fixed; left: 0; right: 0; top: 50%; text-align: center; font-size: 30px; font-weight: 900; letter-spacing: 3px; text-transform: uppercase; opacity: 0; pointer-events: none; }
+  .flash.on { animation: flash 1.6s ease forwards; }
+  @keyframes flash { 0% { opacity: 0; transform: translateY(14px) scale(.9); } 15% { opacity: 1; transform: none; } 75% { opacity: 1; } 100% { opacity: 0; transform: translateY(-10px); } }
+  .row.compact .n { font-size: 40px; }
+</style></head>
+<body>
+<div class="card panel shadow" id="card">
+  <div class="title" id="title"></div>
+  <div class="row" id="row"></div>
+  <div class="streak" id="streak"></div>
+</div>
+<script src="/socket.io/socket.io.js"></script>
+<script src="common.js"></script>
+<script>
+  // ?draws=0 hide draws  ?streak=0 hide the streak  ?title=Record (empty to hide)  ?bg=0  ?compact=1
+  const showDraws = params.get('draws') !== '0';
+  const showStreak = params.get('streak') !== '0';
+  const title = params.get('title') ?? 'Wins & losses';
+  document.getElementById('title').textContent = title;
+  if (!title) document.getElementById('title').remove();
+  if (params.get('bg') === '0') document.getElementById('card').classList.remove('panel');
+  const row = document.getElementById('row');
+  if (params.get('compact') === '1') row.classList.add('compact');
+  const cells = {};
+  const keys = showDraws ? [['wins', 'W'], ['losses', 'L'], ['draws', 'D']] : [['wins', 'W'], ['losses', 'L']];
+  keys.forEach(([k, label], i) => {
+    if (i) row.append(el('span', { class: 'dash' }, '–'));
+    cells[k] = el('span', { class: 'n num' }, '0');
+    row.append(el('div', { class: 'cell' }, cells[k], el('span', { class: 'k' }, label)));
+  });
+  let prev = null;
+  io().on('record', (r) => {
+    for (const [k] of keys) {
+      cells[k].textContent = fmt(r[k] || 0);
+      if (prev && r[k] > prev[k]) { cells[k].classList.remove('pop'); void cells[k].offsetWidth; cells[k].classList.add('pop'); }
+    }
+    const s = document.getElementById('streak');
+    s.className = 'streak' + (r.streak < 0 ? ' lose' : '');
+    s.textContent = !showStreak || Math.abs(r.streak) < 2 ? '' : r.streak > 0 ? `🔥 ${r.streak} win streak` : `${-r.streak} losses in a row`;
+    prev = r;
+  });
+</script>
+</body></html>

@@ -37,6 +37,10 @@ export function simulate(type, opts = {}) {
     }
     case 'like':
       return { type, user, likes: 1 + Math.floor(Math.random() * 15), totalLikes: 0, ts };
+    case 'battle': {
+      const result = ['win', 'loss', 'draw'].includes(opts.result) ? opts.result : pick(['win', 'win', 'loss', 'draw']);
+      return { type, result, opponent: fakeUser().nickname, battleId: `sim-${ts}`, ts };
+    }
     case 'viewers':
       return { type, viewers: 10 + Math.floor(Math.random() * 500), ts };
     case 'follow':

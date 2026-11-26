@@ -579,3 +579,17 @@ input[type=checkbox], input[type=range] { accent-color: #fff; }
 .v-log .read .tag { background: #fff; color: #000; border-color: #fff; }
 .v-log .t { min-width: 0; overflow-wrap: anywhere; }
 #page-voice textarea { width: 100%; box-sizing: border-box; resize: vertical; font: inherit; }
+
+/* ── Wins & losses ── */
+.rec { margin-top: 16px; }
+.rec-body { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 28px; align-items: center; }
+.rec-score { display: flex; align-items: center; justify-content: center; gap: 18px; padding: 18px 0; }
+.rec-score div { display: flex; flex-direction: column; align-items: center; min-width: 90px; }
+.rec-score b { font-size: 72px; font-weight: 700; letter-spacing: -.05em; line-height: 1; font-variant-numeric: tabular-nums; }
+.rec-score span { font: 500 12px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--dim); margin-top: 8px; }
+.rec-score i { font-style: normal; font-size: 44px; color: var(--faint); }
+.rec-side { display: flex; flex-direction: column; gap: 12px; }
+.rec-streak { font-weight: 600; }
+.rec-streak:empty { display: none; }
+.rec .url { display: flex; gap: 6px; }
+@media (max-width: 900px) { .rec-body { grid-template-columns: 1fr; } .rec-score b { font-size: 56px; } }

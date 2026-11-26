@@ -130,11 +130,47 @@ export class TikTokSource extends EventEmitter {
     conn.on(WebcastEvent.MEMBER, (d) => out({ type: 'join', user: normUser(d.user) }));
     conn.on(WebcastEvent.SUPER_FAN ?? 'superFan', (d) => out({ type: 'subscribe', user: normUser(d.user) }));
     conn.on(WebcastEvent.ROOM_USER, (d) => out({ type: 'viewers', viewers: d.viewerCount || 0 }));
+
+    // LIVE battles (matches): when one finishes, work out whether this streamer won, lost or drew.
+    const seenBattles = new Set();
+    conn.on(WebcastEvent.LINK_MIC_BATTLE, (d) => {
+      try {
+        const r = battleOutcome(d, { username: this.username, roomId: conn.roomId });
+        if (!r || seenBattles.has(r.battleId)) return;
+        seenBattles.add(r.battleId);
+        out({ type: 'battle', ...r });
+      } catch (e) { this.emit('log', `Could not read a battle result: ${e.message}`); }
+    });
     conn.on(WebcastEvent.STREAM_END, () => {
       out({ type: 'streamEnd' });
       this.manualDisconnect = true; // stream is over; don't hammer reconnects
     });
   }
+}
+
+const BATTLE_FINISH = 5; // LinkMicBattleBattleAction.FINISH
+const RESULT = { 0: 'win', 1: 'loss', 2: 'draw' }; // BattleResultResult
+
+/**
+ * Reads a finished battle: { battleId, result: 'win'|'loss'|'draw', opponent } for this streamer, or null.
+ * The streamer is the battle host whose TikTok username or room matches the one we're connected to.
+ */
+export function battleOutcome(d, { username, roomId }) {
+  if (!d || Number(d.action) !== BATTLE_FINISH) return null;
+  const anchors = (d.anchorsInfo || []).map((a) => a?.value?.user || a?.user).filter(Boolean);
+  const me = String(username || '').toLowerCase();
+  const self = anchors.find((u) => String(u.displayId || '').toLowerCase() === me) || anchors.find((u) => roomId && String(u.roomId) === String(roomId));
+  if (!self) return null;
+  const results = d.battleResult || {};
+  let code = results[self.userId]?.result;
+  if (code === undefined) { // 2 v 2 team battles report per team
+    const team = (d.teamBattleResult || []).find((t) => (t.teamUser || []).some((u) => String(u.userId ?? u.user?.userId) === String(self.userId)));
+    code = team?.result;
+  }
+  const result = RESULT[Number(code)];
+  if (!result) return null;
+  const rival = anchors.find((u) => u.userId !== self.userId);
+  return { battleId: String(d.battleId || Date.now()), result, opponent: rival ? (rival.nickName || rival.displayId || '') : '' };
 }
 
 /** Turns the room's gift catalogue into [{ name, diamonds, image }], whatever shape it arrives in. */

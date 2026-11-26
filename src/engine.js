@@ -12,7 +12,44 @@ export class Engine extends EventEmitter {
     this.lastFired = new Map();
     this.timer = { running: false, endsAt: 0, remaining: getConfig().timer.startMinutes * 60_000 };
     this.likeRemainder = 0;
+    this.record = { wins: 0, losses: 0, draws: 0, streak: 0, last: null };
+    this.recordHistory = [];
     this.resetStats();
+  }
+
+  // ───── wins & losses ─────
+  /** action: 'win' | 'loss' | 'draw' | 'undo' | 'reset' | 'set'. Returns false if nothing changed. */
+  recordAction(action, { opponent = '', source = 'manual', values } = {}) {
+    const r = this.record;
+    if (action === 'undo') {
+      const prev = this.recordHistory.pop();
+      if (!prev) return false;
+      this.record = prev;
+    } else if (action === 'reset' || action === 'set') {
+      this.recordHistory.push({ ...r });
+      const v = action === 'set' ? values || {} : {};
+      const n = (x) => Math.max(0, Math.min(1e6, Math.floor(Number(x) || 0)));
+      this.record = { wins: n(v.wins), losses: n(v.losses), draws: n(v.draws), streak: 0, last: null };
+    } else if (['win', 'loss', 'draw'].includes(action)) {
+      this.recordHistory.push({ ...r });
+      const next = { ...r, last: { result: action, opponent, source, at: Date.now() } };
+      if (action === 'win') { next.wins++; next.streak = r.streak > 0 ? r.streak + 1 : 1; }
+      if (action === 'loss') { next.losses++; next.streak = r.streak < 0 ? r.streak - 1 : -1; }
+      if (action === 'draw') { next.draws++; next.streak = 0; }
+      this.record = next;
+    } else return false;
+    if (this.recordHistory.length > 50) this.recordHistory.shift();
+    this.emit('record', this.record);
+    return true;
+  }
+
+  #recordFromEvent(evt) {
+    const cfg = this.getConfig().record || {};
+    if (evt.type === 'battle' && cfg.auto !== false) this.recordAction(evt.result, { opponent: evt.opponent, source: 'battle' });
+    if (evt.type === 'chat' && cfg.chatCommands !== false && (evt.user?.isHost || evt.user?.isModerator)) {
+      const m = /^!(win|won|loss|lose|lost|draw|tie|undo)\b/i.exec(String(evt.comment || '').trim());
+      if (m) this.recordAction({ won: 'win', lose: 'loss', lost: 'loss', tie: 'draw' }[m[1].toLowerCase()] || m[1].toLowerCase(), { source: 'chat' });
+    }
   }
 
   // ───── stats ─────
@@ -41,6 +78,7 @@ export class Engine extends EventEmitter {
   }
 
   handle(evt) {
+    this.#recordFromEvent(evt);
     const s = this.stats;
     switch (evt.type) {
       case 'chat': s.comments++; break;

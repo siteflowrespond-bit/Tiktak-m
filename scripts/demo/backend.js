@@ -32,12 +32,13 @@
     send('config', publicConfig());
     send('stats', engine.snapshot());
     send('timer', engine.timerState());
+    send('record', engine.record);
   }
   // overlay iframes subscribe directly through the parent window
   window.__flocktBus = { subscribe(fn) { frames.add(fn); snapshotFor(fn); return () => frames.delete(fn); } };
   if (channel) channel.onmessage = (m) => { if (m.data?.hello) snapshotFor((evt, data) => channel.postMessage({ evt, data })); };
 
-  for (const evt of ['event', 'stats', 'alert', 'tts', 'ttsSkipped', 'sound', 'timer']) engine.on(evt, (d) => broadcast(evt, d));
+  for (const evt of ['event', 'stats', 'alert', 'tts', 'ttsSkipped', 'sound', 'timer', 'record']) engine.on(evt, (d) => broadcast(evt, d));
   const setStatus = (s) => { status = s; broadcast('status', s); };
   const publicConfig = () => { const { signApiKey, ...rest } = config; const { password, ...obs } = config.obs || {}; return { ...rest, obs, hasSignApiKey: false, hasObsPassword: false }; };
 
@@ -48,6 +49,7 @@
       if (evt === 'status') fn(status);
       if (evt === 'stats') fn(engine.snapshot());
       if (evt === 'timer') fn(engine.timerState());
+      if (evt === 'record') fn(engine.record);
       if (evt === 'config') fn(publicConfig());
       if (evt === 'obsStatus') fn({ status: fakeObs.status, detail: fakeObs.detail });
     },
@@ -172,6 +174,8 @@
       return json({ ok: true });
     }
     if (path === '/api/play-sound') { broadcast('sound', { src: body.src, volume: (body.volume ?? 1) * config.sounds.volume, times: 1 }); return json({ ok: true }); }
+    if (path === '/api/record' && method === 'GET') return json(engine.record);
+    if (path === '/api/record') { if (!['win', 'loss', 'draw', 'undo', 'reset', 'set'].includes(body.action)) return json({ error: 'Unknown action' }, 400); engine.recordAction(body.action, { values: body }); return json(engine.record); }
     if (path === '/api/timer') { engine.timerAction(body.action, body.seconds); return json(engine.timerState()); }
     if (path === '/api/connect') { const u = (body.username || 'demo_streamer').replace(/^@/, ''); config.username = u; startLive(u); return json({ ok: true }); }
     if (path === '/api/disconnect') { stopLive(); return json({ ok: true }); }

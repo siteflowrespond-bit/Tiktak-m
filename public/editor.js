@@ -7,7 +7,7 @@ const ED_SIZES = {
   'alerts.html': [1080, 480], 'sounds.html': [240, 120], 'chat.html': [680, 640], 'combos.html': [640, 320], 'hearts.html': [460, 900],
   'ticker.html': [1000, 110], 'jar.html': [380, 480], 'wheel.html': [720, 820], 'battle.html': [1000, 260], 'race.html': [1000, 330],
   'topgift.html': [420, 420], 'emojis.html': [1080, 900], 'celebrate.html': [1080, 1920], 'stats.html': [900, 140], 'gifters.html': [520, 330],
-  'counter.html': [420, 130], 'timer.html': [600, 240], 'goal.html': [900, 110]
+  'counter.html': [420, 130], 'timer.html': [600, 240], 'record.html': [520, 210], 'goal.html': [900, 110]
 };
 // Overlays that are effects over the whole picture.
 const ED_FULL = new Set(['celebrate.html']);

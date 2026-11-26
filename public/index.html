@@ -59,7 +59,7 @@
       <button data-page="sounds"><svg class="i"><use href="#i-sound"/></svg><span>Sounds<small>Sound actions &amp; library</small></span></button>
       <button data-page="voice"><svg class="i"><use href="#i-mic"/></svg><span>Voice<small>Text-to-speech</small></span></button>
       <button data-page="obs"><svg class="i"><use href="#i-obs"/></svg><span>OBS<small>Scenes &amp; sources</small></span></button>
-      <button data-page="goals"><svg class="i"><use href="#i-clock"/></svg><span>Goals &amp; timer<small>Targets &amp; subathon</small></span></button>
+      <button data-page="goals"><svg class="i"><use href="#i-clock"/></svg><span>Goals &amp; timer<small>Targets, subathon, wins</small></span></button>
       <button data-page="settings"><svg class="i"><use href="#i-sliders"/></svg><span>Settings<small>Connection</small></span></button>
     </nav>
     <div class="side-foot mono" id="foot">v0.3</div>
@@ -346,6 +346,32 @@
             <div class="panel-body">
               <p class="note">Progress counts from when you connect or reset stats.</p>
               <div id="goals"></div>
+            </div>
+          </div>
+        </div>
+        <div class="panel rec" id="recPanel">
+          <div class="panel-head"><h2>Wins &amp; losses</h2><div class="grow"></div><button class="btn flat sm" id="recEdit">Edit numbers</button><button class="btn flat sm" id="recReset">Reset</button></div>
+          <div class="panel-body rec-body">
+            <div class="rec-score">
+              <div><b id="recW">0</b><span>Wins</span></div>
+              <i>–</i>
+              <div><b id="recL">0</b><span>Losses</span></div>
+              <i>–</i>
+              <div><b id="recD">0</b><span>Draws</span></div>
+            </div>
+            <div class="rec-side">
+              <div class="rec-streak" id="recStreak"></div>
+              <div class="v-btns">
+                <button class="btn red" data-rec="win">+ Win</button>
+                <button class="btn" data-rec="loss">+ Loss</button>
+                <button class="btn" data-rec="draw">+ Draw</button>
+                <button class="btn flat" data-rec="undo">Undo</button>
+              </div>
+              <p class="note" id="recLast">No results yet.</p>
+              <label class="check"><input type="checkbox" id="recAuto"> Count TikTok LIVE battles automatically</label>
+              <label class="check"><input type="checkbox" id="recChat"> Let you and your moderators type <code>!win</code> <code>!loss</code> <code>!draw</code> <code>!undo</code></label>
+              <div class="url"><input id="recLink" readonly><button class="btn sq" id="recCopy" title="Copy overlay link"><svg class="i"><use href="#i-copy"/></svg></button></div>
+              <p class="note">Add that link to TikTok LIVE Studio or OBS, or add "Wins &amp; losses" in the Layout editor. Your record is kept between streams.</p>
             </div>
           </div>
         </div>

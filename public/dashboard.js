@@ -576,6 +576,35 @@ function voiceLog(kind, text) {
 socket.on('tts', (m) => { voiceLog('read', m.text); if (playHere()) say(m.text, config.tts); });
 socket.on('ttsSkipped', ({ user, why }) => voiceLog('skip', `${user || 'Someone'}: ${why}`));
 
+// ── wins & losses ────────────────────────────────────────
+let record = { wins: 0, losses: 0, draws: 0, streak: 0, last: null };
+const recApi = (action, extra = {}) => api('POST', '/api/record', { action, ...extra }).catch((e) => toast(e.message, true));
+function drawRecord() {
+  $('#recW').textContent = fmt(record.wins);
+  $('#recL').textContent = fmt(record.losses);
+  $('#recD').textContent = fmt(record.draws);
+  const s = record.streak;
+  $('#recStreak').textContent = s >= 2 ? `${s} win streak` : s <= -2 ? `${-s} losses in a row` : '';
+  const l = record.last;
+  $('#recLast').textContent = l ? `Last: ${{ win: 'win', loss: 'loss', draw: 'draw' }[l.result]}${l.opponent ? ` vs ${l.opponent}` : ''} · ${{ battle: 'TikTok battle', chat: 'chat command', manual: 'added by hand' }[l.source] || ''} · ${new Date(l.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'No results yet.';
+}
+socket.on('record', (r) => { record = r; drawRecord(); });
+document.querySelectorAll('[data-rec]').forEach((b) => b.addEventListener('click', () => recApi(b.dataset.rec)));
+$('#recReset').addEventListener('click', () => { if (confirm('Reset wins, losses and draws to 0?')) recApi('reset').then(() => toast('Record reset. Undo brings it back.')); });
+$('#recEdit').addEventListener('click', () => {
+  const v = prompt('Set your record as wins-losses-draws, e.g. 12-4-1', `${record.wins}-${record.losses}-${record.draws}`);
+  if (v == null) return;
+  const [wins, losses, draws] = v.split(/[^0-9]+/).map(Number);
+  recApi('set', { wins, losses, draws });
+});
+function renderRecordSettings() {
+  $('#recAuto').checked = config.record?.auto !== false;
+  $('#recChat').checked = config.record?.chatCommands !== false;
+}
+['#recAuto', '#recChat'].forEach((id) => $(id).addEventListener('change', () => saveConfig({ record: { auto: $('#recAuto').checked, chatCommands: $('#recChat').checked } }, 'Saved')));
+$('#recLink').value = `${new URL('.', location.href).href}overlays/record.html`;
+$('#recCopy').addEventListener('click', () => copyText($('#recLink').value, $('#recLink')));
+
 // ── subathon timer ───────────────────────────────────────
 let timer = { running: false, remaining: 0, endsAt: 0 };
 socket.on('timer', (t) => { timer = t; drawClock(); });
@@ -648,6 +677,8 @@ function overlayCatalog() {
     ]],
     ['goals', 'Goals & timer', [
       ['Subathon timer', 'Countdown that grows with gifts, follows and likes.', '/overlays/timer.html'],
+      ['Wins & losses', 'Your battle record and win streak. Counts TikTok LIVE battles by itself.', '/overlays/record.html'],
+      ['Wins & losses (no draws)', 'Just W – L, with the streak.', '/overlays/record.html?draws=0'],
       ...goalCards
     ]]
   ];
@@ -748,7 +779,7 @@ const PAGE_INFO = {
   actions: ['Alerts', 'Pop-ups when viewers do things', 'zap', 'alert actions events notifications popup'],
   sounds: ['Sounds', 'Sound actions and library', 'sound', 'audio sfx soundboard volume'],
   voice: ['Voice', 'Text-to-speech: read chat out loud', 'mic', 'tts text to speech voice speak read chat pitch speed'],
-  goals: ['Goals & timer', 'Goal bars and the subathon timer', 'clock', 'goal target subathon countdown timer'],
+  goals: ['Goals & timer', 'Goal bars, the subathon timer, wins & losses', 'clock', 'goal target subathon countdown timer wins losses record battle score'],
   settings: ['Settings', 'Connection and API key', 'sliders', 'options reconnect api key euler']
 };
 
@@ -793,6 +824,7 @@ function searchEntries() {
     ['Master volume', 'Volume of all sound actions', 'sounds', '#master', 'loud quiet'],
     ['Play sounds in this tab', 'Hear sounds on this computer', 'sounds', '#playHere', 'preview listen'],
     ['Subathon timer', 'Start, pause, add time', 'goals', '#clock', 'countdown'],
+    ['Wins & losses', 'Battle record, +win, +loss, undo', 'goals', '#recPanel', 'record score battle match win loss draw streak counter'],
     ['Time per gift / follow', 'How much time each event adds', 'goals', '#timerForm', 'subathon seconds coin'],
     ['Goals', 'Like, follow, coin and share targets', 'goals', '#goals', 'target goal bar'],
     ['Auto reconnect', 'Keep retrying if the LIVE drops', 'settings', '#autoReconnect', 'retry offline'],
@@ -903,6 +935,7 @@ document.addEventListener('keydown', (e) => {
   $('#playHere').checked = playHere();
   renderRules();
   renderSoundRules();
+  renderRecordSettings();
   renderTts();
   renderTimerForm();
   renderGoals();

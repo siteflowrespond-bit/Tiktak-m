@@ -126,6 +126,15 @@ engine.on('ttsSkipped', (t) => io.emit('ttsSkipped', t));
 engine.on('sound', (snd) => io.emit('sound', snd));
 engine.on('timer', (t) => io.emit('timer', t));
 
+// ---- Wins & losses: kept on disk so the record carries over between streams ----
+const RECORD_FILE = path.join(DATA_DIR, 'record.json');
+try { const r = JSON.parse(fs.readFileSync(RECORD_FILE, 'utf8')); engine.record = { wins: 0, losses: 0, draws: 0, streak: 0, last: null, ...r }; } catch { /* first run */ }
+engine.on('record', (r) => {
+  io.emit('record', r);
+  try { fs.writeFileSync(RECORD_FILE, JSON.stringify(r)); } catch (e) { log(`Could not save wins & losses: ${e.message}`); }
+  if (r.last && Date.now() - r.last.at < 2000) log(`Record: ${r.last.result}${r.last.opponent ? ` vs ${r.last.opponent}` : ''} (${r.wins}W ${r.losses}L ${r.draws}D)`);
+});
+
 // ---- OBS ----
 const obs = new ObsLink();
 obs.on('status', (st) => { io.emit('obsStatus', st); log(`OBS: ${st.status} ${st.detail || ''}`); });
@@ -149,6 +158,7 @@ io.on('connection', (socket) => {
   socket.emit('config', publicConfig());
   socket.emit('stats', engine.snapshot());
   socket.emit('timer', engine.timerState());
+  socket.emit('record', engine.record);
   socket.emit('obsStatus', { status: obs.status, detail: obs.detail });
 });
 
@@ -270,6 +280,14 @@ app.post('/api/simulate', (req, res) => {
 });
 
 app.post('/api/reset-stats', (req, res) => { engine.resetStats(); res.json({ ok: true }); });
+
+app.get('/api/record', (req, res) => res.json(engine.record));
+app.post('/api/record', (req, res) => {
+  const { action, wins, losses, draws } = req.body || {};
+  if (!['win', 'loss', 'draw', 'undo', 'reset', 'set'].includes(action)) return res.status(400).json({ error: 'Unknown action' });
+  engine.recordAction(action, { values: { wins, losses, draws } });
+  res.json(engine.record);
+});
 
 // ---- Text-to-speech: test on stream, skip, clear ----
 app.post('/api/tts/say', (req, res) => {

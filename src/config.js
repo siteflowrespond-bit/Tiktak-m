@@ -76,6 +76,11 @@ export const DEFAULT_CONFIG = {
     }
   ],
   // Subathon timer: events add time while it's running
+  // wins & losses counter
+  record: {
+    auto: true, // count TikTok LIVE battles automatically
+    chatCommands: true // you and your moderators can type !win !loss !draw !undo
+  },
   timer: {
     startMinutes: 60,
     perCoin: 6,
