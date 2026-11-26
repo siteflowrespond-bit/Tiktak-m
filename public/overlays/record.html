@@ -10,7 +10,8 @@
   .cell { display: flex; flex-direction: column; align-items: center; min-width: 64px; }
   .n { font-size: 52px; font-weight: 800; line-height: 1; letter-spacing: -2px; font-variant-numeric: tabular-nums; }
   .k { font-size: 13px; font-weight: 800; letter-spacing: 2px; opacity: .75; margin-top: 4px; }
-  .dash { font-size: 40px; font-weight: 300; opacity: .35; }
+  .dash { width: 18px; height: 4px; border-radius: 2px; background: currentColor; opacity: .3; align-self: flex-start; margin-top: 25px; font-size: 0; }
+  .row.compact .dash { margin-top: 19px; }
   .streak { font-size: 15px; font-weight: 700; padding: 3px 12px; border-radius: 999px; background: var(--tt-a); color: var(--tt-on-accent); min-height: 1em; }
   .streak:empty { display: none; }
   .streak.lose { background: transparent; color: var(--tt-text); border: 1.5px solid var(--tt-line); }

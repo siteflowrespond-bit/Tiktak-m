@@ -5,15 +5,20 @@
 <style>
   .goal { margin: 10px; padding: 12px 16px 14px; }
   .top span:first-child { font-family: var(--tt-display); }
-  .top { display: flex; justify-content: space-between; font-weight: 700; font-size: 20px; margin-bottom: 8px; }
-  .bar { position: relative; height: 22px; background: var(--tt-track); border-radius: 11px; overflow: hidden; }
-  .bar::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent 0 calc(10% - 2px), rgba(255,255,255,.35) calc(10% - 2px) 10%); pointer-events: none; }
-  .fill { height: 100%; width: 0; background: linear-gradient(90deg, var(--tt-a), var(--tt-butter)); border-radius: 11px; transition: width .6s ease; box-shadow: 0 0 16px var(--tt-glow); }
-  .done .fill { background: var(--tt-mint); }
+  .top { display: flex; align-items: baseline; gap: 10px; font-weight: 700; font-size: 20px; margin-bottom: 10px; }
+  .top #label { flex: 1; }
+  .top #count { font-variant-numeric: tabular-nums; }
+  .pct { font-size: 14px; font-weight: 800; padding: 2px 9px; border-radius: 999px; background: var(--tt-a); color: var(--tt-on-accent); font-variant-numeric: tabular-nums; }
+  .bar { position: relative; height: 14px; background: var(--tt-track); border-radius: 999px; overflow: hidden; }
+  .bar::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent calc(25% - 1px), var(--tt-line) 0 25%, transparent 0 calc(50% - 1px), var(--tt-line) 0 50%, transparent 0 calc(75% - 1px), var(--tt-line) 0 75%, transparent 0); pointer-events: none; }
+  .fill { position: relative; height: 100%; width: 0; min-width: 14px; background: var(--tt-a); border-radius: 999px; transition: width .8s cubic-bezier(.3, 1.2, .4, 1); }
+  .fill::after { content: ""; position: absolute; right: 2px; top: 50%; width: 8px; height: 8px; margin-top: -4px; border-radius: 50%; background: var(--tt-panel); opacity: .55; }
+  .done .fill { animation: glow 1.6s ease-in-out infinite; }
+  @keyframes glow { 50% { filter: brightness(1.35); } }
 </style></head>
 <body>
 <div class="goal panel shadow" id="goal" hidden>
-  <div class="top"><span id="label"></span><span id="count"></span></div>
+  <div class="top"><span id="label"></span><span id="count"></span><span class="pct" id="pct">0%</span></div>
   <div class="bar"><div class="fill" id="fill"></div></div>
 </div>
 <script src="/socket.io/socket.io.js"></script>
@@ -33,6 +38,7 @@
     document.getElementById('label').textContent = goal.label;
     document.getElementById('count').textContent = `${fmt(value)} / ${fmt(goal.target)}`;
     document.getElementById('fill').style.width = pct + '%';
+    document.getElementById('pct').textContent = pct >= 100 ? 'Done!' : `${Math.floor(pct)}%`;
     box.classList.toggle('done', pct >= 100);
   }
 </script>

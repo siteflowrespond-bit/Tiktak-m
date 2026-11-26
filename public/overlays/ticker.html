@@ -3,24 +3,29 @@
 <html><head><meta charset="utf-8"><title>Ticker</title>
 <link rel="stylesheet" href="overlay.css">
 <style>
-  .bar { margin: 10px; padding: 10px 16px; display: flex; gap: 18px; font-size: 17px; flex-wrap: wrap; }
-  .bar b { color: var(--tt-butter); }
-  .bar span:first-child b { color: var(--tt-a); }
+  .bar { margin: 10px; padding: 8px 10px; display: flex; gap: 6px; font-size: 17px; align-items: stretch; }
+  .bar > span { display: flex; flex-direction: column; justify-content: center; min-width: 0; flex: 1; padding: 4px 12px; border-radius: 12px; }
+  .bar > span + span { border-left: 1px solid var(--tt-line); border-radius: 0; }
+  .bar small { font-size: 11px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; opacity: .65; }
+  .bar b { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bar b.new { animation: pop .5s cubic-bezier(.3, 1.6, .5, 1); }
+  @keyframes pop { from { opacity: 0; transform: translateY(6px); } }
 </style></head>
 <body>
 <div class="bar panel shadow">
-  <span>Latest follower: <b id="follow">—</b></span>
-  <span>Latest gift: <b id="gift">—</b></span>
-  <span>Latest share: <b id="share">—</b></span>
+  <span><small>Latest follower</small><b id="follow">—</b></span>
+  <span><small>Latest gift</small><b id="gift">—</b></span>
+  <span><small>Latest share</small><b id="share">—</b></span>
 </div>
 <script src="/socket.io/socket.io.js"></script>
 <script src="common.js"></script>
 <script>
   const socket = io();
+  const set = (id, text) => { const b = document.getElementById(id); b.textContent = text; b.classList.remove('new'); void b.offsetWidth; b.classList.add('new'); };
   socket.on('event', (e) => {
-    if (e.type === 'follow') document.getElementById('follow').textContent = e.user.nickname;
-    if (e.type === 'share') document.getElementById('share').textContent = e.user.nickname;
-    if (e.type === 'gift') document.getElementById('gift').textContent = `${e.user.nickname} · ${e.gift.count}x ${e.gift.name}`;
+    if (e.type === 'follow') set('follow', e.user.nickname);
+    if (e.type === 'share') set('share', e.user.nickname);
+    if (e.type === 'gift') set('gift', `${e.user.nickname} · ${e.gift.count > 1 ? `${e.gift.count}× ` : ''}${e.gift.name}`);
   });
 </script>
 </body></html>

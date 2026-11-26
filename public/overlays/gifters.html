@@ -6,9 +6,10 @@
   .box { margin: 10px; padding: 10px 14px; }
   h3 { margin: 0 0 6px; font-family: var(--tt-display); font-size: 15px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; opacity: .85; }
   .row { display: flex; gap: 10px; align-items: center; padding: 4px 0; font-size: 17px; }
-  .rank { width: 20px; font-weight: 800; opacity: .7; }
-  .row:nth-child(1) .rank { color: var(--tt-butter); opacity: 1; }
-  .row:nth-child(1) .avatar { box-shadow: 0 0 0 2px var(--tt-butter), 0 0 14px var(--tt-butter); }
+  .rank { width: 24px; height: 24px; flex: none; display: grid; place-items: center; border-radius: 8px; font-size: 13px; font-weight: 900; opacity: .7; }
+  .row:nth-child(-n+3) .rank { opacity: 1; border: 1.5px solid var(--tt-a); }
+  .row:nth-child(1) .rank { background: var(--tt-a); color: var(--tt-on-accent); }
+  .row:nth-child(1) .avatar { box-shadow: 0 0 0 2px var(--tt-a), 0 0 14px var(--tt-glow); }
   .amt { color: var(--tt-butter); }
   .name { flex: 1; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .amt { font-weight: 700; }
