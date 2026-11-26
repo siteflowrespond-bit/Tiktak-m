@@ -81,6 +81,33 @@ function withParam(src, key, value) {
   const out = sp.toString();
   return out ? `${path}?${out}` : path;
 }
+// ── custom overlay colours (?accent= &text= &panel=) ──
+const COLOUR_KEYS = [['accent', 'Accent'], ['text', 'Text'], ['panel', 'Panel']];
+const colourDefaults = (theme) => (theme === 'white' ? { accent: '000000', text: '000000', panel: 'ffffff' } : { accent: 'ffffff', text: 'ffffff', panel: '000000' });
+/** The custom colours in an overlay link, e.g. { accent: 'ff3366' }. */
+function coloursOf(src) {
+  const q = new URLSearchParams(String(src).split('?')[1] || '');
+  const out = {};
+  for (const [k] of COLOUR_KEYS) { const v = (q.get(k) || '').replace(/^#/, ''); if (/^[0-9a-f]{6}$/i.test(v)) out[k] = v.toLowerCase(); }
+  return out;
+}
+/** Put custom colours on an overlay link (missing ones are removed). */
+function withColours(src, cols = {}) {
+  for (const [k] of COLOUR_KEYS) src = withParam(src, k, cols[k] || '');
+  return src;
+}
+/** Three colour swatches plus a reset. onChange gets the new colours when a swatch is closed. */
+function colourControls(cols, theme, onChange, { mixed = false } = {}) {
+  const def = colourDefaults(theme);
+  const wrap = el('div', { class: 'colours' });
+  for (const [k, label] of COLOUR_KEYS) {
+    const input = el('input', { type: 'color', value: `#${cols[k] || def[k]}`, 'aria-label': `${label} colour` });
+    input.addEventListener('change', () => onChange({ ...cols, [k]: input.value.slice(1).toLowerCase() }));
+    wrap.append(el('label', { class: `swatch${cols[k] ? ' set' : ''}`, title: `${label} colour` }, input, el('span', {}, label)));
+  }
+  if (Object.keys(cols).length || mixed) wrap.append(el('button', { class: 'btn flat sm', title: 'Back to the theme colours', onclick: () => onChange({}) }, mixed ? 'Clear all' : 'Reset'));
+  return wrap;
+}
 const uid = (p) => `${p}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`;
 
 const EVENTS = {
@@ -339,17 +366,41 @@ function preview(src, volume = 1) {
   previewAudio.play().catch(() => toast('Could not play that file', true));
 }
 
-function markUnsaved(btn) { btn.classList.add('unsaved'); }
+// Changes save themselves a moment after you stop editing. The page's Save button is kept (hidden) as the save action.
+let autosaving = false;
+function markUnsaved(btn) {
+  if (!btn) return;
+  btn.classList.add('unsaved');
+  clearTimeout(btn._autosave);
+  btn._autosave = setTimeout(() => { autosaving = true; try { btn.click(); } finally { autosaving = false; } }, 700);
+}
+function showSaved(ok = true) {
+  const pill = $('#savedPill');
+  if (!pill) return;
+  pill.textContent = ok ? 'Saved' : 'Not saved';
+  pill.classList.toggle('bad', !ok);
+  pill.classList.remove('on'); void pill.offsetWidth; pill.classList.add('on');
+}
 window.addEventListener('beforeunload', (e) => { if (document.querySelector('.unsaved')) { e.preventDefault(); e.returnValue = ''; } });
 
+/** Copy the server's answer into config in place, so the forms on screen keep editing the live objects. */
+function absorb(local, server) {
+  for (const [k, v] of Object.entries(server || {})) {
+    const cur = local[k];
+    if (Array.isArray(cur) && Array.isArray(v)) continue; // lists (rules, layouts …) are what we just sent; keep the ones the page is editing
+    if (cur && v && typeof cur === 'object' && typeof v === 'object' && !Array.isArray(v)) absorb(cur, v);
+    else local[k] = v;
+  }
+}
 async function saveConfig(partial, msg, btn) {
+  const quiet = autosaving;
   try {
     const saved = await api('PUT', '/api/config', partial);
-    config = { ...config, ...saved };
+    absorb(config, saved);
     btn?.classList.remove('unsaved');
-    toast(msg);
+    if (quiet) showSaved(); else toast(msg);
     return true;
-  } catch (e) { toast(e.message, true); return false; }
+  } catch (e) { showSaved(false); toast(e.message, true); return false; }
 }
 
 // ── alerts ───────────────────────────────────────────────
@@ -566,6 +617,8 @@ V('vOnStream').addEventListener('click', () => api('POST', '/api/tts/say', { tex
 V('vSkip').addEventListener('click', () => api('POST', '/api/tts/control', { action: 'skip' }).then(() => toast('Skipped')));
 V('vClear').addEventListener('click', () => api('POST', '/api/tts/control', { action: 'clear' }).then(() => toast('Queue cleared')));
 V('voiceToOverlays').addEventListener('click', () => showPage('overlays'));
+$('#page-voice').addEventListener('input', (e) => { if (e.target.id !== 'vTry') markUnsaved(V('saveVoice')); });
+$('#page-voice').addEventListener('change', (e) => { if (e.target.id !== 'vTry') markUnsaved(V('saveVoice')); });
 V('saveVoice').addEventListener('click', (e) => saveConfig({ tts: voiceForm() }, 'Voice settings saved', e.currentTarget));
 function voiceLog(kind, text) {
   const log = V('vLog');
@@ -698,12 +751,15 @@ function renderOverlays() {
   const themeSel = el('select', { id: 'ovTheme', title: 'Colour theme for the overlay links below', style: 'width:auto;margin-left:auto' }, THEMES.map(([v, l]) => el('option', { value: v }, `Theme: ${l}`)));
   themeSel.value = ovTheme;
   themeSel.addEventListener('change', () => { try { localStorage.setItem('ovTheme', themeSel.value); } catch {} renderOverlays(); });
-  const themed = (p) => (ovTheme === 'black' ? p : withParam(p, 'theme', ovTheme));
+  let ovCols = {};
+  try { ovCols = JSON.parse(localStorage.getItem('ovColours') || '{}'); } catch {}
+  const themed = (p) => withColours(ovTheme === 'black' ? p : withParam(p, 'theme', ovTheme), ovCols);
+  const colourBox = el('div', { class: 'ov-colours', title: 'Custom colours for the overlay links below' }, colourControls(ovCols, ovTheme, (c) => { try { localStorage.setItem('ovColours', JSON.stringify(c)); } catch {} renderOverlays(); }));
   $('#ovTabs').replaceChildren(...tabs.map(([id, label, n]) => el('button', {
     class: id === ovTab ? 'active' : '', role: 'tab', 'aria-selected': String(id === ovTab),
     onclick: () => { ovTab = id; try { localStorage.setItem('ovTab', id); } catch {} renderOverlays(); }
   }, label, el('span', { class: 'c' }, n))));
-  $('#ovTabs').append(themeSel);
+  $('#ovTabs').append(themeSel, colourBox);
 
   let sections;
   if (ovTab === 'start') sections = [{ title: 'Start with these four. Add more any time.', items: STARTER.map((n) => all.find((i) => i.name === n)).filter(Boolean) }];
@@ -737,11 +793,13 @@ function renderSettings() {
   $('#autoReconnect').checked = config.autoReconnect;
   $('#keyState').textContent = config.hasSignApiKey ? 'A key is saved.' : 'No key saved.';
 }
+$('#autoReconnect').addEventListener('change', () => markUnsaved($('#saveSettings')));
+$('#signApiKey').addEventListener('change', () => { if ($('#signApiKey').value.trim()) markUnsaved($('#saveSettings')); });
 $('#saveSettings').addEventListener('click', async () => {
   const body = { autoReconnect: $('#autoReconnect').checked };
   const key = $('#signApiKey').value.trim();
   if (key) body.signApiKey = key;
-  if (await saveConfig(body, 'Settings saved')) { $('#signApiKey').value = ''; renderSettings(); }
+  if (await saveConfig(body, 'Settings saved', $('#saveSettings'))) { $('#signApiKey').value = ''; renderSettings(); }
 });
 
 // ── gifts ────────────────────────────────────────────────

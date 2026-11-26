@@ -21,6 +21,7 @@
   --tt-team-b: #6e6e6e;
   --tt-avatar-bg: #ffffff;
   --tt-avatar-fg: #000000;
+  --tt-on-accent: #000000; /* text drawn on top of the accent colour */
   --tt-glow: transparent;
   --tt-shadow: 0 1px 2px rgba(0,0,0,.85), 0 0 12px rgba(0,0,0,.45);
   --tt-display: "Geist", "Inter", "Segoe UI", system-ui, sans-serif;
@@ -34,7 +35,7 @@
   --tt-track: rgba(0, 0, 0, .12);
   --tt-a: #000000; --tt-ember: #000000; --tt-butter: #000000; --tt-mint: #000000; --tt-lilac: #000000; --tt-rose: #000000; --tt-sky: #000000;
   --tt-team-a: #000000; --tt-team-b: #9a9a9a;
-  --tt-avatar-bg: #000000; --tt-avatar-fg: #ffffff;
+  --tt-avatar-bg: #000000; --tt-avatar-fg: #ffffff; --tt-on-accent: #ffffff;
 }
 
 html, body { margin: 0; background: transparent; overflow: hidden; }

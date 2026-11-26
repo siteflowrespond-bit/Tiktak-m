@@ -3,6 +3,25 @@
 window.params = new URLSearchParams(location.search);
 // ?theme=white (default is black)
 if (params.get('theme')) document.documentElement.dataset.theme = params.get('theme');
+// Custom colours: ?accent=ff3366 &text=ffffff &panel=1a1a2e (hex, with or without #). They sit on top of the theme.
+(function customColours() {
+  const hex = (k) => { const v = (params.get(k) || '').replace(/^#/, ''); return /^[0-9a-f]{6}$/i.test(v) ? `#${v.toLowerCase()}` : ''; };
+  const light = (h) => { const n = parseInt(h.slice(1), 16); return (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) > 150; };
+  const root = document.documentElement.style;
+  const accent = hex('accent'), text = hex('text'), panel = hex('panel');
+  if (accent) {
+    for (const v of ['a', 'ember', 'butter', 'mint', 'lilac', 'rose', 'sky', 'team-a', 'avatar-bg']) root.setProperty(`--tt-${v}`, accent);
+    root.setProperty('--tt-avatar-fg', light(accent) ? '#000000' : '#ffffff');
+    root.setProperty('--tt-on-accent', light(accent) ? '#000000' : '#ffffff');
+  }
+  if (text) {
+    root.setProperty('--tt-text', text);
+    root.setProperty('--tt-dim', `${text}a6`);
+    root.setProperty('--tt-line', `${text}29`);
+    root.setProperty('--tt-track', `${text}29`);
+  }
+  if (panel) root.setProperty('--tt-panel', `${panel}db`);
+})();
 /** Theme colours for canvas drawing (CSS variables resolved to strings). */
 window.tt = (name) => getComputedStyle(document.documentElement).getPropertyValue(`--tt-${name}`).trim();
 window.ttPalette = () => ['ember', 'butter', 'mint', 'lilac', 'rose', 'sky'].map(tt);

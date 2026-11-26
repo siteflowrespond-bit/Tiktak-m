@@ -46,6 +46,10 @@ flock.tt is black and white: black surfaces, white text and labels, and white as
 
 Overlays are black panels with white text by default. Add `?theme=white` to an overlay link for white panels with black text, pick it on the Overlays page, or set it per overlay (or for a whole layout) in the Layout editor.
 
+**Custom colours:** any overlay takes `?accent=ff3366`, `?text=ffffff` and `?panel=1a1a2e` (hex). Pick them with the Accent / Text / Panel swatches on the Overlays page (for every link), in the Layout editor for one overlay, or for a whole layout. Text on top of the accent switches between black and white automatically so it stays readable.
+
+Settings save themselves a moment after you change them (a small "Saved" tick shows in the top bar). The Layout editor keeps its Save button, because saving there updates your stream straight away.
+
 ## Overlays
 
 Copy a URL from the **Overlays** page. In TikTok LIVE Studio, add it as a *Link* source. In OBS, add it as a *Browser* source.

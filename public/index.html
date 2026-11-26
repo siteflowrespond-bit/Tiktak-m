@@ -75,6 +75,7 @@
         <div class="results" id="results" role="listbox" hidden></div>
       </div>
       <form class="connect" id="connectForm">
+        <span class="saved-pill" id="savedPill" aria-live="polite">Saved</span>
         <span class="onair" id="onair"><i></i><span id="onairText">Offline</span></span>
         <div class="at"><input id="username" placeholder="username" autocomplete="off" spellcheck="false"></div>
         <button class="btn red" id="connectBtn" type="submit">Connect</button>
@@ -171,7 +172,7 @@
           <span class="muted" id="ruleCount"></span>
           <div class="grow"></div>
           <button class="btn" id="addRule"><svg class="i"><use href="#i-plus"/></svg>New alert</button>
-          <button class="btn red" id="saveRules">Save</button>
+          <button hidden data-autosave class="btn red" id="saveRules">Save</button>
         </div>
         <div class="panel" id="rules"></div>
       </section>
@@ -182,7 +183,7 @@
           <span class="muted">Play a sound when something happens on stream.</span>
           <div class="grow"></div>
           <button class="btn" id="addSound"><svg class="i"><use href="#i-plus"/></svg>New sound action</button>
-          <button class="btn red" id="saveSounds">Save</button>
+          <button hidden data-autosave class="btn red" id="saveSounds">Save</button>
         </div>
         <div class="panel" style="margin-bottom:16px">
           <div class="snd snd-head"><span></span><span>When</span><span>Details</span><span>Play</span><span>Volume</span><span>Options</span></div>
@@ -217,7 +218,7 @@
         <div class="bar">
           <span class="muted">Read chat out loud on stream, and choose how it sounds.</span>
           <div class="grow"></div>
-          <button class="btn red" id="saveVoice">Save</button>
+          <button hidden data-autosave class="btn red" id="saveVoice">Save</button>
         </div>
         <div class="panel voice-note" id="voiceNote">
           <svg class="i"><use href="#i-sound"/></svg>
@@ -305,7 +306,7 @@
               <span class="muted">Change OBS when something happens on your LIVE.</span>
               <div class="grow"></div>
               <button class="btn" id="obsAdd"><svg class="i"><use href="#i-plus"/></svg>New OBS action</button>
-              <button class="btn red" id="obsSave">Save</button>
+              <button hidden data-autosave class="btn red" id="obsSave">Save</button>
             </div>
             <div class="panel" id="obsRules"></div>
           </div>
@@ -338,11 +339,11 @@
               </div>
               <div class="sub">Seconds added while running</div>
               <div class="form" id="timerForm"></div>
-              <div class="row" style="margin-top:12px"><div class="grow"></div><button class="btn red sm" id="saveTimer">Save</button></div>
+              <button hidden data-autosave class="btn red sm" id="saveTimer">Save</button>
             </div>
           </div>
           <div class="panel">
-            <div class="panel-head"><h2>Goals</h2><div class="grow"></div><button class="btn red sm" id="saveGoals">Save</button></div>
+            <div class="panel-head"><h2>Goals</h2><div class="grow"></div><button hidden data-autosave class="btn red sm" id="saveGoals">Save</button></div>
             <div class="panel-body">
               <p class="note">Progress counts from when you connect or reset stats.</p>
               <div id="goals"></div>
@@ -392,7 +393,7 @@
             <label class="check" style="margin-bottom:14px"><input type="checkbox" id="autoReconnect"> Keep retrying every 30s if I'm not live yet or the connection drops</label>
             <div class="f"><span>Euler Stream API key (optional)</span><input id="signApiKey" type="password" placeholder="Leave empty for the free tier" autocomplete="off"></div>
             <p class="note" style="margin-top:8px"><span id="keyState"></span> Connections are signed through Euler Stream. The free tier has rate limits.</p>
-            <button class="btn red" id="saveSettings">Save</button>
+            <button hidden data-autosave class="btn red" id="saveSettings">Save</button>
           </div>
         </div>
       </section>

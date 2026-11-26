@@ -236,6 +236,17 @@ function edRenderInsp() {
     parts.push(el('div', { class: 'panel-head' }, el('h2', {}, 'Layout')),
       el('div', { class: 'panel-body' }, el('label', { class: 'f' }, el('span', {}, 'Name'), name),
         el('label', { class: 'f', style: 'margin-top:10px' }, el('span', {}, 'Theme for every overlay'), all),
+        el('div', { class: 'f', style: 'margin-top:10px' }, el('span', {}, 'Colours for every overlay'), (() => {
+          const sets = l.widgets.map((x) => JSON.stringify(coloursOf(x.src)));
+          const same = sets.length && sets.every((x) => x === sets[0]);
+          const theme = used.size === 1 ? [...used][0] : 'black';
+          return colourControls(same ? JSON.parse(sets[0]) : {}, theme, (c) => {
+            edSnapshot();
+            for (const x of l.widgets) x.src = withColours(x.src, c);
+            edDirty(); edRenderStage(); edRenderInsp();
+            toast(Object.keys(c).length ? 'Colours applied to every overlay in this layout' : 'Every overlay is back to its theme colours');
+          }, { mixed: !same && sets.some((x) => x !== '{}') });
+        })()),
         el('p', { class: 'note', style: 'margin:10px 0 0' }, l.widgets.length ? 'Click an overlay on the canvas to edit it.' : 'Add overlays from the list on the left, or start from a ready-made set.'),
         l.widgets.length ? null : el('button', { class: 'btn red sm', style: 'margin-top:10px', onclick: edStarter }, icon('plus'), `Add a starter set (${l.width > l.height ? 'landscape' : 'portrait'})`)));
   } else {
@@ -252,8 +263,7 @@ function edRenderInsp() {
     const opts = el('input', { value: query, placeholder: 'e.g. goal=500&title=Jar', spellcheck: false, class: 'mono' });
     opts.addEventListener('change', () => { edSnapshot(); w.src = query === opts.value ? w.src : `${file}${opts.value.trim() ? `?${opts.value.trim().replace(/^\?/, '')}` : ''}`; edDirty(); edRenderStage(); });
     const align = (label, fn) => el('button', { class: 'btn', onclick: () => { edSnapshot(); fn(); edDirty(); edRender(); } }, label);
-    parts.push(el('div', { class: 'panel-head' }, el('h2', {}, w.name || 'Overlay'), el('div', { class: 'grow' }),
-      el('button', { class: 'btn flat sq', title: 'Deselect (Esc)', onclick: () => { ed.sel = null; edRender(); } }, '✕')),
+    parts.push(el('div', { class: 'panel-head' }, el('h2', {}, w.name || 'Overlay')),
     el('div', { class: 'panel-body', style: 'display:grid;gap:10px' },
       el('label', { class: 'f' }, el('span', {}, 'Name'), name),
       el('div', { class: 'xywh' }, num('x', 'X'), num('y', 'Y'), num('w', 'Width'), num('h', 'Height')),
@@ -268,10 +278,10 @@ function edRenderInsp() {
         sel.addEventListener('change', () => { edSnapshot(); w.src = withParam(w.src, 'theme', sel.value === 'black' ? '' : sel.value); edDirty(); edRenderStage(); edRenderInsp(); });
         return sel;
       })()),
+      el('div', { class: 'f' }, el('span', {}, 'Colours'), colourControls(coloursOf(w.src), new URLSearchParams(query).get('theme') || 'black', (c) => { edSnapshot(); w.src = withColours(w.src, c); edDirty(); edRenderStage(); edRenderInsp(); })),
       el('label', { class: 'f' }, el('span', {}, `Options for ${file} (press Enter)`), opts),
       el('div', { class: 'row' },
         el('button', { class: 'btn sm', title: 'Duplicate (Ctrl+D)', onclick: edDuplicate }, icon('dup'), 'Duplicate'),
-        el('button', { class: 'btn sm', onclick: () => { edSnapshot(); w.hidden = !w.hidden; edDirty(); edRender(); } }, icon(w.hidden ? 'eye' : 'eyeoff'), w.hidden ? 'Show' : 'Hide'),
         el('button', { class: 'btn sm flat', title: 'Delete (Del)', onclick: edDelete }, icon('trash'), 'Delete'))));
   }
   parts.push(el('div', { class: 'panel-head', style: 'border-top:1px solid var(--line)' }, el('h2', {}, 'Layers'), el('div', { class: 'grow' }), el('span', { class: 'faint', style: 'font-size:12px' }, 'top = front')),
