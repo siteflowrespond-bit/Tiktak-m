@@ -1,0 +1,49 @@
+<!doctype html>
+<!-- flock.tt (c) 2026 siteflowrespond-bit. Owner proof sha256:99891628516a57a623400d9ccde22b170ecfac1527631e923149d480260a9270 -->
+<html><head><meta charset="utf-8"><title>Poll</title>
+<link rel="stylesheet" href="overlay.css">
+<style>
+  .poll { margin: 10px; padding: 16px 18px 18px; width: calc(100% - 20px); box-sizing: border-box; transition: opacity .4s, transform .5s cubic-bezier(.2, 1.4, .4, 1); }
+  .poll.hide { opacity: 0; transform: translateY(20px) scale(.96); }
+  .head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; }
+  .q { font-size: 22px; font-weight: 800; letter-spacing: -.3px; flex: 1; }
+  .meta { font-size: 13px; font-weight: 700; opacity: .7; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .opt { position: relative; display: flex; align-items: center; gap: 10px; padding: 9px 12px; margin-top: 8px; border-radius: 12px; overflow: hidden; border: 1px solid var(--tt-line); }
+  .bar { position: absolute; inset: 0 auto 0 0; width: 0; background: var(--tt-a); opacity: .22; transition: width .6s cubic-bezier(.3, 1.2, .4, 1); }
+  .opt.win { border-color: var(--tt-a); }
+  .opt.win .bar { opacity: .4; }
+  .num { position: relative; width: 26px; height: 26px; flex: none; border-radius: 8px; display: grid; place-items: center; font-weight: 900; font-size: 15px; background: var(--tt-a); color: var(--tt-on-accent); text-shadow: none; }
+  .label { position: relative; flex: 1; font-size: 17px; font-weight: 700; }
+  .pct { position: relative; font-size: 16px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .hint { margin-top: 12px; font-size: 13px; font-weight: 700; opacity: .7; text-align: center; }
+</style></head>
+<body>
+<div class="poll panel shadow hide" id="poll"></div>
+<script src="/socket.io/socket.io.js"></script>
+<script src="common.js"></script>
+<script>
+  // Shows the poll from the Interactive page. Viewers vote by typing the number in chat. ?hide=0 keeps the last result on screen
+  const box = document.getElementById('poll');
+  let poll = null, hideTimer;
+  function draw() {
+    clearTimeout(hideTimer);
+    if (!poll) { box.classList.add('hide'); return; }
+    box.classList.remove('hide');
+    const total = poll.total || 0;
+    const left = poll.open && poll.endsAt ? Math.max(0, Math.ceil((poll.endsAt - Date.now()) / 1000)) : 0;
+    const meta = poll.open ? `${fmt(total)} vote${total === 1 ? '' : 's'}${left ? ` · ${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}` : ''}` : (poll.winner ? 'Final result' : poll.tie ? 'It\'s a tie!' : 'Poll closed');
+    box.replaceChildren(
+      el('div', { class: 'head' }, el('div', { class: 'q' }, poll.question), el('div', { class: 'meta' }, meta)),
+      ...poll.options.map((o, i) => {
+        const pct = total ? Math.round((o.votes / total) * 100) : 0;
+        const row = el('div', { class: `opt${!poll.open && poll.winner === o.label ? ' win' : ''}` }, el('div', { class: 'bar' }), el('div', { class: 'num' }, String(i + 1)), el('div', { class: 'label' }, o.label), el('div', { class: 'pct' }, `${pct}%`));
+        requestAnimationFrame(() => { row.firstChild.style.width = `${pct}%`; });
+        return row;
+      }),
+      poll.open ? el('div', { class: 'hint' }, `Type 1${poll.options.length > 1 ? `–${poll.options.length}` : ''} in chat to vote`) : null);
+    if (!poll.open && params.get('hide') !== '0') hideTimer = setTimeout(() => box.classList.add('hide'), 15000);
+  }
+  io().on('poll', (p) => { poll = p; draw(); });
+  setInterval(() => { if (poll?.open && poll.endsAt) draw(); }, 1000);
+</script>
+</body></html>

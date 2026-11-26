@@ -1,0 +1,40 @@
+<!doctype html>
+<!-- flock.tt (c) 2026 siteflowrespond-bit. Owner proof sha256:99891628516a57a623400d9ccde22b170ecfac1527631e923149d480260a9270 -->
+<html><head><meta charset="utf-8"><title>Camera frame</title>
+<link rel="stylesheet" href="overlay.css">
+<style>
+  html, body { height: 100%; }
+  .f { position: fixed; inset: 14px; border-radius: var(--r, 28px); border: var(--w, 4px) solid var(--tt-a); box-shadow: 0 0 0 1px rgba(0,0,0,.25), 0 10px 40px rgba(0,0,0,.35); }
+  .f.corners { border-color: transparent; box-shadow: none; }
+  .c { position: fixed; width: 56px; height: 56px; border: 0 solid var(--tt-a); }
+  .c.tl { top: 14px; left: 14px; border-top-width: var(--w, 5px); border-left-width: var(--w, 5px); border-top-left-radius: var(--r, 28px); }
+  .c.tr { top: 14px; right: 14px; border-top-width: var(--w, 5px); border-right-width: var(--w, 5px); border-top-right-radius: var(--r, 28px); }
+  .c.bl { bottom: 14px; left: 14px; border-bottom-width: var(--w, 5px); border-left-width: var(--w, 5px); border-bottom-left-radius: var(--r, 28px); }
+  .c.br { bottom: 14px; right: 14px; border-bottom-width: var(--w, 5px); border-right-width: var(--w, 5px); border-bottom-right-radius: var(--r, 28px); }
+  .tag { position: fixed; left: 38px; bottom: 0; transform: translateY(-2px); display: flex; align-items: center; gap: 10px; padding: 8px 14px; border-radius: 14px 14px 0 0; }
+  .tag b { font-size: 20px; letter-spacing: -.3px; }
+  .live { position: fixed; top: 34px; right: 38px; display: flex; align-items: center; gap: 8px; padding: 5px 12px; border-radius: 999px; font-size: 14px; font-weight: 800; letter-spacing: 1px; background: var(--tt-a); color: var(--tt-on-accent); text-shadow: none; }
+  .live i { width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: blink 1.4s infinite; }
+  @keyframes blink { 50% { opacity: .25; } }
+</style></head>
+<body>
+<div class="f" id="f"></div>
+<div class="tag panel" id="tag"><b id="name"></b></div>
+<div class="live" id="live"><i></i><span id="lv">LIVE</span></div>
+<script src="/socket.io/socket.io.js"></script>
+<script src="common.js"></script>
+<script>
+  // Put it over your camera. ?name=@you (defaults to your connected username)  ?style=corners  ?live=0  ?viewers=0  ?radius=28  ?width=4
+  const f = document.getElementById('f');
+  if (params.get('radius')) document.documentElement.style.setProperty('--r', `${Number(params.get('radius'))}px`);
+  if (params.get('width')) document.documentElement.style.setProperty('--w', `${Number(params.get('width'))}px`);
+  if (params.get('style') === 'corners') { f.classList.add('corners'); for (const k of ['tl', 'tr', 'bl', 'br']) document.body.append(el('div', { class: `c ${k}` })); }
+  if (params.get('live') === '0') document.getElementById('live').remove();
+  const name = document.getElementById('name');
+  const setName = (n) => { name.textContent = n; document.getElementById('tag').style.display = n ? '' : 'none'; };
+  setName(params.get('name') || '');
+  const sock = io();
+  if (!params.get('name')) sock.on('status', (s) => setName(s.username ? `@${s.username}` : ''));
+  sock.on('stats', (s) => { const lv = document.getElementById('lv'); if (lv && params.get('viewers') !== '0') lv.textContent = s.viewers ? `LIVE · ${fmt(s.viewers)}` : 'LIVE'; });
+</script>
+</body></html>

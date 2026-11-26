@@ -125,6 +125,8 @@ engine.on('tts', (t) => io.emit('tts', t));
 engine.on('ttsSkipped', (t) => io.emit('ttsSkipped', t));
 engine.on('sound', (snd) => io.emit('sound', snd));
 engine.on('timer', (t) => io.emit('timer', t));
+engine.on('poll', (p) => io.emit('poll', p));
+engine.on('queue', (q) => io.emit('queue', q));
 
 // ---- Wins & losses: kept on disk so the record carries over between streams ----
 const RECORD_FILE = path.join(DATA_DIR, 'record.json');
@@ -159,6 +161,8 @@ io.on('connection', (socket) => {
   socket.emit('stats', engine.snapshot());
   socket.emit('timer', engine.timerState());
   socket.emit('record', engine.record);
+  socket.emit('poll', engine.pollState());
+  socket.emit('queue', engine.queue);
   socket.emit('obsStatus', { status: obs.status, detail: obs.detail });
 });
 
@@ -281,6 +285,17 @@ app.post('/api/simulate', (req, res) => {
 
 app.post('/api/reset-stats', (req, res) => { engine.resetStats(); res.json({ ok: true }); });
 
+app.post('/api/poll', (req, res) => {
+  const { action, question, options, seconds } = req.body || {};
+  const err = engine.pollAction(action, { question, options: Array.isArray(options) ? options : [], seconds });
+  if (err) return res.status(400).json({ error: err });
+  res.json(engine.pollState());
+});
+app.post('/api/queue', (req, res) => {
+  const err = engine.queueAction(req.body?.action, { id: req.body?.id });
+  if (err) return res.status(400).json({ error: err });
+  res.json(engine.queue);
+});
 app.get('/api/record', (req, res) => res.json(engine.record));
 app.post('/api/record', (req, res) => {
   const { action, wins, losses, draws } = req.body || {};

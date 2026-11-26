@@ -33,12 +33,14 @@
     send('stats', engine.snapshot());
     send('timer', engine.timerState());
     send('record', engine.record);
+    send('poll', engine.pollState());
+    send('queue', engine.queue);
   }
   // overlay iframes subscribe directly through the parent window
   window.__flocktBus = { subscribe(fn) { frames.add(fn); snapshotFor(fn); return () => frames.delete(fn); } };
   if (channel) channel.onmessage = (m) => { if (m.data?.hello) snapshotFor((evt, data) => channel.postMessage({ evt, data })); };
 
-  for (const evt of ['event', 'stats', 'alert', 'tts', 'ttsSkipped', 'sound', 'timer', 'record']) engine.on(evt, (d) => broadcast(evt, d));
+  for (const evt of ['event', 'stats', 'alert', 'tts', 'ttsSkipped', 'sound', 'timer', 'record', 'poll', 'queue']) engine.on(evt, (d) => broadcast(evt, d));
   const setStatus = (s) => { status = s; broadcast('status', s); };
   const publicConfig = () => { const { signApiKey, ...rest } = config; const { password, ...obs } = config.obs || {}; return { ...rest, obs, hasSignApiKey: false, hasObsPassword: false }; };
 
@@ -50,6 +52,8 @@
       if (evt === 'stats') fn(engine.snapshot());
       if (evt === 'timer') fn(engine.timerState());
       if (evt === 'record') fn(engine.record);
+      if (evt === 'poll') fn(engine.pollState());
+      if (evt === 'queue') fn(engine.queue);
       if (evt === 'config') fn(publicConfig());
       if (evt === 'obsStatus') fn({ status: fakeObs.status, detail: fakeObs.detail });
     },
@@ -174,6 +178,8 @@
       return json({ ok: true });
     }
     if (path === '/api/play-sound') { broadcast('sound', { src: body.src, volume: (body.volume ?? 1) * config.sounds.volume, times: 1 }); return json({ ok: true }); }
+    if (path === '/api/poll') { const err = engine.pollAction(body.action, { question: body.question, options: Array.isArray(body.options) ? body.options : [], seconds: body.seconds }); return err ? json({ error: err }, 400) : json(engine.pollState()); }
+    if (path === '/api/queue') { const err = engine.queueAction(body.action, { id: body.id }); return err ? json({ error: err }, 400) : json(engine.queue); }
     if (path === '/api/record' && method === 'GET') return json(engine.record);
     if (path === '/api/record') { if (!['win', 'loss', 'draw', 'undo', 'reset', 'set'].includes(body.action)) return json({ error: 'Unknown action' }, 400); engine.recordAction(body.action, { values: body }); return json(engine.record); }
     if (path === '/api/timer') { engine.timerAction(body.action, body.seconds); return json(engine.timerState()); }

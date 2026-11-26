@@ -1,0 +1,37 @@
+<!doctype html>
+<!-- flock.tt (c) 2026 siteflowrespond-bit. Owner proof sha256:99891628516a57a623400d9ccde22b170ecfac1527631e923149d480260a9270 -->
+<html><head><meta charset="utf-8"><title>Recent</title>
+<link rel="stylesheet" href="overlay.css">
+<style>
+  .r { margin: 10px; padding: 14px 16px; width: calc(100% - 20px); box-sizing: border-box; }
+  .title { font-size: 14px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; opacity: .75; margin-bottom: 6px; }
+  .row { display: flex; align-items: center; gap: 10px; padding: 6px 0; font-size: 17px; font-weight: 700; animation: in .5s cubic-bezier(.2, 1.4, .4, 1); }
+  .row .what { margin-left: auto; font-size: 13px; opacity: .7; font-weight: 700; white-space: nowrap; }
+  .row .gift { width: 26px; height: 26px; object-fit: contain; }
+  .empty { font-size: 15px; opacity: .65; font-weight: 600; padding: 4px 0; }
+  @keyframes in { from { opacity: 0; transform: translateY(-10px) scale(.96); } }
+</style></head>
+<body>
+<div class="r panel shadow" id="r"></div>
+<script src="/socket.io/socket.io.js"></script>
+<script src="common.js"></script>
+<script>
+  // ?type=follow|gift|share|join|subscribe (comma list allowed)  ?count=5  ?title=...  ?bg=0
+  const types = (params.get('type') || 'follow').split(',');
+  const count = Number(params.get('count')) || 5;
+  const names = { follow: 'Recent followers', gift: 'Recent gifts', share: 'Recent shares', join: 'Just joined', subscribe: 'Recent subscribers' };
+  const box = document.getElementById('r');
+  if (params.get('bg') === '0') box.classList.remove('panel');
+  const items = [];
+  function draw() {
+    box.replaceChildren(...[el('div', { class: 'title' }, params.get('title') || (types.length === 1 ? names[types[0]] || 'Recent' : 'Recent activity')),
+      items.length ? items.map((e) => el('div', { class: 'row' }, avatarEl(e.user, 28), el('span', {}, e.user?.nickname || 'Someone'),
+        e.type === 'gift' ? [e.gift.image ? el('img', { class: 'gift', src: e.gift.image, alt: '', referrerPolicy: 'no-referrer' }) : null, el('span', { class: 'what' }, `${e.gift.count > 1 ? `${e.gift.count}× ` : ''}${e.gift.name}`)] : el('span', { class: 'what' }, { follow: 'followed', share: 'shared', join: 'joined', subscribe: 'subscribed' }[e.type] || ''))) : el('div', { class: 'empty' }, 'Waiting…')].flat());
+  }
+  io().on('event', (e) => {
+    if (!types.includes(e.type) || !e.user) return;
+    items.unshift(e); items.length = Math.min(items.length, count); draw();
+  });
+  draw();
+</script>
+</body></html>

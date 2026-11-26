@@ -19,15 +19,15 @@
 <script src="/socket.io/socket.io.js"></script>
 <script src="common.js"></script>
 <script>
-  // ?by=coins|likes  ?count=5  ?title=Top%20supporters
-  const by = params.get('by') === 'likes' ? 'likes' : 'coins';
+  // ?by=coins|likes|comments  ?count=5  ?title=Top%20supporters
+  const by = ['likes', 'comments'].includes(params.get('by')) ? params.get('by') : 'coins';
   const count = Number(params.get('count') || 5);
-  document.getElementById('title').textContent = params.get('title') || (by === 'likes' ? 'Top likers' : 'Top gifters');
+  document.getElementById('title').textContent = params.get('title') || ({ likes: 'Top likers', comments: 'Top chatters' }[by] || 'Top gifters');
   io().on('stats', (s) => {
-    const list = (by === 'likes' ? s.topLikers : s.topGifters) || [];
+    const list = ({ likes: s.topLikers, comments: s.topChatters }[by] || s.topGifters) || [];
     const rows = list.slice(0, count).map((g, i) =>
       el('div', { class: 'row' }, el('span', { class: 'rank num' }, i + 1), avatarEl(g.user, 28),
-        el('span', { class: 'name' }, g.user.nickname), el('span', { class: 'amt num' }, `${fmt(g[by])} ${by === 'likes' ? 'likes' : 'coins'}`)));
+        el('span', { class: 'name' }, g.user.nickname), el('span', { class: 'amt num' }, `${fmt(g[by])} ${{ likes: 'likes', comments: g[by] === 1 ? 'message' : 'messages' }[by] || 'coins'}`)));
     document.getElementById('rows').replaceChildren(...(rows.length ? rows : [el('div', { class: 'empty' }, 'Nobody yet')]));
   });
 </script>

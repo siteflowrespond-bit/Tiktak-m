@@ -1,0 +1,39 @@
+<!doctype html>
+<!-- flock.tt (c) 2026 siteflowrespond-bit. Owner proof sha256:99891628516a57a623400d9ccde22b170ecfac1527631e923149d480260a9270 -->
+<html><head><meta charset="utf-8"><title>Banner</title>
+<link rel="stylesheet" href="overlay.css">
+<style>
+  body { display: flex; align-items: center; height: 100vh; }
+  .b { margin: 0 10px; width: calc(100% - 20px); box-sizing: border-box; display: flex; align-items: center; gap: 12px; padding: 10px 16px; overflow: hidden; transition: opacity .4s; }
+  .b.hide { opacity: 0; }
+  .dot { width: 10px; height: 10px; flex: none; border-radius: 50%; background: var(--tt-a); box-shadow: 0 0 0 0 var(--tt-a); animation: pulse 2s infinite; }
+  .t { font-size: 24px; font-weight: 800; letter-spacing: -.3px; white-space: nowrap; }
+  .track { overflow: hidden; flex: 1; }
+  .track.scroll { mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent); }
+  .scroll .t { display: inline-block; padding-left: 100%; animation: marquee var(--dur, 14s) linear infinite; }
+  .swap { animation: swap .5s cubic-bezier(.2, 1.4, .4, 1); }
+  @keyframes marquee { to { transform: translateX(-100%); } }
+  @keyframes pulse { 70% { box-shadow: 0 0 0 9px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
+  @keyframes swap { from { opacity: 0; transform: translateY(10px); } }
+</style></head>
+<body>
+<div class="b panel shadow hide" id="b"><span class="dot"></span><div class="track" id="track"><span class="t" id="t"></span></div></div>
+<script src="/socket.io/socket.io.js"></script>
+<script src="common.js"></script>
+<script>
+  // Text comes from the Interactive page and updates live. ?text=... overrides it  ?scroll=1  ?dot=0  ?bg=0
+  const b = document.getElementById('b'), t = document.getElementById('t'), track = document.getElementById('track');
+  if (params.get('dot') === '0') b.querySelector('.dot').remove();
+  if (params.get('bg') === '0') b.classList.remove('panel');
+  function show(text, scroll) {
+    b.classList.toggle('hide', !text);
+    if (t.textContent === text && track.classList.contains('scroll') === scroll) return;
+    t.textContent = text;
+    track.classList.toggle('scroll', scroll);
+    track.style.setProperty('--dur', `${Math.max(8, text.length * 0.28)}s`);
+    t.classList.remove('swap'); void t.offsetWidth; t.classList.add('swap');
+  }
+  if (params.get('text')) show(params.get('text'), params.get('scroll') === '1');
+  else io().on('config', (c) => show(c.banner?.text || '', params.has('scroll') ? params.get('scroll') === '1' : Boolean(c.banner?.scroll)));
+</script>
+</body></html>

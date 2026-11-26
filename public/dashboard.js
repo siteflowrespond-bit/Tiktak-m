@@ -121,7 +121,7 @@ const EVENTS = {
 };
 
 // ── navigation ───────────────────────────────────────────
-const TITLES = { live: 'Live', layout: 'Layout editor', obs: 'OBS', actions: 'Alerts', sounds: 'Sounds', voice: 'Voice', goals: 'Goals & timer', overlays: 'Overlays', settings: 'Settings' };
+const TITLES = { interactive: 'Interactive', live: 'Live', layout: 'Layout editor', obs: 'OBS', actions: 'Alerts', sounds: 'Sounds', voice: 'Voice', goals: 'Goals & timer', overlays: 'Overlays', settings: 'Settings' };
 function showPage(page) {
   if (!TITLES[page]) page = 'live';
   document.querySelectorAll('#nav button').forEach((b) => b.classList.toggle('active', b.dataset.page === page));
@@ -629,6 +629,70 @@ function voiceLog(kind, text) {
 socket.on('tts', (m) => { voiceLog('read', m.text); if (playHere()) say(m.text, config.tts); });
 socket.on('ttsSkipped', ({ user, why }) => voiceLog('skip', `${user || 'Someone'}: ${why}`));
 
+// ── interactive: poll, viewer queue, banner ──────────────
+const ovUrl = (file) => `${new URL('.', location.href).href}overlays/${file}`;
+$('#pollLink').value = ovUrl('poll.html');
+$('#queueLink').value = ovUrl('queue.html');
+$('#bannerLink').value = ovUrl('banner.html');
+document.querySelectorAll('[data-copy]').forEach((b) => b.addEventListener('click', () => copyText($(`#${b.dataset.copy}`).value, $(`#${b.dataset.copy}`))));
+
+let poll = null;
+function drawPoll() {
+  const running = poll?.open;
+  $('#pollStart').textContent = running ? 'Restart poll' : 'Start poll';
+  $('#pollEnd').hidden = !running;
+  $('#pollClear').hidden = !poll;
+  const left = running && poll.endsAt ? Math.max(0, Math.ceil((poll.endsAt - Date.now()) / 1000)) : 0;
+  $('#pollState').textContent = !poll ? 'No poll running' : running ? `Live · ${poll.total} vote${poll.total === 1 ? '' : 's'}${left ? ` · ${left}s left` : ''}` : poll.winner ? `Ended · ${poll.winner} won` : poll.tie ? 'Ended · tie' : 'Ended';
+  if (!poll) { $('#pollLive').replaceChildren(); return; }
+  $('#pollLive').replaceChildren(el('div', { class: 'pl-q' }, poll.question), ...poll.options.map((o, i) => {
+    const pct = poll.total ? Math.round((o.votes / poll.total) * 100) : 0;
+    return el('div', { class: `pl-row${!poll.open && poll.winner === o.label ? ' win' : ''}` }, el('span', { class: 'pl-n' }, String(i + 1)), el('span', { class: 'pl-l' }, o.label),
+      el('span', { class: 'pl-bar' }, el('i', { style: `width:${pct}%` })), el('span', { class: 'pl-v' }, `${o.votes} · ${pct}%`));
+  }));
+}
+socket.on('poll', (p) => { poll = p; drawPoll(); });
+setInterval(() => { if (poll?.open && poll.endsAt) drawPoll(); }, 1000);
+$('#pollStart').addEventListener('click', () => {
+  const options = $('#pollOpts').value.split('\n').map((x) => x.trim()).filter(Boolean);
+  api('POST', '/api/poll', { action: 'start', question: $('#pollQ').value, options, seconds: Number($('#pollSecs').value) })
+    .then(() => toast('Poll is live: viewers vote by typing the number'), (e) => toast(e.message, true));
+});
+$('#pollEnd').addEventListener('click', () => api('POST', '/api/poll', { action: 'end' }).catch((e) => toast(e.message, true)));
+$('#pollClear').addEventListener('click', () => api('POST', '/api/poll', { action: 'clear' }).catch((e) => toast(e.message, true)));
+
+let queue = { open: false, list: [], current: null };
+function drawQueue() {
+  $('#queueOpen').checked = queue.open;
+  $('#queueOpenText').textContent = queue.open ? 'Open' : 'Closed';
+  $('#queueNow').replaceChildren(queue.current ? el('div', { class: 'qn' }, el('small', {}, 'Up now'), el('b', {}, queue.current.nickname)) : el('p', { class: 'muted', style: 'margin:0' }, queue.list.length ? 'Press Next to call the first person up.' : 'Nobody is up yet.'));
+  $('#queueNext').disabled = !queue.list.length;
+  $('#queueDone').hidden = !queue.current;
+  $('#queueList').replaceChildren(...(queue.list.length ? queue.list.map((x, i) => el('div', { class: 'ql' }, el('span', { class: 'pl-n' }, String(i + 1)), el('span', { class: 'grow' }, x.nickname),
+    el('button', { class: 'btn flat sq', title: 'Remove', onclick: () => api('POST', '/api/queue', { action: 'remove', id: x.id }) }, icon('trash')))) : [el('p', { class: 'note', style: 'margin:0' }, queue.open ? 'Waiting for viewers to join…' : 'Open the queue to let viewers join.')]));
+}
+socket.on('queue', (q) => { queue = q; drawQueue(); });
+$('#queueOpen').addEventListener('change', (e) => api('POST', '/api/queue', { action: e.target.checked ? 'open' : 'close' }));
+$('#queueNext').addEventListener('click', () => api('POST', '/api/queue', { action: 'next' }));
+$('#queueDone').addEventListener('click', () => api('POST', '/api/queue', { action: 'done' }));
+$('#queueClear').addEventListener('click', () => { if (!queue.list.length || confirm('Remove everyone from the queue?')) api('POST', '/api/queue', { action: 'clear' }); });
+
+function renderInteractive() {
+  $('#queueCmd').value = config.queue?.command || '!join';
+  $('#queueCmdShow').textContent = config.queue?.command || '!join';
+  $('#queueMax').value = config.queue?.max || 50;
+  $('#bannerText').value = config.banner?.text || '';
+  $('#bannerScroll').checked = Boolean(config.banner?.scroll);
+}
+const saveInter = () => markUnsaved($('#saveInteractive'));
+$('#page-interactive').addEventListener('input', (e) => { if (!e.target.hasAttribute('data-nosave') && e.target.closest('#queueCmd, #queueMax, #bannerText')) saveInter(); });
+$('#bannerScroll').addEventListener('change', saveInter);
+$('#saveInteractive').addEventListener('click', (e) => {
+  const cmd = ($('#queueCmd').value.trim() || '!join').toLowerCase();
+  $('#queueCmdShow').textContent = cmd;
+  saveConfig({ queue: { command: cmd.startsWith('!') ? cmd : `!${cmd}`, max: Math.max(1, Number($('#queueMax').value) || 50) }, banner: { text: $('#bannerText').value.trim(), scroll: $('#bannerScroll').checked } }, 'Saved', e.currentTarget);
+});
+
 // ── wins & losses ────────────────────────────────────────
 let record = { wins: 0, losses: 0, draws: 0, streak: 0, last: null };
 const recApi = (action, extra = {}) => api('POST', '/api/record', { action, ...extra }).catch((e) => toast(e.message, true));
@@ -725,8 +789,19 @@ function overlayCatalog() {
       ['Stats rotator', 'Shows one stat at a time and cycles every 5 seconds.', '/overlays/stats.html?layout=rotate'],
       ['Top gifters', 'Biggest supporters this stream.', '/overlays/gifters.html'],
       ['Top likers', 'Who tapped the most.', '/overlays/gifters.html?by=likes'],
+      ['Top chatters', 'Who is talking the most.', '/overlays/gifters.html?by=comments'],
+      ['Recent followers', 'The latest people to follow, newest on top.', '/overlays/recent.html?type=follow', { idle: 'Waiting for a follow' }],
+      ['Recent gifts', 'The latest gifts with their pictures.', '/overlays/recent.html?type=gift', { idle: 'Waiting for a gift' }],
       ['Like counter', 'One big number. Change ?stat= for viewers, coins, follows …', '/overlays/counter.html?stat=likes'],
       ['Viewer counter', 'Current viewers.', '/overlays/counter.html?stat=viewers']
+    ]],
+    ['interactive', 'Interactive', [
+      ['Poll', 'Viewers vote by typing 1, 2, 3 in chat. Live bars, a timer and the winner. Run it from the Interactive page.', '/overlays/poll.html', { idle: 'Start a poll on the Interactive page' }],
+      ['Viewer queue', 'Viewers type !join to get in line for your games. You call them up with Next.', '/overlays/queue.html'],
+      ['Banner', 'A message bar you change from the Interactive page while you are live.', '/overlays/banner.html'],
+      ['Scrolling banner', 'The same message, scrolling across like a news ticker.', '/overlays/banner.html?scroll=1'],
+      ['Camera frame', 'A frame for your camera with your @name and a LIVE badge with viewer count.', '/overlays/camframe.html'],
+      ['Camera corners', 'Just the four corners, for a lighter look.', '/overlays/camframe.html?style=corners']
     ]],
     ['goals', 'Goals & timer', [
       ['Subathon timer', 'Countdown that grows with gifts, follows and likes.', '/overlays/timer.html'],
@@ -837,6 +912,7 @@ const PAGE_INFO = {
   actions: ['Alerts', 'Pop-ups when viewers do things', 'zap', 'alert actions events notifications popup'],
   sounds: ['Sounds', 'Sound actions and library', 'sound', 'audio sfx soundboard volume'],
   voice: ['Voice', 'Text-to-speech: read chat out loud', 'mic', 'tts text to speech voice speak read chat pitch speed'],
+  interactive: ['Interactive', 'Polls, viewer queue and the banner', 'poll', 'poll vote voting queue join line banner message ticker interactive game'],
   goals: ['Goals & timer', 'Goal bars, the subathon timer, wins & losses', 'clock', 'goal target subathon countdown timer wins losses record battle score'],
   settings: ['Settings', 'Connection and API key', 'sliders', 'options reconnect api key euler']
 };
@@ -882,6 +958,9 @@ function searchEntries() {
     ['Master volume', 'Volume of all sound actions', 'sounds', '#master', 'loud quiet'],
     ['Play sounds in this tab', 'Hear sounds on this computer', 'sounds', '#playHere', 'preview listen'],
     ['Subathon timer', 'Start, pause, add time', 'goals', '#clock', 'countdown'],
+    ['Start a poll', 'Viewers vote in chat', 'interactive', '#pollQ', 'poll vote question'],
+    ['Viewer queue', 'Let viewers !join a line', 'interactive', '#queueOpen', 'queue join line play with viewers'],
+    ['Banner message', 'Change the message on stream', 'interactive', '#bannerText', 'banner text ticker message'],
     ['Wins & losses', 'Battle record, +win, +loss, undo', 'goals', '#recPanel', 'record score battle match win loss draw streak counter'],
     ['Time per gift / follow', 'How much time each event adds', 'goals', '#timerForm', 'subathon seconds coin'],
     ['Goals', 'Like, follow, coin and share targets', 'goals', '#goals', 'target goal bar'],
@@ -993,6 +1072,7 @@ document.addEventListener('keydown', (e) => {
   $('#playHere').checked = playHere();
   renderRules();
   renderSoundRules();
+  renderInteractive();
   renderRecordSettings();
   renderTts();
   renderTimerForm();

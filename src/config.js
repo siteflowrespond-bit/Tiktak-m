@@ -76,6 +76,9 @@ export const DEFAULT_CONFIG = {
     }
   ],
   // Subathon timer: events add time while it's running
+  polls: { enabled: true },
+  queue: { command: '!join', max: 50 },
+  banner: { text: 'Welcome in! Follow for more', scroll: false },
   // wins & losses counter
   record: {
     auto: true, // count TikTok LIVE battles automatically

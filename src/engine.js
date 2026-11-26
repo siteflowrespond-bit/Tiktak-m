@@ -14,7 +14,83 @@ export class Engine extends EventEmitter {
     this.likeRemainder = 0;
     this.record = { wins: 0, losses: 0, draws: 0, streak: 0, last: null };
     this.recordHistory = [];
+    this.poll = null; // { question, options: [{ label, votes }], open, endsAt, winner }
+    this.pollVoters = new Map(); // user id -> option index
+    this.queue = { open: false, list: [], current: null };
     this.resetStats();
+  }
+
+  // ───── polls: viewers vote by typing the option's number ─────
+  pollState() {
+    if (!this.poll) return null;
+    const total = this.poll.options.reduce((a, o) => a + o.votes, 0);
+    return { ...this.poll, total };
+  }
+  #emitPoll() { this.emit('poll', this.pollState()); }
+  pollAction(action, { question = '', options = [], seconds = 60 } = {}) {
+    clearTimeout(this.pollTimer);
+    if (action === 'start') {
+      const opts = options.map((o) => String(o).trim().slice(0, 60)).filter(Boolean).slice(0, 6);
+      if (opts.length < 2) return 'Add at least two options';
+      const secs = Math.max(0, Math.min(3600, Number(seconds) || 0));
+      this.poll = { question: String(question).trim().slice(0, 120) || 'Vote in chat!', options: opts.map((label) => ({ label, votes: 0 })), open: true, endsAt: secs ? Date.now() + secs * 1000 : 0, winner: null };
+      this.pollVoters = new Map();
+      if (secs) this.pollTimer = setTimeout(() => this.pollAction('end'), secs * 1000);
+    } else if (action === 'end') {
+      if (!this.poll) return 'No poll running';
+      const top = Math.max(...this.poll.options.map((o) => o.votes));
+      const leaders = this.poll.options.filter((o) => o.votes === top);
+      this.poll = { ...this.poll, open: false, endsAt: 0, winner: top > 0 && leaders.length === 1 ? leaders[0].label : null, tie: top > 0 && leaders.length > 1 };
+    } else if (action === 'clear') {
+      this.poll = null;
+    } else return 'Unknown action';
+    this.#emitPoll();
+    return '';
+  }
+  #pollVote(evt) {
+    const p = this.poll;
+    if (!p?.open || (this.getConfig().polls?.enabled === false)) return;
+    const m = /^!?\s*([1-6])\s*$/.exec(String(evt.comment || ''));
+    let i = m ? Number(m[1]) - 1 : p.options.findIndex((o) => o.label.toLowerCase() === String(evt.comment || '').trim().toLowerCase());
+    if (i < 0 || i >= p.options.length) return;
+    const key = evt.user?.id || evt.user?.nickname;
+    if (this.pollVoters.has(key)) return; // one vote each
+    this.pollVoters.set(key, i);
+    p.options[i].votes++;
+    this.#emitPoll();
+  }
+
+  // ───── viewer queue: !join to get in line ─────
+  #emitQueue() { this.emit('queue', this.queue); }
+  queueAction(action, { id } = {}) {
+    const q = this.queue;
+    if (action === 'open') q.open = true;
+    else if (action === 'close') q.open = false;
+    else if (action === 'next') q.current = q.list.shift() || null;
+    else if (action === 'done') q.current = null;
+    else if (action === 'remove') q.list = q.list.filter((x) => x.id !== id);
+    else if (action === 'clear') { q.list = []; q.current = null; }
+    else return 'Unknown action';
+    this.#emitQueue();
+    return '';
+  }
+  #queueCommand(evt) {
+    const cfg = this.getConfig().queue || {};
+    const text = String(evt.comment || '').trim().toLowerCase();
+    const join = String(cfg.command || '!join').toLowerCase();
+    const u = evt.user || {};
+    const id = u.id || u.nickname;
+    const q = this.queue;
+    if (text === join || text.startsWith(`${join} `)) {
+      if (!q.open || q.list.some((x) => x.id === id) || q.current?.id === id) return;
+      if (q.list.length >= (Number(cfg.max) || 50)) return;
+      q.list.push({ id, nickname: u.nickname || 'Someone', avatar: u.avatar || '', at: Date.now() });
+      this.#emitQueue();
+    } else if (text === '!leave') {
+      const n = q.list.length;
+      q.list = q.list.filter((x) => x.id !== id);
+      if (q.list.length !== n) this.#emitQueue();
+    }
   }
 
   // ───── wins & losses ─────
@@ -62,6 +138,7 @@ export class Engine extends EventEmitter {
     };
     this.gifters = new Map(); // user id -> { user, coins }
     this.likers = new Map(); // user id -> { user, likes }
+    this.chatters = new Map(); // user id -> { user, comments }
     this.emitStats();
   }
 
@@ -70,7 +147,7 @@ export class Engine extends EventEmitter {
   }
 
   snapshot() {
-    return { ...this.stats, topGifters: this.top(this.gifters, 'coins'), topLikers: this.top(this.likers, 'likes') };
+    return { ...this.stats, topGifters: this.top(this.gifters, 'coins'), topLikers: this.top(this.likers, 'likes'), topChatters: this.top(this.chatters, 'comments') };
   }
 
   emitStats() {
@@ -81,7 +158,7 @@ export class Engine extends EventEmitter {
     this.#recordFromEvent(evt);
     const s = this.stats;
     switch (evt.type) {
-      case 'chat': s.comments++; break;
+      case 'chat': s.comments++; bump(this.chatters, evt.user, 'comments', 1); this.#pollVote(evt); this.#queueCommand(evt); break;
       case 'gift': {
         s.gifts += evt.gift.count;
         s.coins += evt.gift.coins;

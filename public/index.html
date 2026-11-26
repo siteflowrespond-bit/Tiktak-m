@@ -39,6 +39,7 @@
   <symbol id="i-panels" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M15 4v16"/></symbol>
   <symbol id="i-obs" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="7.5" r="2.2"/><circle cx="8" cy="14.5" r="2.2"/><circle cx="16" cy="14.5" r="2.2"/></symbol>
   <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></symbol>
+  <symbol id="i-poll" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/></symbol>
   <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
 </svg>
 
@@ -57,6 +58,7 @@
       <button data-page="layout"><svg class="i"><use href="#i-grid"/></svg><span>Layout editor<small>One link for everything</small></span></button>
       <button data-page="actions"><svg class="i"><use href="#i-zap"/></svg><span>Alerts<small>On-screen pop-ups</small></span></button>
       <button data-page="sounds"><svg class="i"><use href="#i-sound"/></svg><span>Sounds<small>Sound actions &amp; library</small></span></button>
+      <button data-page="interactive"><svg class="i"><use href="#i-poll"/></svg><span>Interactive<small>Polls, queue, banner</small></span></button>
       <button data-page="voice"><svg class="i"><use href="#i-mic"/></svg><span>Voice<small>Text-to-speech</small></span></button>
       <button data-page="obs"><svg class="i"><use href="#i-obs"/></svg><span>OBS<small>Scenes &amp; sources</small></span></button>
       <button data-page="goals"><svg class="i"><use href="#i-clock"/></svg><span>Goals &amp; timer<small>Targets, subathon, wins</small></span></button>
@@ -211,6 +213,47 @@
             </div>
           </div>
         </div>
+      </section>
+
+      <!-- INTERACTIVE -->
+      <section class="page" id="page-interactive">
+        <div class="cols even">
+          <div class="panel">
+            <div class="panel-head"><h2>Poll</h2><div class="grow"></div><span class="muted" id="pollState">No poll running</span></div>
+            <div class="panel-body">
+              <div class="form" id="pollForm">
+                <div class="f span2"><span>Question</span><input id="pollQ" placeholder="What should I play next?" maxlength="120" data-nosave></div>
+                <div class="f span2"><span>Options <small class="muted">(one per line, 2 to 6; viewers type the number)</small></span><textarea id="pollOpts" rows="4" placeholder="Fortnite&#10;Minecraft&#10;Roblox" data-nosave></textarea></div>
+                <div class="f"><span>How long</span><select id="pollSecs" data-nosave><option value="30">30 seconds</option><option value="60" selected>1 minute</option><option value="120">2 minutes</option><option value="300">5 minutes</option><option value="0">Until I end it</option></select></div>
+              </div>
+              <div class="v-btns" style="margin-top:12px"><button class="btn red" id="pollStart">Start poll</button><button class="btn" id="pollEnd" hidden>End now</button><button class="btn flat" id="pollClear" hidden>Hide from stream</button></div>
+              <div class="poll-live" id="pollLive"></div>
+              <div class="url"><input id="pollLink" readonly data-nosave><button class="btn sq" data-copy="pollLink" title="Copy overlay link"><svg class="i"><use href="#i-copy"/></svg></button></div>
+            </div>
+          </div>
+          <div class="stack">
+            <div class="panel">
+              <div class="panel-head"><h2>Viewer queue</h2><div class="grow"></div><label class="switch"><input type="checkbox" id="queueOpen"><i></i><span id="queueOpenText">Closed</span></label></div>
+              <div class="panel-body">
+                <p class="note" style="margin-top:0">Viewers type <code id="queueCmdShow">!join</code> to get in line and <code>!leave</code> to drop out. Press Next to call someone up.</p>
+                <div class="queue-now" id="queueNow"></div>
+                <div class="v-btns"><button class="btn red" id="queueNext">Next</button><button class="btn" id="queueDone">Done with them</button><button class="btn flat" id="queueClear">Clear the queue</button></div>
+                <div class="queue-list" id="queueList"></div>
+                <div class="form" style="margin-top:12px"><div class="f"><span>Join command</span><input id="queueCmd" maxlength="20"></div><div class="f"><span>Most people in line</span><input id="queueMax" type="number" min="1" max="500"></div></div>
+                <div class="url"><input id="queueLink" readonly data-nosave><button class="btn sq" data-copy="queueLink" title="Copy overlay link"><svg class="i"><use href="#i-copy"/></svg></button></div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><h2>Banner</h2></div>
+              <div class="panel-body">
+                <div class="f"><span>Message on stream <small class="muted">(updates live; leave empty to hide)</small></span><input id="bannerText" maxlength="160" placeholder="Road to 10k followers!"></div>
+                <label class="check" style="margin-top:10px"><input type="checkbox" id="bannerScroll"> Scroll the text</label>
+                <div class="url"><input id="bannerLink" readonly data-nosave><button class="btn sq" data-copy="bannerLink" title="Copy overlay link"><svg class="i"><use href="#i-copy"/></svg></button></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <button hidden data-autosave id="saveInteractive">Save</button>
       </section>
 
       <!-- VOICE -->
