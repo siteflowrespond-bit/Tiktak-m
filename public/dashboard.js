@@ -982,8 +982,43 @@ function renderAbout() {
   $('#foot').textContent = `${v ? `${v} · ` : ''}/ to search`;
   $('#aboutVersion').textContent = v || 'Demo';
   $('#aboutData').textContent = config.dataDir || 'This browser tab (demo)';
-  $('#aboutUpdates').textContent = /[?&]app=/.test(location.search) ? 'Updates install by themselves: flock.tt checks when it opens and every few hours.' : 'Running in a browser. The desktop app updates itself.';
+  $('#aboutUpdates').textContent = /[?&]app=/.test(location.search) ? 'Updates download by themselves: flock.tt checks when it opens, every 30 minutes and when you come back to it.' : 'Running in a browser. The desktop app updates itself.';
 }
+
+// ── updates (desktop app): check now, download progress, restart ──
+let upd = null, updTimer = 0;
+function drawUpd() {
+  if (!upd?.supported) return;
+  $('#updBox').hidden = false;
+  const s = upd.status;
+  $('#updText').textContent = {
+    checking: 'Checking for updates…',
+    downloading: `Downloading ${upd.next ? `v${upd.next}` : 'the update'}… ${upd.percent || 0}%`,
+    ready: `v${upd.next} is downloaded and ready`,
+    latest: `You have the latest version (v${upd.version})`,
+    error: `Couldn't check for updates${upd.error ? `: ${upd.error}` : ''}`
+  }[s] || `v${upd.version}`;
+  $('#updCheck').hidden = s === 'ready';
+  $('#updCheck').disabled = s === 'checking' || s === 'downloading';
+  $('#updInstall').hidden = s !== 'ready';
+  $('#updBar').hidden = s !== 'downloading';
+  $('#updFill').style.width = `${upd.percent || 0}%`;
+  $('#updPill').hidden = s !== 'ready';
+  if (s === 'ready') $('#updPill').textContent = `v${upd.next} ready · Restart`;
+}
+async function pollUpd() {
+  clearTimeout(updTimer);
+  try { upd = await api('GET', '/api/update'); } catch { return; }
+  drawUpd();
+  if (!upd.supported) return;
+  // poll fast while it's working, slowly otherwise (so the "ready" banner shows up by itself)
+  updTimer = setTimeout(pollUpd, ['checking', 'downloading'].includes(upd.status) ? 800 : 60000);
+}
+$('#updCheck').addEventListener('click', async () => { try { upd = await api('POST', '/api/update', { action: 'check' }); drawUpd(); pollUpd(); } catch (e) { toast(e.message, true); } });
+const updInstall = () => { if (!confirm('Restart flock.tt now to install the update? If you are live, overlays go blank for a few seconds.')) return; api('POST', '/api/update', { action: 'install' }).catch((e) => toast(e.message, true)); };
+$('#updInstall').addEventListener('click', updInstall);
+$('#updPill').addEventListener('click', updInstall);
+pollUpd();
 
 // ── settings ─────────────────────────────────────────────
 function renderSettings() {
@@ -1119,6 +1154,7 @@ function searchEntries() {
     ['Earlier polls', 'Results of past polls, run one again', 'interactive', '#pollLive', 'poll history results again'],
     ['Auto reconnect', 'Keep retrying if the LIVE drops', 'settings', '#autoReconnect', 'retry offline'],
     ['API key', 'Euler Stream sign key', 'settings', '#signApiKey', 'euler sign rate limit'],
+    ['Check for updates', 'Download the newest flock.tt now', 'settings', '#aboutVersion', 'update upgrade new version download install'],
     ['Activity filters', 'Show or hide likes, joins …', 'live', '#filters', 'feed log']
   ];
   for (const [title, sub, page, sel, kw] of settings) out.push({ kind: 'Settings', icon: 'sliders', title, sub, where: PAGE_INFO[page][0], kw, run: () => goTo(page, sel) });

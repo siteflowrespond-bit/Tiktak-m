@@ -81,6 +81,7 @@
       </div>
       <form class="connect" id="connectForm">
         <button class="ov-pill" id="ovPill" type="button" hidden title="Overlays open in TikTok LIVE Studio, OBS or a browser">No overlays open</button>
+        <button class="upd-pill" id="updPill" type="button" hidden title="A new version of flock.tt is ready">Update ready · Restart</button>
         <span class="saved-pill" id="savedPill" aria-live="polite">Saved</span>
         <span class="onair" id="onair"><i></i><span id="onairText">Offline</span></span>
         <div class="at"><input id="username" placeholder="username" autocomplete="off" spellcheck="false"></div>
@@ -474,6 +475,10 @@
           <div class="panel-head"><h2>About flock.tt</h2><div class="grow"></div><span class="mono muted" id="aboutVersion"></span></div>
           <div class="panel-body">
             <p class="note" id="aboutUpdates" style="margin-top:0"></p>
+            <div class="upd" id="updBox" hidden>
+              <div class="upd-row"><span id="updText">Up to date</span><div class="grow"></div><button class="btn sm" id="updCheck" type="button">Check for updates</button><button class="btn sm red" id="updInstall" type="button" hidden>Restart to update</button></div>
+              <div class="meter upd-bar" id="updBar" hidden><i id="updFill" style="width:0%"></i></div>
+            </div>
             <div class="f"><span>Your settings, sounds and records are saved in</span><code class="about-path" id="aboutData"></code></div>
             <p class="note">Everything stays on this computer. <a href="https://flocktt.xyz/privacy.html" target="_blank" rel="noopener">Privacy</a> · <a href="https://flocktt.xyz" target="_blank" rel="noopener">flocktt.xyz</a> · Not affiliated with TikTok or ByteDance.</p>
           </div>

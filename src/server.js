@@ -367,6 +367,16 @@ app.post('/api/restore', (req, res) => {
   res.json(publicConfig());
 });
 
+// ---- Updates (desktop app only): the app's updater registers itself as globalThis.__flockUpdate ----
+const updater = () => globalThis.__flockUpdate;
+app.get('/api/update', (req, res) => res.json(updater()?.state() || { supported: false, status: 'idle', version: VERSION }));
+app.post('/api/update', (req, res) => {
+  const u = updater();
+  if (!u?.state().supported) return res.status(400).json({ error: 'Updates install by themselves in the desktop app' });
+  if (req.body?.action === 'install') u.install(); else u.check();
+  res.json(u.state());
+});
+
 app.post('/api/connect', async (req, res) => {
   const username = (req.body?.username || config.username || '').trim();
   if (!username) return res.status(400).json({ error: 'Enter a TikTok username' });

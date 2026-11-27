@@ -18,7 +18,7 @@ A TikTok LIVE interaction toolkit in the spirit of TikFinity. It runs on your ow
 
 Install it, open flock.tt, type your TikTok username and press **Connect**.
 
-**Updates install themselves.** From v1.1.1 on, flock.tt checks for a new version when it opens (and every few hours), downloads it in the background and asks to restart. Pick **Later** if you're live; it installs the next time you close the app. Keep the app open while you stream: TikTok LIVE Studio and OBS load the overlays from it.
+**Updates install themselves.** From v1.1.1 on, flock.tt checks for a new version when it opens, every 30 minutes and when you come back to the window, downloads it in the background and asks to restart. To get one right away: **Settings → Check for updates** (with a progress bar and **Restart to update**); a "ready · Restart" button also shows in the top bar. Pick **Later** if you're live; it installs the next time you close the app. Keep the app open while you stream: TikTok LIVE Studio and OBS load the overlays from it.
 
 The installer isn't code-signed yet, so the first launch shows a warning:
 - **Windows:** "Windows protected your PC" → **More info** → **Run anyway**.

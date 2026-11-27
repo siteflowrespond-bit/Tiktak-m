@@ -826,3 +826,10 @@ body.ed-full .ai-fab { width: 46px; height: 46px; opacity: .85; }
 /* toasts sit above the FlockAi bubble, not under it */
 .toasts { right: 22px; bottom: 92px; z-index: 950; align-items: flex-end; }
 @media (max-width: 560px) { .toasts { right: 14px; bottom: 84px; } }
+/* updates */
+.upd { margin: 4px 0 14px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255,255,255,.03); }
+.upd-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; }
+.upd-bar { margin-top: 10px; }
+.upd-pill { font: 600 12px var(--sans); color: #000; background: #fff; border: 0; border-radius: 999px; padding: 6px 12px; cursor: pointer; white-space: nowrap; animation: upd-glow 2s ease-in-out infinite; }
+@keyframes upd-glow { 50% { box-shadow: 0 0 0 5px rgba(255,255,255,.15); } }
+.upd-row .grow { flex: 1; }

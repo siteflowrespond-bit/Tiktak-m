@@ -80,14 +80,21 @@ async function start() {
 // Checks GitHub Releases on launch and every 4 hours, downloads new versions in the background,
 // then offers a restart. If you pick "Later" it installs the next time flock.tt closes.
 function setupUpdates() {
+  // The dashboard talks to the updater through the built-in server (/api/update): Check now, progress, Restart.
+  const state = { supported: app.isPackaged, status: 'idle', version: app.getVersion(), next: '', percent: 0, error: '', checkedAt: 0 };
+  globalThis.__flockUpdate = { state: () => state, check: () => {}, install: () => {} };
   if (!app.isPackaged) return; // only the installed app updates itself
   const { autoUpdater } = updaterPkg;
   autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = true;
   let offered = '';
-  autoUpdater.on('error', (e) => console.log('[update]', e?.message || e));
-  autoUpdater.on('update-available', (info) => console.log(`[update] downloading ${info.version}`));
+  autoUpdater.on('checking-for-update', () => { state.status = 'checking'; state.error = ''; });
+  autoUpdater.on('update-not-available', () => { state.status = 'latest'; state.checkedAt = Date.now(); });
+  autoUpdater.on('error', (e) => { console.log('[update]', e?.message || e); state.status = 'error'; state.error = String(e?.message || e).split('\n')[0].slice(0, 200); });
+  autoUpdater.on('update-available', (info) => { console.log(`[update] downloading ${info.version}`); state.status = 'downloading'; state.next = info.version; state.percent = 0; });
+  autoUpdater.on('download-progress', (p) => { state.status = 'downloading'; state.percent = Math.round(p.percent || 0); });
   autoUpdater.on('update-downloaded', async (info) => {
+    state.status = 'ready'; state.next = info.version; state.percent = 100;
     if (offered === info.version || !win) return;
     offered = info.version;
     const { response } = await dialog.showMessageBox(win, {
@@ -101,9 +108,16 @@ function setupUpdates() {
     });
     if (response === 0) setImmediate(() => autoUpdater.quitAndInstall(true, true));
   });
-  const check = () => autoUpdater.checkForUpdates().catch((e) => console.log('[update]', e?.message || e));
+  const check = () => {
+    if (['checking', 'downloading', 'ready'].includes(state.status)) return;
+    autoUpdater.checkForUpdates().catch((e) => { state.status = 'error'; state.error = String(e?.message || e).split('\n')[0].slice(0, 200); });
+  };
+  globalThis.__flockUpdate = { state: () => state, check, install: () => { if (state.status === 'ready') setImmediate(() => autoUpdater.quitAndInstall(true, true)); } };
   check();
-  setInterval(check, 4 * 60 * 60 * 1000);
+  // check every 30 minutes, and when you come back to the window (at most every 10 minutes)
+  setInterval(check, 30 * 60 * 1000);
+  let lastFocus = Date.now();
+  app.on('browser-window-focus', () => { if (Date.now() - lastFocus > 10 * 60 * 1000) { lastFocus = Date.now(); check(); } });
 }
 
 app.on('window-all-closed', () => app.quit());
