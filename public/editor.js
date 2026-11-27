@@ -3,12 +3,7 @@
    Uses helpers from dashboard.js (config, api, el, icon, toast, saveConfig, markUnsaved, overlayCatalog, copyText). */
 /* global config, el, icon, toast, saveConfig, markUnsaved, overlayCatalog, copyText */
 
-const ED_SIZES = {
-  'alerts.html': [1080, 480], 'sounds.html': [240, 120], 'chat.html': [680, 640], 'combos.html': [640, 320], 'hearts.html': [460, 900],
-  'ticker.html': [1000, 110], 'jar.html': [380, 480], 'wheel.html': [720, 820], 'battle.html': [1000, 260], 'race.html': [1000, 330],
-  'topgift.html': [420, 420], 'emojis.html': [1080, 900], 'celebrate.html': [1080, 1920], 'stats.html': [900, 140], 'gifters.html': [520, 330],
-  'counter.html': [420, 130], 'timer.html': [600, 240], 'record.html': [520, 210], 'poll.html': [620, 380], 'queue.html': [460, 420], 'banner.html': [900, 90], 'recent.html': [460, 300], 'camframe.html': [1080, 1920], 'goal.html': [900, 110]
-};
+const ED_SIZES = window.TT_SIZES; // natural overlay sizes, shared with layout links (overlays/sizes.js)
 // Overlays that are effects over the whole picture.
 const ED_FULL = new Set(['celebrate.html']);
 // Approximate areas the TikTok LIVE app draws on top of a phone stream (1080 x 1920).
@@ -243,7 +238,8 @@ function edRenderStage() {
       ed.frames.set(w.id, f);
       st.append(node);
     }
-    if (f.src !== w.src) { f.src = w.src; f.iframe.src = edPreviewSrc(w.src); }
+    const placed = ttPlace(f.iframe, w.src, w.w, w.h); // same scaling as the live layout link
+    if (f.src !== placed) { f.src = placed; f.iframe.src = edPreviewSrc(placed); }
     f.tag.textContent = w.hidden ? `${w.name} (hidden)` : w.name;
     Object.assign(f.node.style, { left: `${w.x}px`, top: `${w.y}px`, width: `${w.w}px`, height: `${w.h}px`, zIndex: String(i + 1) });
     f.node.classList.toggle('sel', w.id === ed.sel);

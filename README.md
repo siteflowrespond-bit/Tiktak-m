@@ -106,6 +106,8 @@ Instead of adding a separate source for every overlay, open **Layout editor**:
 
 **Landscape:** pick *Landscape · 1920 × 1080* to build for a horizontal stream. Switching keeps every overlay's size and moves it to the same spot on the new shape; full-screen effects refill the canvas. An empty layout offers a ready-made starter set for its orientation, and the guides switch to a 5% safe area.
 
+**Sharp at any size:** make an overlay bigger by dragging its corner in the editor, not by stretching the source in LIVE Studio or OBS. Each overlay's content scales to fill its box and is redrawn at that size, so text and canvases stay crisp. Size the layout source itself to the whole screen (1080 × 1920 or 1920 × 1080).
+
 **Full screen:** press **Full screen** (or F) to give the whole window to the canvas. H hides the side panels, P shows a clean preview exactly as viewers will see it, Esc leaves full screen.
 
 You can keep several layouts (for example one for chatting and one for games) and switch between them by changing the link.

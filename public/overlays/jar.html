@@ -31,7 +31,7 @@
   const imgCache = new Map();
 
   function layout() {
-    dpr = Math.min(2, devicePixelRatio || 1);
+    dpr = ttDPR();
     W = innerWidth; H = innerHeight;
     cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     const w = Math.min(W * 0.62, H * 0.55), h = Math.min(H * 0.62, w * 1.25);

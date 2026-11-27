@@ -55,7 +55,7 @@
 
   function layout() {
     size = Number(params.get('size')) || Math.min(innerWidth * 0.85, innerHeight * 0.72, 520);
-    const dpr = Math.min(2, devicePixelRatio || 1);
+    const dpr = ttDPR();
     cv.width = size * dpr; cv.height = size * dpr; cv.style.width = cv.style.height = `${size}px`;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     draw();

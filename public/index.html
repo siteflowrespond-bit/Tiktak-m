@@ -149,7 +149,7 @@
           <button class="btn red" id="edSave">Save</button>
         </div>
         <div class="ed-link panel">
-          <div><b>Your one link</b><span class="muted"> · add it once in TikTok LIVE Studio or OBS. Saved changes show up on stream right away.</span></div>
+          <div><b>Your one link</b><span class="muted"> · add it once in TikTok LIVE Studio or OBS, sized to fill the whole screen (1080 × 1920 for phone, 1920 × 1080 for landscape) so it stays sharp. To make an overlay bigger, drag its corner here instead of stretching the source.</span></div>
           <div class="url"><input id="edUrl" readonly><button class="btn sq" id="edCopy" title="Copy link"><svg class="i"><use href="#i-copy"/></svg></button><a class="btn sq" id="edOpen" title="Open in a new tab" target="_blank" rel="noopener"><svg class="i"><use href="#i-external"/></svg></a></div>
         </div>
         <div class="ed">
@@ -471,6 +471,7 @@
 </dialog>
 <script src="/socket.io/socket.io.js"></script>
 <script src="/dashboard.js"></script>
+<script src="/overlays/sizes.js"></script>
 <script src="/ai/layout-model.js"></script>
 <script src="/editor.js"></script>
 <script src="/obs-ui.js"></script>

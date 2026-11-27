@@ -47,4 +47,6 @@ window.avatarEl = function avatarEl(user, size = 32) {
   if (user && user.avatar) return el('img', { class: 'avatar', src: user.avatar, alt: '', style, referrerPolicy: 'no-referrer' });
   return el('span', { class: 'avatar', style }, ((user && user.nickname) || '?').charAt(0).toUpperCase());
 };
+/** Pixel density for canvases: the screen's, times the layout's scale-up (?px=) so scaled overlays stay sharp. */
+window.ttDPR = () => Math.min(6, Math.min(2, devicePixelRatio || 1) * Math.max(1, Number(params.get('px')) || 1));
 window.fmt = (n) => Number(n || 0).toLocaleString();

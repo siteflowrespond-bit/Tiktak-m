@@ -12,6 +12,7 @@
 <div id="msg" class="shadow"></div>
 <script src="/socket.io/socket.io.js"></script>
 <script src="common.js"></script>
+<script src="sizes.js"></script>
 <script>
   // One link for a whole layout built in the Layout editor.  ?layout=main
   // Size the browser source to the layout (1080 x 1920 for portrait); it also scales to fit any size.
@@ -45,8 +46,10 @@
         frames.set(w.id, f);
         stage.append(f);
       }
-      if (f.dataset.src !== w.src) { f.dataset.src = w.src; f.src = w.src; }
-      Object.assign(f.style, { left: `${w.x}px`, top: `${w.y}px`, width: `${w.w}px`, height: `${w.h}px`, zIndex: String(i + 1) });
+      // content is scaled to fill the box (see sizes.js), so a bigger box means a bigger, still-sharp overlay
+      const src = ttPlace(f, w.src, w.w, w.h);
+      if (f.dataset.src !== src) { f.dataset.src = src; f.src = src; }
+      Object.assign(f.style, { left: `${w.x}px`, top: `${w.y}px`, zIndex: String(i + 1) });
     });
     for (const [id, f] of frames) if (!keep.has(id)) { f.remove(); frames.delete(id); }
     fit();

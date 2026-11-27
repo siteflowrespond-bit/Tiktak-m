@@ -12,7 +12,7 @@ window.createFx = function createFx(zIndex = 50) {
   const COLORS = ['#ffffff', '#ffffff', '#e6e6e6', '#bdbdbd', '#8c8c8c'];
 
   function resize() {
-    dpr = Math.min(2, window.devicePixelRatio || 1);
+    dpr = window.ttDPR ? window.ttDPR() : Math.min(2, window.devicePixelRatio || 1);
     W = innerWidth; H = innerHeight;
     canvas.width = W * dpr; canvas.height = H * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
