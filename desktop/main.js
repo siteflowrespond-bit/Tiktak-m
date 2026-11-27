@@ -48,12 +48,12 @@ async function start() {
     minWidth: 960,
     minHeight: 620,
     title: 'flock.tt',
-    backgroundColor: '#000000',
+    backgroundColor: '#08080a',
     icon: path.join(__dirname, 'icon.png'),
     autoHideMenuBar: true,
     // No white system title bar: the page draws a black one, and Windows keeps its own min/max/close buttons on top.
     titleBarStyle: os === 'mac' ? 'hiddenInset' : 'hidden',
-    ...(os === 'mac' ? {} : { titleBarOverlay: { color: '#000000', symbolColor: '#ffffff', height: 36 } }),
+    ...(os === 'mac' ? {} : { titleBarOverlay: { color: '#0b0b0e', symbolColor: '#ffffff', height: 36 } }),
     show: false,
     webPreferences: { contextIsolation: true, sandbox: true, nodeIntegration: false, webviewTag: false }
   });
