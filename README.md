@@ -91,9 +91,9 @@ or *"landscape gaming layout with a spin wheel in blue"*. FlockAi works out the 
 accent colour and goal type, shows what it understood (with how sure it is), lets you tap overlays on or off, then lays them
 out clear of TikTok's buttons and comments.
 
-FlockAi was built from scratch for flock.tt: a small neural network trained on 120,000 generated stream requests
-(`scripts/ai/`). It runs inside the app on your own computer: no account, no API key, no internet, about half a
-millisecond per request. Retrain it with `npm run ai:train` (needs Python with PyTorch); scores are in `scripts/ai/RESULTS.md`.
+FlockAi was built from scratch for flock.tt: a neural network (about 6 million parameters, 8 MB) trained on 120,000
+generated stream requests (`scripts/ai/`). It runs inside the app on your own computer: no account, no API key, no
+internet, a couple of milliseconds per request. Retrain it with `npm run ai:train` (needs Python with PyTorch); scores are in `scripts/ai/RESULTS.md`.
 
 ## Layout editor (one link for everything)
 
