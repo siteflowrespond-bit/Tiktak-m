@@ -11,7 +11,8 @@ ACCENT = ['none', 'red', 'pink', 'purple', 'blue', 'cyan', 'green', 'yellow', 'o
 GOAL = ['likes', 'follows', 'coins']
 DENSITY = ['minimal', 'normal', 'full']
 
-DIM = 2048
+import os
+DIM = int(os.environ.get('DIM', 2048))
 NEG = {'no', 'without', 'not', 'dont', 'remove', 'minus', 'except', 'skip', 'hate', 'nothing', 'ditch', 'drop', 'nah', 'never', 'w/o', 'wo'}
 
 def fnv1a(s: str) -> int:

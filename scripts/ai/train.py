@@ -93,6 +93,8 @@ def main():
     t = evaluate(model, Xte, Yte)
     print('TEST (held-out phrasings):', {k: round(v, 3) for k, v in t.items()})
 
+    if os.environ.get('NO_EXPORT') == '1':
+        return
     os.makedirs('../../public/ai', exist_ok=True)
     out = {
         'version': 1, 'dim': DIM, 'hidden': HIDDEN,
