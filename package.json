@@ -1,7 +1,7 @@
 {
   "name": "flock.tt",
   "private": true,
-  "version": "1.1.2",
+  "version": "1.2.0",
   "description": "flock.tt: alerts, sounds, animated overlays and OBS control for TikTok LIVE. A live you won't forget.",
   "type": "module",
   "main": "desktop/main.js",
@@ -13,7 +13,8 @@
     "app": "electron .",
     "dist": "electron-builder",
     "dist:win": "electron-builder --win",
-    "dist:mac": "electron-builder --mac"
+    "dist:mac": "electron-builder --mac",
+    "ai:train": "cd scripts/ai && python3 make_data.py && python3 train.py"
   },
   "engines": {
     "node": ">=18"

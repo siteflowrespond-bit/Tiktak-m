@@ -5,3 +5,7 @@ public/sounds/custom/
 demo-dist/
 site-dist/
 release/
+
+# generated training data for the layout model (npm run ai:train recreates it)
+scripts/ai/data/
+scripts/ai/__pycache__/

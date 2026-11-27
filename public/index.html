@@ -129,6 +129,7 @@
       <section class="page" id="page-layout">
         <div class="ed-bar">
           <select id="edLayout" aria-label="Layout" style="width:auto;min-width:150px"></select>
+          <button class="btn sm red" id="edAI" title="Describe a layout and the flock.tt model builds it">✨ Generate</button>
           <button class="btn sm" id="edNew" title="New layout"><svg class="i"><use href="#i-plus"/></svg>New</button>
           <button class="btn sm flat" id="edRename">Rename</button>
           <button class="btn sm flat" id="edDelete">Delete</button>
@@ -446,8 +447,31 @@
 
 <datalist id="giftList"></datalist>
 <div class="toasts" id="toasts"></div>
+<dialog class="ai-dlg" id="aiDlg" aria-labelledby="aiTitle">
+  <form method="dialog" class="ai-x"><button class="btn flat sq" title="Close" aria-label="Close">✕</button></form>
+  <div id="aiAsk">
+    <h2 id="aiTitle">✨ Generate a layout</h2>
+    <p class="muted">Describe your stream. flock.tt's own model (it runs on this computer, no internet needed) picks the overlays, colours and shape, then you can tweak it.</p>
+    <textarea id="aiPrompt" rows="3" maxlength="300" placeholder="e.g. chill pink stream with a poll and a like goal"></textarea>
+    <div class="ai-examples" id="aiExamples"></div>
+    <div class="v-btns" style="margin-top:14px"><button class="btn red" id="aiGo">Generate</button></div>
+  </div>
+  <div id="aiResult" hidden>
+    <h2>Here's what I understood</h2>
+    <p class="muted" id="aiEcho"></p>
+    <div class="form ai-opts">
+      <div class="f"><span>Shape</span><select id="aiOrient"><option value="portrait">Phone (portrait)</option><option value="landscape">Landscape</option></select></div>
+      <div class="f"><span>Theme</span><select id="aiTheme"><option value="black">Black</option><option value="white">White</option></select></div>
+      <div class="f"><span>Accent colour</span><select id="aiAccent"></select></div>
+      <div class="f"><span>Goal counts</span><select id="aiGoal"><option value="likes">Likes</option><option value="follows">Follows</option><option value="coins">Coins</option></select></div>
+    </div>
+    <div class="f" style="margin-top:12px"><span>Overlays <small class="muted">(tap to add or remove; % is how sure the model is)</small></span><div class="ai-chips" id="aiChips"></div></div>
+    <div class="v-btns" style="margin-top:16px"><button class="btn red" id="aiCreate">Create layout</button><button class="btn" id="aiBack">Change the description</button></div>
+  </div>
+</dialog>
 <script src="/socket.io/socket.io.js"></script>
 <script src="/dashboard.js"></script>
+<script src="/ai/layout-model.js"></script>
 <script src="/editor.js"></script>
 <script src="/obs-ui.js"></script>
 </body>

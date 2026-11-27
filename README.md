@@ -84,6 +84,17 @@ Copy a URL from the **Overlays** page. In TikTok LIVE Studio, add it as a *Link*
 | Camera frame | `/overlays/camframe.html` | `name=@you`, `style=corners`, `live=0`, `viewers=0`, `radius=28`, `width=4` |
 | Wins & losses | `/overlays/record.html` | `draws=0`, `streak=0`, `title=...`, `compact=1`, `bg=0` |
 
+## ✨ Generate a layout (flock.tt's own AI model)
+
+In the **Layout editor**, press **✨ Generate** and describe your stream, e.g. *"chill pink stream with a poll and a like goal, no chat"*
+or *"landscape gaming layout with a spin wheel in blue"*. flock.tt's model works out the overlays, portrait or landscape, theme,
+accent colour and goal type, shows what it understood (with how sure it is), lets you tap overlays on or off, then lays them
+out clear of TikTok's buttons and comments.
+
+The model was built from scratch for flock.tt: a small neural network trained on 120,000 generated stream requests
+(`scripts/ai/`). It runs inside the app on your own computer: no account, no API key, no internet, about half a
+millisecond per request. Retrain it with `npm run ai:train` (needs Python with PyTorch); scores are in `scripts/ai/RESULTS.md`.
+
 ## Layout editor (one link for everything)
 
 Instead of adding a separate source for every overlay, open **Layout editor**:

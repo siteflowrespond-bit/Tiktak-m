@@ -36,6 +36,7 @@ let page = fs.readFileSync(path.join(PUB, 'index.html'), 'utf8')
   .replaceAll('href="/style.css"', 'href="style.css"').replaceAll('/logo.svg', 'logo.svg')
   .replace('<script src="/socket.io/socket.io.js"></script>', '<script src="demo-backend.js"></script>')
   .replace('<script src="/dashboard.js"></script>', '<script src="dashboard.js"></script>')
+  .replace('<script src="/ai/layout-model.js"></script>', '<script src="ai/layout-model.js"></script>')
   .replace('<script src="/editor.js"></script>', '<script src="editor.js"></script>')
   .replace('<script src="/obs-ui.js"></script>', '<script src="obs-ui.js"></script>')
   .replace('<div class="content">', `<div class="content">
@@ -53,6 +54,7 @@ for (const f of fs.readdirSync(path.join(PUB, 'overlays'))) {
   if (f.endsWith('.html')) s = s.replace('<script src="/socket.io/socket.io.js"></script>', '<script src="demo-socket.js"></script>');
   write(`overlays/${f}`, s);
 }
+fs.cpSync(path.join(PUB, 'ai'), path.join(OUT, 'ai'), { recursive: true });
 fs.mkdirSync(path.join(OUT, 'sounds', 'builtin'), { recursive: true });
 for (const f of fs.readdirSync(path.join(PUB, 'sounds', 'builtin'))) fs.copyFileSync(path.join(PUB, 'sounds', 'builtin', f), path.join(OUT, 'sounds', 'builtin', f));
 
