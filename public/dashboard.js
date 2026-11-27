@@ -122,17 +122,43 @@ const EVENTS = {
 };
 
 // ── navigation ───────────────────────────────────────────
-const TITLES = { interactive: 'Interactive', live: 'Live', layout: 'Layout editor', obs: 'OBS', actions: 'Alerts', sounds: 'Sounds', voice: 'Voice', goals: 'Goals & timer', overlays: 'Overlays', settings: 'Settings' };
-function showPage(page) {
+const TITLES = { interactive: 'Interactive', live: 'Live', layout: 'Layout editor', actions: 'Alerts', sounds: 'Sounds', voice: 'Voice', goals: 'Goals & timer', overlays: 'Overlays', settings: 'Settings' };
+let currentPage = '';
+/** Shows a page. The address bar follows (#sounds), so Back / Forward and reloading keep your place. */
+function showPage(page, { push = true } = {}) {
+  if (page === 'obs') { showPage('settings', { push }); requestAnimationFrame(() => document.getElementById('obsSection')?.scrollIntoView({ block: 'start' })); return; } // OBS lives in Settings now
   if (!TITLES[page]) page = 'live';
-  document.querySelectorAll('#nav button').forEach((b) => b.classList.toggle('active', b.dataset.page === page));
+  const changed = page !== currentPage;
+  currentPage = page;
+  document.querySelectorAll('#nav button').forEach((b) => { b.classList.toggle('active', b.dataset.page === page); b.toggleAttribute('aria-current', b.dataset.page === page); });
   document.querySelectorAll('.page').forEach((s) => s.classList.toggle('active', s.id === `page-${page}`));
   $('#pageTitle').textContent = TITLES[page];
+  document.title = `${TITLES[page]} · flock.tt`;
   try { localStorage.setItem('page', page); } catch {}
+  if (location.hash !== `#${page}`) history[push && changed ? 'pushState' : 'replaceState'](null, '', `${location.pathname}${location.search}#${page}`);
+  if (changed) window.scrollTo({ top: 0 });
 }
 $('#nav').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) showPage(b.dataset.page); });
-try { showPage(localStorage.getItem('page')); } catch { showPage('live'); }
-$('#foot').textContent = '/ to search';
+window.addEventListener('popstate', () => showPage(location.hash.slice(1), { push: false }));
+{ let start = location.hash.slice(1); if (!TITLES[start] && start !== 'obs') { try { start = localStorage.getItem('page'); } catch {} } showPage(start, { push: false }); }
+
+// little dots in the sidebar show what's running: live, a poll or open queue, the timer, OBS
+function navDot(page, on, title = '') {
+  const b = document.querySelector(`#nav button[data-page="${page}"]`);
+  if (!b) return;
+  let d = b.querySelector('.nav-dot');
+  if (on && !d) b.append(d = el('i', { class: 'nav-dot' }));
+  if (!on && d) d.remove();
+  if (d) d.title = title;
+}
+const navState = { poll: false, queue: false };
+socket.on('status', (st) => navDot('live', st.status === 'connected', 'You are connected to a LIVE'));
+socket.on('poll', (p) => { navState.poll = Boolean(p?.open); navDot('interactive', navState.poll || navState.queue, navState.poll ? 'A poll is running' : 'The queue is open'); });
+socket.on('queue', (q) => { navState.queue = Boolean(q?.open); navDot('interactive', navState.poll || navState.queue, navState.poll ? 'A poll is running' : 'The queue is open'); });
+socket.on('timer', (t) => navDot('goals', Boolean(t?.running), 'The subathon timer is running'));
+socket.on('obsStatus', (o) => navDot('settings', o?.status === 'connected', 'Connected to OBS'));
+
+$('#foot').textContent = '';
 
 // ── connection ───────────────────────────────────────────
 let status = 'disconnected';
@@ -352,7 +378,7 @@ function triggerText(t) {
 
 function soundSelect(value, onChange, { allowNone = true } = {}) {
   const sel = el('select', {},
-    allowNone ? el('option', { value: '' }, 'No sound') : null,
+    allowNone ? el('option', { value: '' }, 'No sound') : el('option', { value: '', disabled: true }, 'Pick a sound…'),
     el('optgroup', { label: 'Built-in' }, sounds.filter((s) => s.kind === 'builtin').map((s) => el('option', { value: s.src }, s.name))),
     sounds.some((s) => s.kind === 'custom') ? el('optgroup', { label: 'Uploaded' }, sounds.filter((s) => s.kind === 'custom').map((s) => el('option', { value: s.src }, s.name))) : null);
   if (value && !sounds.some((s) => s.src === value)) sel.append(el('option', { value }, value));
@@ -531,17 +557,34 @@ function renderLibrary() {
     el('span', { title: s.name }, s.name),
     el('button', { class: 'btn flat', title: 'Preview here', onclick: () => preview(s.src) }, icon('play')),
     el('button', { class: 'btn flat', title: 'Play on stream', onclick: () => api('POST', '/api/play-sound', { src: s.src }) }, icon('cast')),
-    s.kind === 'custom' ? el('button', { class: 'btn flat', title: 'Delete', onclick: async () => {
-      if (!confirm(`Delete ${s.name}?`)) return;
-      await api('DELETE', `/api/sounds/${s.src.split('/').pop()}`);
-      await loadSounds();
-    } }, icon('trash')) : null)));
+    el('button', { class: 'btn flat', title: 'Delete', onclick: () => deleteSound(s) }, icon('trash')))));
+  const hidden = config?.sounds?.hidden?.length || 0;
+  $('#libRestore').hidden = !hidden;
+  $('#libRestore').textContent = `Bring back deleted built-in sounds (${hidden})`;
+}
+/** Deletes any sound. Sound actions and alerts that used it are switched to no sound. */
+async function deleteSound(s) {
+  const same = (x) => x && decodeURIComponent(x) === decodeURIComponent(s.src);
+  const users = [...config.sounds.rules.filter((r) => same(r.sound)).map(() => 'a sound action'), ...config.rules.filter((r) => same(r.alert?.sound)).map((r) => `the "${r.name}" alert`)];
+  const msg = `Delete "${s.name}"?${users.length ? `\n\nIt's used by ${users.length === 1 ? users[0] : `${users.length} actions and alerts`}. ${users.length === 1 ? 'It' : 'They'} will play no sound until you pick another.` : ''}${s.kind === 'builtin' ? '\n\nYou can bring built-in sounds back later.' : ''}`;
+  if (!confirm(msg)) return;
+  try {
+    await api('DELETE', `/api/sounds/${s.src.split('/').pop()}${s.kind === 'builtin' ? '?kind=builtin' : ''}`);
+    for (const r of config.sounds.rules) if (same(r.sound)) r.sound = '';
+    for (const r of config.rules) if (same(r.alert?.sound)) r.alert.sound = '';
+    if (s.kind === 'builtin') config.sounds.hidden = [...new Set([...(config.sounds.hidden || []), decodeURIComponent(s.src.split('/').pop())])];
+    toast(`Deleted "${s.name}"${users.length ? `. ${users.length === 1 ? 'It was used by 1 action, which now plays' : `${users.length} actions that used it now play`} no sound` : ''}`);
+    await loadSounds();
+  } catch (e) { toast(e.message, true); }
 }
 async function loadSounds() {
   sounds = await api('GET', '/api/sounds');
   renderLibrary();
   if (config) { renderSoundRules(); renderRules(); }
 }
+$('#libRestore').addEventListener('click', async () => {
+  try { await api('POST', '/api/sounds/restore'); config.sounds.hidden = []; toast('Built-in sounds are back'); await loadSounds(); } catch (e) { toast(e.message, true); }
+});
 $('#upload').addEventListener('change', async (e) => {
   for (const file of e.target.files) {
     try { await api('POST', `/api/sounds?name=${encodeURIComponent(file.name)}`, null, file); toast(`Added ${file.name}`); } catch (err) { toast(`${file.name}: ${err.message}`, true); }
@@ -979,7 +1022,7 @@ function renderOverlays() {
 // ── about ──
 function renderAbout() {
   const v = config.appVersion ? `v${config.appVersion}` : '';
-  $('#foot').textContent = `${v ? `${v} · ` : ''}/ to search`;
+  $('#foot').textContent = v || 'flock.tt'; $('#foot').title = 'Press / to search, ? for keyboard shortcuts';
   $('#aboutVersion').textContent = v || 'Demo';
   $('#aboutData').textContent = config.dataDir || 'This browser tab (demo)';
   $('#aboutUpdates').textContent = /[?&]app=/.test(location.search) ? 'Updates download by themselves: flock.tt checks when it opens, every 30 minutes and when you come back to it.' : 'Running in a browser. The desktop app updates itself.';
@@ -1090,7 +1133,7 @@ const PAGE_INFO = {
   live: ['Live', 'Activity, stats, test events', 'live', 'home dashboard activity feed log chat viewers'],
   overlays: ['Overlays', 'Links for TikTok LIVE Studio and OBS', 'layers', 'widgets browser source link obs studio'],
   layout: ['Layout editor', 'Arrange overlays and use one link', 'grid', 'scene editor canvas arrange position drag one link combine'],
-  obs: ['OBS', 'Connect OBS, switch scenes, show sources', 'obs', 'obs studio websocket scene source mute camera remote streamlabs'],
+  obs: ['Settings › OBS', 'Connect OBS, switch scenes, show sources', 'obs', 'obs studio websocket scene source mute camera remote streamlabs'],
   actions: ['Alerts', 'Pop-ups when viewers do things', 'zap', 'alert actions events notifications popup'],
   sounds: ['Sounds', 'Sound actions and library', 'sound', 'audio sfx soundboard volume'],
   voice: ['Voice', 'Text-to-speech: read chat out loud', 'mic', 'tts text to speech voice speak read chat pitch speed'],
@@ -1120,7 +1163,7 @@ function searchEntries() {
       goTo('overlays', () => document.querySelector(`[data-ov="${CSS.escape(o.path)}"]`));
     } });
   }
-  for (const r of config.obs?.rules || []) out.push({ kind: 'OBS actions', icon: 'obs', title: r.name || `${triggerText(r.trigger)} → OBS`, sub: `${triggerText(r.trigger)} → ${typeof obsActionText === 'function' ? obsActionText(r.action || {}) : ''}`, where: 'OBS', kw: 'obs scene source', run: () => goTo('obs', `[data-id="${CSS.escape(r.id)}"]`) });
+  for (const r of config.obs?.rules || []) out.push({ kind: 'OBS actions', icon: 'obs', title: r.name || `${triggerText(r.trigger)} → OBS`, sub: `${triggerText(r.trigger)} → ${typeof obsActionText === 'function' ? obsActionText(r.action || {}) : ''}`, where: 'Settings › OBS', kw: 'obs scene source', run: () => goTo('settings', `[data-id="${CSS.escape(r.id)}"]`) });
   for (const l of config.layouts || []) out.push({ kind: 'Layouts', icon: 'grid', title: l.name, sub: `${l.widgets.length} overlays · ${l.width} × ${l.height}`, where: 'Layout editor', kw: 'layout scene one link', run: () => { if (typeof edOpenLayout === 'function') edOpenLayout(l.id); showPage('layout'); } });
   for (const r of config.rules) {
     out.push({ kind: 'Alerts', icon: 'zap', title: r.name || 'Untitled alert', sub: `${triggerText(r.trigger)} → ${r.alert?.text || 'no text'}`, where: 'Alerts', kw: `alert ${r.trigger.type} ${r.trigger.command || ''} ${r.trigger.giftName || ''}`, run: () => {
@@ -1169,8 +1212,8 @@ function searchEntries() {
     ['New alert', () => { showPage('actions'); $('#addRule').click(); }],
     ['New sound action', () => { $('#addSound').click(); goTo('sounds', () => document.querySelector('#soundRules .snd:last-child')); }],
     ['Upload a sound', () => { showPage('sounds'); $('#upload').click(); }],
-    ['Connect to OBS', () => goTo('obs', '#obsUrl')],
-    ['New OBS action', () => { showPage('obs'); $('#obsAdd').click(); }],
+    ['Connect to OBS', () => goTo('settings', '#obsUrl')],
+    ['New OBS action', () => { showPage('settings'); $('#obsAdd').click(); }],
     ['Reset stats', () => $('#resetStats').click()],
     [status === 'disconnected' ? 'Connect to a LIVE' : 'Disconnect', () => (status === 'disconnected' ? $('#username').focus() : $('#connectBtn').click())]
   ];

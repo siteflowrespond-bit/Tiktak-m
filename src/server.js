@@ -211,9 +211,11 @@ app.get('/api/gifts', (req, res) => res.json(tiktok.gifts?.length ? tiktok.gifts
 
 // ---- Sound library ----
 app.get('/api/sounds', (req, res) => {
+  const hidden = new Set(config.sounds?.hidden || []);
   const list = [];
   for (const [kind, dir] of Object.entries(SOUND_DIRS)) {
     for (const file of fs.readdirSync(dir).filter((f) => AUDIO_EXT.test(f)).sort()) {
+      if (kind === 'builtin' && hidden.has(file)) continue; // built-ins you deleted stay hidden (updates bring the files back)
       list.push({ kind, name: file.replace(AUDIO_EXT, ''), src: `/sounds/${kind}/${encodeURIComponent(file)}` });
     }
   }
@@ -295,11 +297,30 @@ app.post('/api/myinstants', async (req, res) => {
   } catch (e) { res.status(502).json({ error: `Couldn't get that sound: ${e.message}` }); }
 });
 
+// Delete any sound. Your own are removed from disk; built-ins are hidden for good (an update would put the file back).
+// Sound actions and alerts that used it are set to no sound, so nothing tries to play a sound that's gone.
 app.delete('/api/sounds/:file', (req, res) => {
   const file = path.basename(req.params.file);
-  const full = path.join(SOUND_DIRS.custom, file);
+  const kind = req.query.kind === 'builtin' ? 'builtin' : 'custom';
+  const full = path.join(SOUND_DIRS[kind], file);
   if (!AUDIO_EXT.test(file) || !fs.existsSync(full)) return res.status(404).json({ error: 'Not found' });
-  fs.unlinkSync(full);
+  if (kind === 'custom') {
+    try { fs.unlinkSync(full); } catch (e) { return res.status(500).json({ error: `Could not delete it: ${e.message}` }); }
+  } else {
+    config.sounds.hidden = [...new Set([...(config.sounds.hidden || []), file])];
+  }
+  const src = `/sounds/${kind}/${encodeURIComponent(file)}`;
+  const same = (x) => x && decodeURIComponent(x) === decodeURIComponent(src);
+  let cleared = 0;
+  for (const r of config.sounds.rules || []) if (same(r.sound)) { r.sound = ''; cleared++; }
+  for (const r of config.rules || []) if (same(r.alert?.sound)) { r.alert.sound = ''; cleared++; }
+  saveConfig(config);
+  io.emit('config', publicConfig());
+  res.json({ ok: true, cleared });
+});
+app.post('/api/sounds/restore', (req, res) => {
+  config.sounds.hidden = [];
+  saveConfig(config);
   res.json({ ok: true });
 });
 

@@ -15,6 +15,7 @@
   const engine = new Engine(() => config);
   const BUILTIN = ['airhorn', 'applause', 'boing', 'buzzer', 'chime', 'coin', 'ding', 'drumroll', 'laser', 'levelup', 'pop', 'tada', 'whoosh'];
   const library = BUILTIN.map((name) => ({ kind: 'builtin', name, src: `${BASE}sounds/builtin/${name}.wav` }));
+  const BUILTIN_SOUNDS = library.map((s) => ({ ...s }));
   let status = { status: 'disconnected', username: '' };
 
   // ── socket bus (dashboard + overlay iframes + overlay tabs) ──
@@ -178,8 +179,14 @@
     }
     if (path.startsWith('/api/sounds/') && method === 'DELETE') {
       const file = decodeURIComponent(path.split('/').pop());
-      const i = library.findIndex((s) => s.kind === 'custom' && s.src.endsWith(file));
-      if (i >= 0) library.splice(i, 1);
+      const i = library.findIndex((s) => decodeURIComponent(s.src).endsWith(file));
+      if (i >= 0) { const [gone] = library.splice(i, 1); if (gone.kind === 'builtin') config.sounds.hidden = [...(config.sounds.hidden || []), file]; }
+      return json({ ok: true });
+    }
+    if (path === '/api/sounds/restore') {
+      for (const s of BUILTIN_SOUNDS) if (!library.some((x) => x.src === s.src)) library.push({ ...s });
+      library.sort((a, b) => (a.kind === b.kind ? a.name.localeCompare(b.name) : a.kind === 'builtin' ? -1 : 1));
+      config.sounds.hidden = [];
       return json({ ok: true });
     }
     if (path === '/api/play-sound') { broadcast('sound', { src: body.src, volume: (body.volume ?? 1) * config.sounds.volume, times: 1 }); return json({ ok: true }); }

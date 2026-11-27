@@ -42,6 +42,7 @@ export const DEFAULT_CONFIG = {
   sounds: {
     volume: 0.8,
     maxAtOnce: 4,
+    hidden: [], // built-in sound files you deleted
     rules: [
       { id: 's-rose', enabled: true, trigger: { type: 'gift', giftName: 'Rose' }, sound: '/sounds/builtin/pop.wav', volume: 0.8, repeat: true, cooldown: 0 },
       { id: 's-mid', enabled: true, trigger: { type: 'gift', giftName: '', minCoins: 100, maxCoins: 999 }, sound: '/sounds/builtin/tada.wav', volume: 1, repeat: false, cooldown: 0 },
@@ -157,7 +158,7 @@ export function merge(base, override) {
 /** Keeps only settings that have the right shape (numbers are numbers, lists are lists …), so a bad save
     can't break the app. Unknown top-level keys are dropped. */
 function clean(base, v) {
-  if (Array.isArray(base)) return Array.isArray(v) ? v.filter((x) => x && typeof x === 'object' && !Array.isArray(x)) : undefined;
+  if (Array.isArray(base)) return Array.isArray(v) ? v.filter((x) => (x && typeof x === 'object' && !Array.isArray(x)) || typeof x === 'string') : undefined;
   if (base && typeof base === 'object') {
     if (!v || typeof v !== 'object' || Array.isArray(v)) return undefined;
     const out = {};

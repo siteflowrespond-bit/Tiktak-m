@@ -64,10 +64,9 @@
       <button data-page="interactive" title="Polls, queue, banner"><svg class="i"><use href="#i-poll"/></svg><span>Interactive<small>Polls, queue, banner</small></span></button>
       <button data-page="goals" title="Targets, subathon, wins"><svg class="i"><use href="#i-clock"/></svg><span>Goals &amp; timer<small>Targets, subathon, wins</small></span></button>
       <div class="nav-label">Connect</div>
-      <button data-page="obs" title="Scenes &amp; sources"><svg class="i"><use href="#i-obs"/></svg><span>OBS<small>Scenes &amp; sources</small></span></button>
-      <button data-page="settings" title="Connection"><svg class="i"><use href="#i-sliders"/></svg><span>Settings<small>Connection</small></span></button>
+      <button data-page="settings" title="Connection, OBS, backup, updates"><svg class="i"><use href="#i-sliders"/></svg><span>Settings<small>Connection, OBS, backup</small></span></button>
     </nav>
-    <div class="side-foot mono" id="foot">v0.3</div>
+    <div class="side-foot"><span class="mono" id="foot">v0.3</span></div>
   </aside>
 
   <div class="main">
@@ -205,8 +204,9 @@
               <label class="btn sm" style="cursor:pointer"><svg class="i"><use href="#i-upload"/></svg>Upload<input type="file" id="upload" accept="audio/*" multiple hidden></label>
             </div>
             <div class="panel-body">
-              <p class="note"><svg class="i" style="vertical-align:-3px"><use href="#i-play"/></svg> previews here. <svg class="i" style="vertical-align:-3px"><use href="#i-cast"/></svg> plays it on stream. Uploads are saved with your settings, so updates keep them.</p>
+              <p class="note"><svg class="i" style="vertical-align:-3px"><use href="#i-play"/></svg> previews here. <svg class="i" style="vertical-align:-3px"><use href="#i-cast"/></svg> plays it on stream. Uploads are saved with your settings, so updates keep them. Delete any sound you don't want.</p>
               <div class="lib" id="library"></div>
+              <button class="btn flat sm lib-restore" id="libRestore" type="button" hidden>Bring back deleted built-in sounds</button>
             </div>
           </div>
           <div class="panel mi" id="miPanel">
@@ -341,53 +341,6 @@
       </section>
 
       <!-- OBS -->
-      <section class="page" id="page-obs">
-        <div class="cols">
-          <div class="stack">
-            <div class="panel">
-              <div class="panel-head"><h2>Connection</h2><div class="grow"></div><span class="onair" id="obsPill"><i></i><span id="obsPillText">Not connected</span></span></div>
-              <div class="panel-body">
-                <div class="form">
-                  <label class="f span2"><span>Server address</span><input id="obsUrl" placeholder="ws://127.0.0.1:4455" spellcheck="false"></label>
-                  <label class="f span2"><span>Password</span><input id="obsPass" type="password" autocomplete="off"></label>
-                </div>
-                <div class="row" style="margin-top:12px">
-                  <label class="check"><input type="checkbox" id="obsAuto"> Connect when flock.tt starts</label>
-                  <div class="grow"></div>
-                  <button class="btn red" id="obsConnect">Connect to OBS</button>
-                </div>
-                <p class="note" id="obsDetail" style="margin:10px 0 0"></p>
-                <details class="how-obs"><summary>How do I turn this on in OBS?</summary>
-                  <ol>
-                    <li>Open OBS Studio (version 28 or newer).</li>
-                    <li>Go to <b>Tools → WebSocket Server Settings</b>.</li>
-                    <li>Tick <b>Enable WebSocket server</b>. Leave the port at 4455.</li>
-                    <li>Click <b>Show Connect Info</b> and copy the password into the box above.</li>
-                    <li>OBS on another computer? Use its address, for example <code>ws://192.168.1.20:4455</code>.</li>
-                  </ol>
-                </details>
-              </div>
-            </div>
-            <div class="bar" style="margin:0">
-              <span class="muted">Change OBS when something happens on your LIVE.</span>
-              <div class="grow"></div>
-              <button class="btn" id="obsAdd"><svg class="i"><use href="#i-plus"/></svg>New OBS action</button>
-              <button hidden data-autosave class="btn red" id="obsSave">Save</button>
-            </div>
-            <div class="panel" id="obsRules"></div>
-          </div>
-          <div class="stack">
-            <div class="panel">
-              <div class="panel-head"><h2>Scenes</h2><div class="grow"></div><button class="btn flat sm" id="obsRefresh">Refresh</button></div>
-              <div class="panel-body"><p class="note" style="margin-bottom:8px">Click to switch now.</p><div class="scenes" id="obsScenes"></div></div>
-            </div>
-            <div class="panel">
-              <div class="panel-head"><h2>What OBS did</h2><div class="grow"></div><button class="btn flat sm" id="obsClearLog">Clear</button></div>
-              <div class="obs-log" id="obsLog"><div class="faint" style="padding:12px 14px">Nothing yet.</div></div>
-            </div>
-          </div>
-        </div>
-      </section>
 
       <!-- GOALS & TIMER -->
       <section class="page" id="page-goals">
@@ -481,6 +434,52 @@
             </div>
             <div class="f"><span>Your settings, sounds and records are saved in</span><code class="about-path" id="aboutData"></code></div>
             <p class="note">Everything stays on this computer. <a href="https://flocktt.xyz/privacy.html" target="_blank" rel="noopener">Privacy</a> · <a href="https://flocktt.xyz" target="_blank" rel="noopener">flocktt.xyz</a> · Not affiliated with TikTok or ByteDance.</p>
+          </div>
+        </div>
+        <div class="settings-group" id="obsSection"><h2>OBS Studio</h2><p class="muted">Optional. If you stream with OBS, flock.tt can switch scenes and show or hide sources when something happens on your LIVE.</p></div>
+        <div class="cols">
+          <div class="stack">
+            <div class="panel">
+              <div class="panel-head"><h2>Connection</h2><div class="grow"></div><span class="onair" id="obsPill"><i></i><span id="obsPillText">Not connected</span></span></div>
+              <div class="panel-body">
+                <div class="form">
+                  <label class="f span2"><span>Server address</span><input id="obsUrl" placeholder="ws://127.0.0.1:4455" spellcheck="false"></label>
+                  <label class="f span2"><span>Password</span><input id="obsPass" type="password" autocomplete="off"></label>
+                </div>
+                <div class="row" style="margin-top:12px">
+                  <label class="check"><input type="checkbox" id="obsAuto"> Connect when flock.tt starts</label>
+                  <div class="grow"></div>
+                  <button class="btn red" id="obsConnect">Connect to OBS</button>
+                </div>
+                <p class="note" id="obsDetail" style="margin:10px 0 0"></p>
+                <details class="how-obs"><summary>How do I turn this on in OBS?</summary>
+                  <ol>
+                    <li>Open OBS Studio (version 28 or newer).</li>
+                    <li>Go to <b>Tools → WebSocket Server Settings</b>.</li>
+                    <li>Tick <b>Enable WebSocket server</b>. Leave the port at 4455.</li>
+                    <li>Click <b>Show Connect Info</b> and copy the password into the box above.</li>
+                    <li>OBS on another computer? Use its address, for example <code>ws://192.168.1.20:4455</code>.</li>
+                  </ol>
+                </details>
+              </div>
+            </div>
+            <div class="bar" style="margin:0">
+              <span class="muted">Change OBS when something happens on your LIVE.</span>
+              <div class="grow"></div>
+              <button class="btn" id="obsAdd"><svg class="i"><use href="#i-plus"/></svg>New OBS action</button>
+              <button hidden data-autosave class="btn red" id="obsSave">Save</button>
+            </div>
+            <div class="panel" id="obsRules"></div>
+          </div>
+          <div class="stack">
+            <div class="panel">
+              <div class="panel-head"><h2>Scenes</h2><div class="grow"></div><button class="btn flat sm" id="obsRefresh">Refresh</button></div>
+              <div class="panel-body"><p class="note" style="margin-bottom:8px">Click to switch now.</p><div class="scenes" id="obsScenes"></div></div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><h2>What OBS did</h2><div class="grow"></div><button class="btn flat sm" id="obsClearLog">Clear</button></div>
+              <div class="obs-log" id="obsLog"><div class="faint" style="padding:12px 14px">Nothing yet.</div></div>
+            </div>
           </div>
         </div>
       </section>
