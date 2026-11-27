@@ -12,6 +12,7 @@ import { ObsLink } from './obs.js';
 import { simulate, SIM_GIFTS } from './simulate.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const VERSION = (() => { try { return JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8')).version; } catch { return ''; } })();
 const PORT = Number(process.env.PORT) || 8787;
 const HOST = process.env.HOST || '127.0.0.1';
 
@@ -158,7 +159,7 @@ function publicConfig() {
   // Never ship secrets (API key, OBS password) to the browser or overlays.
   const { signApiKey, ...rest } = config;
   const { password, ...obsRest } = config.obs || {};
-  return { ...rest, obs: obsRest, hasSignApiKey: Boolean(signApiKey), hasObsPassword: Boolean(password) };
+  return { ...rest, obs: obsRest, hasSignApiKey: Boolean(signApiKey), hasObsPassword: Boolean(password), appVersion: VERSION, dataDir: DATA_DIR };
 }
 
 // ---- Which overlays are open right now (LIVE Studio / OBS / a browser) ----

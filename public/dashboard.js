@@ -131,7 +131,7 @@ function showPage(page) {
 }
 $('#nav').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) showPage(b.dataset.page); });
 try { showPage(localStorage.getItem('page')); } catch { showPage('live'); }
-$('#foot').textContent = 'v1.0 · / to search';
+$('#foot').textContent = '/ to search';
 
 // ── connection ───────────────────────────────────────────
 let status = 'disconnected';
@@ -850,7 +850,7 @@ function renderOverlays() {
     class: id === ovTab ? 'active' : '', role: 'tab', 'aria-selected': String(id === ovTab),
     onclick: () => { ovTab = id; try { localStorage.setItem('ovTab', id); } catch {} renderOverlays(); }
   }, label, el('span', { class: 'c' }, n))));
-  $('#ovTabs').append(themeSel, colourBox);
+  $('#ovTabs').append(el('div', { class: 'ov-tools' }, colourBox, themeSel));
 
   let sections;
   if (ovTab === 'start') sections = [{ title: 'Start with these four. Add more any time.', items: STARTER.map((n) => all.find((i) => i.name === n)).filter(Boolean) }];
@@ -877,6 +877,15 @@ function renderOverlays() {
             el('a', { class: 'btn sq', title: 'Open in a new tab', href: url, target: '_blank', rel: 'noopener', onclick: used }, icon('external')))));
     }))
   ]));
+}
+
+// ── about ──
+function renderAbout() {
+  const v = config.appVersion ? `v${config.appVersion}` : '';
+  $('#foot').textContent = `${v ? `${v} · ` : ''}/ to search`;
+  $('#aboutVersion').textContent = v || 'Demo';
+  $('#aboutData').textContent = config.dataDir || 'This browser tab (demo)';
+  $('#aboutUpdates').textContent = /[?&]app=/.test(location.search) ? 'Updates install by themselves: flock.tt checks when it opens and every few hours.' : 'Running in a browser. The desktop app updates itself.';
 }
 
 // ── settings ─────────────────────────────────────────────
@@ -1090,6 +1099,7 @@ document.addEventListener('keydown', (e) => {
   renderRules();
   renderSoundRules();
   renderInteractive();
+  renderAbout();
   renderRecordSettings();
   renderTts();
   renderTimerForm();

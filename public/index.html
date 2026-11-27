@@ -134,7 +134,10 @@
           <button class="btn sm" id="edNew" title="New layout"><svg class="i"><use href="#i-plus"/></svg>New</button>
           <button class="btn sm flat" id="edRename">Rename</button>
           <button class="btn sm flat" id="edDelete">Delete</button>
-          <span class="ed-sep"></span>
+          <div class="grow"></div>
+          <button class="btn red" id="edSave">Save</button>
+        </div>
+        <div class="ed-bar ed-bar2">
           <select id="edSize" aria-label="Canvas size" style="width:auto">
             <option value="1080x1920">Phone · 1080 × 1920</option>
             <option value="1920x1080">Landscape · 1920 × 1080</option>
@@ -146,8 +149,6 @@
           <button class="btn sm flat" id="edPreview" title="See it exactly as viewers will (P)"><svg class="i"><use href="#i-eye"/></svg>Preview</button>
           <button class="btn sm flat" id="edPanels" title="Hide or show the side panels (H)"><svg class="i"><use href="#i-panels"/></svg>Hide panels</button>
           <button class="btn sm" id="edFull" title="Full screen (F)"><svg class="i"><use href="#i-expand"/></svg>Full screen</button>
-          <div class="grow"></div>
-          <button class="btn red" id="edSave">Save</button>
         </div>
         <div class="ed-link panel">
           <div><b>Your one link</b><span class="muted"> · add it once in TikTok LIVE Studio or OBS, sized to fill the whole screen (1080 × 1920 for phone, 1920 × 1080 for landscape) so it stays sharp. To make an overlay bigger, drag its corner here instead of stretching the source.</span></div>
@@ -200,7 +201,7 @@
               <label class="btn sm" style="cursor:pointer"><svg class="i"><use href="#i-upload"/></svg>Upload<input type="file" id="upload" accept="audio/*" multiple hidden></label>
             </div>
             <div class="panel-body">
-              <p class="note"><svg class="i" style="vertical-align:-3px"><use href="#i-play"/></svg> previews here. <svg class="i" style="vertical-align:-3px"><use href="#i-cast"/></svg> plays it on stream. Uploads go to <code>public/sounds/custom</code>.</p>
+              <p class="note"><svg class="i" style="vertical-align:-3px"><use href="#i-play"/></svg> previews here. <svg class="i" style="vertical-align:-3px"><use href="#i-cast"/></svg> plays it on stream. Uploads are saved with your settings, so updates keep them.</p>
               <div class="lib" id="library"></div>
             </div>
           </div>
@@ -390,7 +391,7 @@
           <div class="panel">
             <div class="panel-head"><h2>Goals</h2><div class="grow"></div><button hidden data-autosave class="btn red sm" id="saveGoals">Save</button></div>
             <div class="panel-body">
-              <p class="note">Progress counts from when you connect or reset stats.</p>
+              <p class="note">Likes use TikTok's total for the whole stream. Follows, coins and shares count from when you connect (or reset stats).</p>
               <div id="goals"></div>
             </div>
           </div>
@@ -439,6 +440,14 @@
             <div class="f"><span>Euler Stream API key (optional)</span><input id="signApiKey" type="password" placeholder="Leave empty for the free tier" autocomplete="off"></div>
             <p class="note" style="margin-top:8px"><span id="keyState"></span> Connections are signed through Euler Stream. The free tier has rate limits.</p>
             <button hidden data-autosave class="btn red" id="saveSettings">Save</button>
+          </div>
+        </div>
+        <div class="panel about" style="max-width:640px;margin-top:16px">
+          <div class="panel-head"><h2>About flock.tt</h2><div class="grow"></div><span class="mono muted" id="aboutVersion"></span></div>
+          <div class="panel-body">
+            <p class="note" id="aboutUpdates" style="margin-top:0"></p>
+            <div class="f"><span>Your settings, sounds and records are saved in</span><code class="about-path" id="aboutData"></code></div>
+            <p class="note">Everything stays on this computer. <a href="https://flocktt.xyz/privacy.html" target="_blank" rel="noopener">Privacy</a> · <a href="https://flocktt.xyz" target="_blank" rel="noopener">flocktt.xyz</a> · Not affiliated with TikTok or ByteDance.</p>
           </div>
         </div>
       </section>
