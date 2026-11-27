@@ -642,3 +642,9 @@ input[type=checkbox], input[type=range] { accent-color: #fff; }
 .chip.on { background: #fff; color: #000; border-color: #fff; }
 .chip small { opacity: .6; font: 500 11px var(--mono); }
 .ai-opts { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+
+/* overlays-on-stream pill */
+.ov-pill { font: 500 12px var(--mono); letter-spacing: .04em; color: var(--dim); background: transparent; padding: 4px 10px; border: 1px solid var(--line-2); border-radius: 999px; cursor: pointer; white-space: nowrap; }
+.ov-pill::before { content: "● "; color: #fff; }
+.ov-pill.none::before { content: "○ "; color: var(--faint); }
+.ov-pill:hover { color: #fff; border-color: #777; }

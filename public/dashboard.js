@@ -693,6 +693,22 @@ $('#saveInteractive').addEventListener('click', (e) => {
   saveConfig({ queue: { command: cmd.startsWith('!') ? cmd : `!${cmd}`, max: Math.max(1, Number($('#queueMax').value) || 50) }, banner: { text: $('#bannerText').value.trim(), scroll: $('#bannerScroll').checked } }, 'Saved', e.currentTarget);
 });
 
+// ── overlays on stream: how many overlay links are open in LIVE Studio / OBS right now ──
+let openOverlays = [];
+function drawOvPill() {
+  const n = openOverlays.reduce((a, o) => a + o.count, 0);
+  const pill = $('#ovPill');
+  pill.textContent = n ? `${n} overlay${n === 1 ? '' : 's'} on stream` : 'No overlays open';
+  pill.classList.toggle('none', !n);
+  pill.title = n ? `Open now:\n${openOverlays.map((o) => `• ${o.page}${o.count > 1 ? ` ×${o.count}` : ''}`).join('\n')}` : 'No overlay links are open in TikTok LIVE Studio, OBS or a browser.';
+}
+socket.on('overlays', (list) => { openOverlays = list || []; $('#ovPill').hidden = false; drawOvPill(); });
+$('#ovPill').addEventListener('click', () => {
+  const n = openOverlays.reduce((a, o) => a + o.count, 0);
+  if (n) toast(`On stream: ${openOverlays.map((o) => o.page).join(', ')}. Press "Send a test follow" on the Live page to see them react.`);
+  else toast('No overlays are open. In TikTok LIVE Studio: Add source → Link → paste the link from the Layout editor (or the Overlays page). flock.tt must stay open on this PC.', true);
+});
+
 // ── wins & losses ────────────────────────────────────────
 let record = { wins: 0, losses: 0, draws: 0, streak: 0, last: null };
 const recApi = (action, extra = {}) => api('POST', '/api/record', { action, ...extra }).catch((e) => toast(e.message, true));
@@ -850,7 +866,7 @@ function renderOverlays() {
     el('div', { class: 'ovs' }, sec.items.map(({ name, desc, path: p0, opt }) => {
       const p = themed(p0);
       const url = base + p.slice(1);
-      const src = opt.pv ? `${p.slice(1)}${p.includes('?') ? '&' : '?'}${opt.pv}` : p.slice(1);
+      const src = `${p.slice(1)}${p.includes('?') ? '&' : '?'}preview=1${opt.pv ? `&${opt.pv}` : ''}`;
       const used = () => { try { localStorage.setItem('usedOverlay', '1'); } catch {} drawSteps(); };
       return el('div', { class: 'panel ov', 'data-ov': p0 },
         el('div', { class: 'pv' }, opt.idle ? el('span', { class: 'idle' }, opt.idle) : null, el('iframe', { src, loading: 'lazy', title: name, tabIndex: -1 })),

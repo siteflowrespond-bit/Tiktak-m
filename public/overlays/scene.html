@@ -47,7 +47,8 @@
         stage.append(f);
       }
       // content is scaled to fill the box (see sizes.js), so a bigger box means a bigger, still-sharp overlay
-      const src = ttPlace(f, w.src, w.w, w.h);
+      let src = ttPlace(f, w.src, w.w, w.h);
+      src += `${src.includes('?') ? '&' : '?'}in=scene`;
       if (f.dataset.src !== src) { f.dataset.src = src; f.src = src; }
       Object.assign(f.style, { left: `${w.x}px`, top: `${w.y}px`, zIndex: String(i + 1) });
     });

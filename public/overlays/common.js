@@ -1,6 +1,12 @@
 // flock.tt (c) 2026 siteflowrespond-bit. Owner proof sha256:99891628516a57a623400d9ccde22b170ecfac1527631e923149d480260a9270
 /* Helpers shared by every overlay page. */
 window.params = new URLSearchParams(location.search);
+// Tell flock.tt which overlay this is, so the app can show what's open on stream.
+if (typeof window.io === 'function' && !window.io.__tagged) {
+  const realIo = window.io;
+  window.io = (opts = {}) => realIo({ ...opts, query: { ...(opts.query || {}), ovpage: location.pathname + location.search } });
+  window.io.__tagged = true;
+}
 // ?theme=white (default is black)
 if (params.get('theme')) document.documentElement.dataset.theme = params.get('theme');
 // Custom colours: ?accent=ff3366 &text=ffffff &panel=1a1a2e (hex, with or without #). They sit on top of the theme.

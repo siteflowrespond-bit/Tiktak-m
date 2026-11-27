@@ -220,7 +220,7 @@ addEventListener('resize', () => { if (document.querySelector('#page-layout.acti
 
 function edPreviewSrc(src) {
   const quiet = ED_QUIET[fileOf(src)];
-  return `overlays/${src}${quiet ? (src.includes('?') ? '&' : '?') + quiet : ''}`;
+  return `overlays/${src}${src.includes('?') ? '&' : '?'}preview=1${quiet ? `&${quiet}` : ''}`;
 }
 
 function edRenderStage() {

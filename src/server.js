@@ -161,7 +161,27 @@ function publicConfig() {
   return { ...rest, obs: obsRest, hasSignApiKey: Boolean(signApiKey), hasObsPassword: Boolean(password) };
 }
 
+// ---- Which overlays are open right now (LIVE Studio / OBS / a browser) ----
+// Each overlay page's socket comes from its own URL. Editor/Overlays-page previews (preview=1) and the overlays
+// inside a layout link (in=scene) are left out, so this counts what is really on stream.
+const overlayPages = new Map(); // socket id -> { page, since }
+function overlayList() {
+  const counts = {};
+  for (const { page } of overlayPages.values()) counts[page] = (counts[page] || 0) + 1;
+  return Object.entries(counts).map(([page, count]) => ({ page, count }));
+}
 io.on('connection', (socket) => {
+  try {
+    const ref = new URL(String(socket.handshake.query?.ovpage || ''), 'http://x');
+    if (ref.pathname.includes('/overlays/') && !ref.searchParams.has('preview') && !ref.searchParams.has('in')) {
+      const file = ref.pathname.split('/').pop();
+      const page = file === 'scene.html' ? `Layout: ${ref.searchParams.get('layout') || 'main'}` : file.replace('.html', '');
+      overlayPages.set(socket.id, { page, since: Date.now() });
+      io.emit('overlays', overlayList());
+      socket.on('disconnect', () => { overlayPages.delete(socket.id); io.emit('overlays', overlayList()); });
+    }
+  } catch { /* not an overlay page */ }
+  socket.emit('overlays', overlayList());
   socket.emit('status', { status: tiktok.status, username: tiktok.username });
   socket.emit('config', publicConfig());
   socket.emit('stats', engine.snapshot());
