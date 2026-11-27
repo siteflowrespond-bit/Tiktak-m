@@ -133,7 +133,6 @@
       <section class="page" id="page-layout">
         <div class="ed-bar">
           <select id="edLayout" aria-label="Layout" style="width:auto;min-width:150px"></select>
-          <button class="btn sm red" id="edAI" title="Describe a layout and FlockAi builds it">✨ FlockAi</button>
           <button class="btn sm" id="edNew" title="New layout"><svg class="i"><use href="#i-plus"/></svg>New</button>
           <button class="btn sm flat" id="edRename">Rename</button>
           <button class="btn sm flat" id="edDelete">Delete</button>
@@ -471,28 +470,24 @@
 
 <datalist id="giftList"></datalist>
 <div class="toasts" id="toasts"></div>
-<dialog class="ai-dlg" id="aiDlg" aria-labelledby="aiTitle">
-  <form method="dialog" class="ai-x"><button class="btn flat sq" title="Close" aria-label="Close">✕</button></form>
-  <div id="aiAsk">
-    <h2 id="aiTitle">✨ FlockAi</h2>
-    <p class="muted">Describe your stream and FlockAi builds the layout. It's flock.tt's own AI: it runs on this computer, free, with no internet needed. You can tweak what it picks before it builds.</p>
-    <textarea id="aiPrompt" rows="3" maxlength="300" placeholder="e.g. chill pink stream with a poll and a like goal"></textarea>
-    <div class="ai-examples" id="aiExamples"></div>
-    <div class="v-btns" style="margin-top:14px"><button class="btn red" id="aiGo">Generate</button></div>
-  </div>
-  <div id="aiResult" hidden>
-    <h2>Here's what FlockAi understood</h2>
-    <p class="muted" id="aiEcho"></p>
-    <div class="form ai-opts">
-      <div class="f"><span>Shape</span><select id="aiOrient"><option value="portrait">Phone (portrait)</option><option value="landscape">Landscape</option></select></div>
-      <div class="f"><span>Theme</span><select id="aiTheme"><option value="black">Black</option><option value="white">White</option></select></div>
-      <div class="f"><span>Accent colour</span><select id="aiAccent"></select></div>
-      <div class="f"><span>Goal counts</span><select id="aiGoal"><option value="likes">Likes</option><option value="follows">Follows</option><option value="coins">Coins</option></select></div>
-    </div>
-    <div class="f" style="margin-top:12px"><span>Overlays <small class="muted">(tap to add or remove; % is how sure FlockAi is)</small></span><div class="ai-chips" id="aiChips"></div></div>
-    <div class="v-btns" style="margin-top:16px"><button class="btn red" id="aiCreate">Create layout</button><button class="btn" id="aiBack">Change the description</button></div>
-  </div>
-</dialog>
+<!-- ✨ FlockAi chat: a bubble in the bottom-right corner on every page -->
+<button class="ai-fab" id="aiFab" type="button" aria-label="Open FlockAi" aria-expanded="false" aria-controls="aiChat">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path class="spark" d="M12 3.5l1.9 4.6 4.6 1.9-4.6 1.9L12 16.5l-1.9-4.6L5.5 10l4.6-1.9z"/><path class="spark sm" d="M18.5 15l.8 1.9 1.9.8-1.9.8-.8 1.9-.8-1.9-1.9-.8 1.9-.8z"/></svg>
+  <span class="ai-fab-x" aria-hidden="true">✕</span>
+</button>
+<section class="ai-chat" id="aiChat" role="dialog" aria-labelledby="aiTitle" hidden>
+  <header class="ai-head">
+    <span class="ai-av" aria-hidden="true">✨</span>
+    <div class="grow"><b id="aiTitle">FlockAi</b><small>Builds layouts for you · runs on this PC</small></div>
+    <button class="btn flat sq" id="aiClear" type="button" title="Start over" aria-label="Start over"><svg class="i"><use href="#i-undo"/></svg></button>
+    <button class="btn flat sq" id="aiClose" type="button" title="Close" aria-label="Close">✕</button>
+  </header>
+  <div class="ai-msgs" id="aiMsgs" aria-live="polite"></div>
+  <form class="ai-input" id="aiForm">
+    <textarea id="aiPrompt" rows="1" maxlength="300" placeholder="Describe your stream…" aria-label="Describe your stream"></textarea>
+    <button class="btn red sq" id="aiGo" type="submit" title="Send" aria-label="Send"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+  </form>
+</section>
 <script src="/socket.io/socket.io.js"></script>
 <script src="/dashboard.js"></script>
 <script src="/overlays/sizes.js"></script>

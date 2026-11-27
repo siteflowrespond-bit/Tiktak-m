@@ -1065,7 +1065,7 @@ function searchEntries() {
     ['Start a poll', 'Viewers vote in chat', 'interactive', '#pollQ', 'poll vote question'],
     ['Viewer queue', 'Let viewers !join a line', 'interactive', '#queueOpen', 'queue join line play with viewers'],
     ['Banner message', 'Change the message on stream', 'interactive', '#bannerText', 'banner text ticker message'],
-    ['FlockAi', 'Describe a layout and FlockAi builds it', 'layout', '#edAI', 'ai generate auto layout magic make design flockai'],
+    ['FlockAi', 'Chat with FlockAi and it builds your layout', 'layout', '#aiFab', 'ai generate auto layout magic make design flockai'],
     ['Wins & losses', 'Battle record, +win, +loss, undo', 'goals', '#recPanel', 'record score battle match win loss draw streak counter'],
     ['Time per gift / follow', 'How much time each event adds', 'goals', '#timerForm', 'subathon seconds coin'],
     ['Goals', 'Like, follow, coin and share targets', 'goals', '#goals', 'target goal bar'],
@@ -1078,6 +1078,9 @@ function searchEntries() {
     ['Activity filters', 'Show or hide likes, joins …', 'live', '#filters', 'feed log']
   ];
   for (const [title, sub, page, sel, kw] of settings) out.push({ kind: 'Settings', icon: 'sliders', title, sub, where: PAGE_INFO[page][0], kw, run: () => goTo(page, sel) });
+  // FlockAi lives in the chat bubble: searching for it opens the chat
+  const fa = out.find((e) => e.title === 'FlockAi');
+  if (fa) { fa.where = 'Chat bubble'; fa.run = () => window.aiOpen?.(); }
   const actions = [
     ['Send a test follow', sim('follow')], ['Send a test gift', sim('gift')], ['Send a big test gift', sim('gift', { giftName: 'Galaxy' })],
     ['Send test likes', sim('like')], ['Send a test chat', sim('chat')], ['Send a test share', sim('share')], ['Send a test subscribe', sim('subscribe')],

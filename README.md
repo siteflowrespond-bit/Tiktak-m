@@ -86,7 +86,7 @@ Copy a URL from the **Overlays** page. In TikTok LIVE Studio, add it as a *Link*
 
 ## ✨ FlockAi: describe a layout, get a layout
 
-**FlockAi** is flock.tt's own AI. In the **Layout editor**, press **✨ FlockAi** and describe your stream, e.g. *"chill pink stream with a poll and a like goal, no chat"*
+**FlockAi** is flock.tt's own AI. Tap the **✨ chat bubble** in the bottom-right corner (on any page) and describe your stream, e.g. *"chill pink stream with a poll and a like goal, no chat"*
 or *"landscape gaming layout with a spin wheel in blue"*. FlockAi works out the overlays, portrait or landscape, theme,
 accent colour and goal type, shows what it understood (with how sure it is), lets you tap overlays on or off, then lays them
 out clear of TikTok's buttons and comments.

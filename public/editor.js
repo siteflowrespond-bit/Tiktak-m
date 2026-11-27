@@ -118,52 +118,126 @@ function edStarter() {
   edDirty(); edRender();
 }
 
-// ── ✨ FlockAi: flock.tt's own layout model (public/ai/layout-model.js, trained in scripts/ai) ──
+// ── ✨ FlockAi chat: flock.tt's own layout model (public/ai/layout-model.js, trained in scripts/ai) ──
+// A chat bubble in the bottom-right corner. Describe the stream, FlockAi answers with what it would build
+// (tap overlays on or off, change the shape, theme and colour), then one tap builds the layout.
 const AI_EXAMPLES = ['chill pink stream with a poll and a like goal', 'landscape gaming layout, no chat', 'subathon with a timer and top gifters',
   'battle stream with wins and losses in gold', 'minimal white just chatting setup', 'play with viewers: queue, poll and chat in blue'];
-let aiChoice = null;
+const aiCap = (t) => t[0].toUpperCase() + t.slice(1);
+const aiMsgs = () => $e('#aiMsgs');
+function aiScroll() { const m = aiMsgs(); requestAnimationFrame(() => { m.scrollTop = m.scrollHeight; }); }
+function aiSay(who, ...children) {
+  const b = el('div', { class: `ai-msg ${who}` }, who === 'bot' ? el('span', { class: 'ai-av sm', 'aria-hidden': 'true' }, '✨') : null, el('div', { class: 'ai-bubble' }, ...children));
+  aiMsgs().append(b); aiScroll();
+  return b;
+}
+function aiExamples() {
+  return el('div', { class: 'ai-suggest' }, AI_EXAMPLES.map((t) => el('button', { type: 'button', class: 'chip', onclick: () => aiSend(t) }, t)));
+}
+function aiWelcome() {
+  aiMsgs().replaceChildren();
+  aiSay('bot', el('p', {}, el('b', {}, 'Hi! I build stream layouts. '), 'Tell me what kind of stream you do and what you want on screen, and I\'ll lay it out for you.'),
+    el('p', { class: 'muted' }, 'Try one of these:'), aiExamples());
+}
 function aiOpen() {
-  const dlg = $e('#aiDlg');
-  $e('#aiAsk').hidden = false; $e('#aiResult').hidden = true;
-  $e('#aiExamples').replaceChildren(...AI_EXAMPLES.map((t) => el('button', { class: 'chip', type: 'button', onclick: () => { $e('#aiPrompt').value = t; $e('#aiPrompt').focus(); } }, t)));
-  if (!$e('#aiAccent').options.length) $e('#aiAccent').append(el('option', { value: 'none' }, 'None (black & white)'), ...Object.keys(flockAI.ACCENT_HEX).map((c) => el('option', { value: c }, c[0].toUpperCase() + c.slice(1))));
-  dlg.showModal();
-  $e('#aiPrompt').focus();
+  const chat = $e('#aiChat');
+  if (!aiMsgs().children.length) aiWelcome();
+  chat.hidden = false;
+  requestAnimationFrame(() => chat.classList.add('on'));
+  $e('#aiFab').classList.add('open', 'seen'); $e('#aiFab').setAttribute('aria-expanded', 'true');
+  try { localStorage.setItem('aiSeen', '1'); } catch {}
+  setTimeout(() => $e('#aiPrompt').focus(), 60);
 }
-function aiRenderChips() {
-  $e('#aiChips').replaceChildren(...flockAI.OVERLAYS.map((o) => {
-    const on = aiChoice.picked.includes(o), p = Math.round((aiChoice.probs[o] || 0) * 100);
-    return el('button', { type: 'button', class: `chip${on ? ' on' : ''}`, title: `${p}% sure`, onclick: () => {
-      aiChoice.picked = on ? aiChoice.picked.filter((x) => x !== o) : [...aiChoice.picked, o];
-      aiRenderChips();
-    } }, flockAI.NAME[o], el('small', {}, ` ${p}%`));
-  }));
-  $e('#aiCreate').disabled = !aiChoice.picked.length;
+function aiClose() {
+  const chat = $e('#aiChat');
+  chat.classList.remove('on');
+  $e('#aiFab').classList.remove('open'); $e('#aiFab').setAttribute('aria-expanded', 'false');
+  setTimeout(() => { if (!chat.classList.contains('on')) chat.hidden = true; }, 220);
 }
-async function aiGenerate() {
-  const prompt = $e('#aiPrompt').value.trim();
-  if (!prompt) { $e('#aiPrompt').focus(); return; }
-  try { aiChoice = await flockAI.understand(prompt); } catch (e) { toast(e.message, true); return; }
-  aiChoice.prompt = prompt;
-  $e('#aiEcho').textContent = `"${prompt}"`;
-  $e('#aiOrient').value = aiChoice.orient; $e('#aiTheme').value = aiChoice.theme; $e('#aiAccent').value = aiChoice.accent; $e('#aiGoal').value = aiChoice.goal;
-  aiRenderChips();
-  $e('#aiAsk').hidden = true; $e('#aiResult').hidden = false;
+/** FlockAi's answer: a card with what it picked, which can be changed before building. */
+function aiCard(choice) {
+  const sel = (label, key, opts) => {
+    const s = el('select', { 'aria-label': label }, opts.map(([v, t]) => el('option', { value: v }, t)));
+    s.value = choice[key];
+    s.addEventListener('change', () => { choice[key] = s.value; });
+    return el('label', { class: 'ai-opt' }, el('span', {}, label), s);
+  };
+  const top = el('div', { class: 'ai-chips' });  // what's picked
+  const all = el('div', { class: 'ai-chips' });  // everything, under "See all"
+  const build = el('button', { type: 'button', class: 'btn red', onclick: () => aiBuild(choice, build) }, 'Build this layout');
+  const chip = (o) => {
+    const on = choice.picked.includes(o), p = Math.round((choice.probs[o] || 0) * 100);
+    return el('button', { type: 'button', class: `chip${on ? ' on' : ''}`, title: on ? `${p}% sure · tap to remove` : `${p}% sure · tap to add`, 'aria-pressed': String(on), onclick: () => {
+      choice.picked = on ? choice.picked.filter((x) => x !== o) : [...choice.picked, o];
+      draw();
+    } }, on ? '✓ ' : '+ ', flockAI.NAME[o]);
+  };
+  const sum = el('summary');
+  const more = el('details', { class: 'ai-more' }, sum, all);
+  function draw() {
+    top.replaceChildren(...choice.picked.map(chip));
+    if (!choice.picked.length) top.append(el('span', { class: 'muted' }, 'Nothing picked yet. Add some from the list below.'));
+    const rest = flockAI.OVERLAYS.filter((o) => !choice.picked.includes(o)).sort((x, y) => (choice.probs[y] || 0) - (choice.probs[x] || 0));
+    all.replaceChildren(...rest.map(chip));
+    sum.textContent = `Add more (${rest.length})`;
+    build.disabled = !choice.picked.length;
+  }
+  draw();
+  return el('div', { class: 'ai-card' },
+    el('div', { class: 'ai-card-h' }, 'Overlays'), top, more,
+    el('div', { class: 'ai-opts' },
+      sel('Shape', 'orient', [['portrait', 'Phone'], ['landscape', 'Landscape']]),
+      sel('Theme', 'theme', [['black', 'Black'], ['white', 'White']]),
+      sel('Colour', 'accent', [['none', 'None'], ...Object.keys(flockAI.ACCENT_HEX).map((c) => [c, aiCap(c)])]),
+      sel('Goal', 'goal', [['likes', 'Likes'], ['follows', 'Follows'], ['coins', 'Coins']])),
+    el('div', { class: 'ai-actions' }, build));
 }
-function aiCreate() {
-  const choice = { ...aiChoice, orient: $e('#aiOrient').value, theme: $e('#aiTheme').value, accent: $e('#aiAccent').value, goal: $e('#aiGoal').value };
+function aiSummary(c) {
+  const names = c.picked.map((o) => flockAI.NAME[o]);
+  const list = names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names.at(-1)}` : names[0];
+  const look = `a ${c.theme === 'white' ? 'white' : 'black'} ${c.orient === 'landscape' ? 'landscape' : 'phone'} layout${c.accent && c.accent !== 'none' ? ` in ${c.accent}` : ''}`;
+  return `I'd make ${look} with ${list}.`;
+}
+let aiBusy = false;
+async function aiSend(text) {
+  const prompt = String(text ?? $e('#aiPrompt').value).trim();
+  if (!prompt || aiBusy) { $e('#aiPrompt').focus(); return; }
+  aiBusy = true;
+  $e('#aiPrompt').value = ''; aiGrow();
+  aiMsgs().querySelectorAll('.ai-suggest').forEach((x) => x.remove());
+  aiSay('me', prompt);
+  const typing = aiSay('bot', el('span', { class: 'ai-dots' }, el('i'), el('i'), el('i')));
+  try {
+    const [choice] = await Promise.all([flockAI.understand(prompt), new Promise((r) => setTimeout(r, 650))]);
+    choice.prompt = prompt;
+    typing.remove();
+    aiSay('bot', el('p', {}, aiSummary(choice)), el('p', { class: 'muted' }, 'Tap to add or remove anything, then build it.'), aiCard(choice));
+  } catch (e) {
+    typing.remove();
+    aiSay('bot', el('p', {}, `Sorry, I couldn't load my brain: ${e.message}`));
+  } finally { aiBusy = false; }
+}
+function aiBuild(choice, btn) {
   const { layout, dropped } = flockAI.buildLayout(choice, choice.prompt);
   edLayouts().push(layout);
-  $e('#aiDlg').close();
+  showPage('layout');
   edOpenLayout(layout.id);
   edDirty();
-  toast(dropped.length ? `FlockAi made your layout. Left out ${dropped.map((d) => flockAI.NAME[d]).join(', ')} so the rest fit; add them from the list.` : 'FlockAi made your layout! Drag anything to adjust, then Save.');
+  btn.disabled = true; btn.textContent = 'Built ✓';
+  aiSay('bot', el('p', {}, el('b', {}, `Done! "${layout.name.replace(/^✨ /, '')}" is open in the Layout editor. `),
+    'Drag anything to move it, then add the layout\'s one link to TikTok LIVE Studio or OBS.'),
+    dropped.length ? el('p', { class: 'muted' }, `I left out ${dropped.map((d) => flockAI.NAME[d]).join(', ')} so the rest fit. You can add them from the list.`) : null,
+    el('p', { class: 'muted' }, 'Want another? Just describe it.'));
 }
-$e('#edAI').addEventListener('click', aiOpen);
-$e('#aiGo').addEventListener('click', aiGenerate);
-$e('#aiPrompt').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); aiGenerate(); } });
-$e('#aiBack').addEventListener('click', () => { $e('#aiAsk').hidden = false; $e('#aiResult').hidden = true; $e('#aiPrompt').focus(); });
-$e('#aiCreate').addEventListener('click', aiCreate);
+function aiGrow() { const t = $e('#aiPrompt'); t.style.height = 'auto'; t.style.height = `${Math.min(120, t.scrollHeight)}px`; }
+try { if (localStorage.getItem('aiSeen')) $e('#aiFab').classList.add('seen'); } catch {}
+$e('#aiFab').addEventListener('click', () => ($e('#aiChat').hidden ? aiOpen() : aiClose()));
+$e('#aiClose').addEventListener('click', aiClose);
+$e('#aiClear').addEventListener('click', () => { aiWelcome(); $e('#aiPrompt').focus(); });
+$e('#aiForm').addEventListener('submit', (e) => { e.preventDefault(); aiSend(); });
+$e('#aiPrompt').addEventListener('input', aiGrow);
+$e('#aiPrompt').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); aiSend(); } });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$e('#aiChat').hidden) aiClose(); });
 
 $e('#edGuides').addEventListener('change', () => edRenderStage());
 $e('#edUndo').addEventListener('click', edUndo);

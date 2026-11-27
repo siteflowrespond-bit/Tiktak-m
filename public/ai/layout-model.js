@@ -161,7 +161,9 @@
     const dropped = [];
     while (!placed && items.length) { dropped.push(items.pop().o); placed = pack(items, regions, 0.45); }
     widgets.push(...(placed || []));
-    const title = prompt.trim().replace(/\s+/g, ' ').slice(0, 32) || 'AI layout';
+    let title = prompt.trim().replace(/\s+/g, ' ');
+    if (title.length > 36) { title = title.slice(0, 36); title = title.slice(0, title.lastIndexOf(' ') > 20 ? title.lastIndexOf(' ') : 36).replace(/[\s,.:;-]+$/, '') + '…'; }
+    title = title ? title[0].toUpperCase() + title.slice(1) : 'AI layout';
     return {
       dropped,
       layout: {
