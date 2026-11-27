@@ -11,14 +11,18 @@ function imageUrl(img) {
   return '';
 }
 
-function normUser(u = {}) {
+// TikTok's current message format (tiktok-live-connector 2.x, proto v3) renamed many fields. Every reader
+// below takes the new name first and the old one as a fallback, so both shapes work.
+export function normUser(u = {}) {
+  const handle = u.displayId || u.uniqueId || '';
   return {
-    id: String(u.userId ?? u.uniqueId ?? ''),
-    username: u.uniqueId || '',
-    nickname: u.nickname || u.uniqueId || 'Someone',
-    avatar: imageUrl(u.profilePicture || u.avatarThumb)
+    id: String(u.id ?? u.userId ?? handle ?? ''),
+    username: handle,
+    nickname: u.nickname || u.nickName || handle || 'Someone',
+    avatar: imageUrl(u.avatarThumb || u.avatarMedium || u.profilePicture)
   };
 }
+const num = (v) => { const n = Number(v); return Number.isFinite(n) ? n : 0; };
 
 /**
  * Wraps a TikTok LIVE connection and re-emits a small, normalized event shape:
@@ -113,13 +117,13 @@ export class TikTokSource extends EventEmitter {
     conn.on(WebcastEvent.CHAT, (d) => {
       const id = d.userIdentity || {};
       const user = { ...normUser(d.user), isFollower: Boolean(id.isFollowerOfAnchor || id.isMutualFollowingWithAnchor), isSubscriber: Boolean(id.isSubscriberOfAnchor), isModerator: Boolean(id.isModeratorOfAnchor), isGifter: Boolean(id.isGiftGiverOfAnchor), isHost: Boolean(id.isAnchor) };
-      out({ type: 'chat', user, comment: d.comment || '' });
+      out({ type: 'chat', user, comment: d.content ?? d.comment ?? '' });
     });
 
     conn.on(WebcastEvent.GIFT, (d) => {
-      const details = d.giftDetails || {};
+      const details = d.gift || d.giftDetails || {};
       const ext = d.extendedGiftInfo || {};
-      const streakable = details.giftType === 1;
+      const streakable = num(details.type ?? details.giftType) === 1 || details.combo === true;
       // For streakable gifts, only count the event that closes the streak.
       if (streakable && !d.repeatEnd) {
         out({ type: 'giftStreak', user: normUser(d.user), gift: giftInfo(d, details, ext) });
@@ -128,14 +132,15 @@ export class TikTokSource extends EventEmitter {
       out({ type: 'gift', user: normUser(d.user), gift: giftInfo(d, details, ext) });
     });
 
+    // count = likes in this batch, total = the stream's total so far (what TikTok shows)
     conn.on(WebcastEvent.LIKE, (d) => out({
-      type: 'like', user: normUser(d.user), likes: d.likeCount || 1, totalLikes: d.totalLikeCount || 0
+      type: 'like', user: normUser(d.user), likes: num(d.count ?? d.likeCount) || 1, totalLikes: num(d.total ?? d.totalLikeCount)
     }));
     conn.on(WebcastEvent.FOLLOW, (d) => out({ type: 'follow', user: normUser(d.user) }));
     conn.on(WebcastEvent.SHARE, (d) => out({ type: 'share', user: normUser(d.user) }));
     conn.on(WebcastEvent.MEMBER, (d) => out({ type: 'join', user: normUser(d.user) }));
     conn.on(WebcastEvent.SUPER_FAN ?? 'superFan', (d) => out({ type: 'subscribe', user: normUser(d.user) }));
-    conn.on(WebcastEvent.ROOM_USER, (d) => out({ type: 'viewers', viewers: d.viewerCount || 0 }));
+    conn.on(WebcastEvent.ROOM_USER, (d) => out({ type: 'viewers', viewers: num(d.total ?? d.viewerCount) }));
 
     // LIVE battles (matches): when one finishes, work out whether this streamer won, lost or drew.
     const seenBattles = new Set();
@@ -193,13 +198,13 @@ function parseGiftList(raw) {
     .sort((a, b) => a.diamonds - b.diamonds);
 }
 
-function giftInfo(d, details, ext) {
-  const diamonds = details.diamondCount ?? ext.diamond_count ?? 0;
-  const count = d.repeatCount || 1;
+export function giftInfo(d, details, ext = {}) {
+  const diamonds = num(details.diamondCount ?? ext.diamond_count ?? ext.diamondCount);
+  const count = num(d.repeatCount || d.comboCount) || 1;
   return {
-    id: d.giftId,
-    name: details.giftName || ext.name || `Gift #${d.giftId}`,
-    image: imageUrl(details.giftImage) || imageUrl(ext.image),
+    id: d.giftId ?? details.id,
+    name: details.name || details.giftName || ext.name || `Gift #${d.giftId}`,
+    image: imageUrl(details.image) || imageUrl(details.icon) || imageUrl(details.giftImage) || imageUrl(ext.image),
     diamonds,
     count,
     coins: diamonds * count
