@@ -1,0 +1,89 @@
+<!doctype html>
+<!-- flock.tt (c) 2026 siteflowrespond-bit. Owner proof sha256:99891628516a57a623400d9ccde22b170ecfac1527631e923149d480260a9270 -->
+<html><head><meta charset="utf-8"><title>Hype meter</title>
+<link rel="stylesheet" href="overlay.css">
+<style>
+  .hype { margin: 10px; padding: 14px 18px 16px; }
+  .top { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .lvl { flex: none; width: 54px; height: 54px; border-radius: 16px; display: grid; place-items: center; background: var(--tt-a); color: var(--tt-on-accent);
+    font-family: var(--tt-display); font-size: 30px; font-weight: 800; letter-spacing: -1px; transition: transform .3s; }
+  .lvl.up { animation: lvlup .8s cubic-bezier(.3, 1.8, .5, 1); }
+  @keyframes lvlup { 0% { transform: scale(1) rotate(0); } 40% { transform: scale(1.35) rotate(-8deg); } 100% { transform: none; } }
+  .words { flex: 1; min-width: 0; }
+  .title { font-size: 12px; font-weight: 800; letter-spacing: 2.5px; text-transform: uppercase; opacity: .7; }
+  .name { font-family: var(--tt-display); font-size: 26px; font-weight: 800; letter-spacing: -.5px; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pct { font: 800 16px var(--tt-display); font-variant-numeric: tabular-nums; opacity: .85; }
+  .bar { position: relative; height: 18px; border-radius: 999px; background: var(--tt-track); overflow: hidden; }
+  .fill { position: absolute; inset: 0 auto 0 0; width: 0; border-radius: inherit; background: var(--tt-a); transition: width .5s cubic-bezier(.3, 1.2, .4, 1); }
+  .fill::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: repeating-linear-gradient(-45deg, rgba(255,255,255,.22) 0 8px, transparent 8px 16px); animation: slide 1s linear infinite; }
+  :root[data-theme="white"] .fill::after { background: repeating-linear-gradient(-45deg, rgba(255,255,255,.28) 0 8px, transparent 8px 16px); }
+  @keyframes slide { to { background-position: 22px 0; } }
+  .ticks { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(5, 1fr); pointer-events: none; }
+  .ticks i { border-right: 2px solid var(--tt-panel); opacity: .8; }
+  .ticks i:last-child { border: 0; }
+  /* the hotter it gets, the more it moves */
+  .hype.l3 .bar, .hype.l4 .bar, .hype.l5 .bar { box-shadow: 0 0 18px -4px var(--tt-a); }
+  .hype.l4 { animation: buzz .5s ease-in-out infinite; }
+  .hype.l5 { animation: buzz .3s ease-in-out infinite; }
+  @keyframes buzz { 25% { transform: translate(.6px, -.4px); } 75% { transform: translate(-.6px, .4px); } }
+  .pop { position: absolute; right: 18px; top: 10px; font: 800 16px var(--tt-display); color: var(--tt-a); pointer-events: none; animation: up 1.2s ease-out forwards; }
+  @keyframes up { from { opacity: 1; transform: translateY(6px); } to { opacity: 0; transform: translateY(-26px); } }
+</style></head>
+<body>
+<div class="hype panel shadow" id="hype">
+  <div class="top">
+    <div class="lvl num" id="lvl">1</div>
+    <div class="words"><div class="title" id="title"></div><div class="name" id="name">Warming up</div></div>
+    <div class="pct" id="pct">0%</div>
+  </div>
+  <div class="bar"><div class="fill" id="fill"></div><div class="ticks"><i></i><i></i><i></i><i></i><i></i></div></div>
+</div>
+<script src="/socket.io/socket.io.js"></script>
+<script src="common.js"></script>
+<script src="fx.js"></script>
+<script>
+  // Hype meter: likes, gifts, follows and shares fill it up; it cools down when chat goes quiet.
+  // ?title=Hype  ?speed=1 (how fast it fills; 2 = twice as fast)  ?cool=1 (how fast it cools down; 0 = never)
+  const box = document.getElementById('hype');
+  document.getElementById('title').textContent = params.get('title') ?? 'Hype meter';
+  const speed = Math.max(0.1, Number(params.get('speed')) || 1);
+  const cool = Math.max(0, Number(params.get('cool') ?? 1));
+  const NAMES = ['Warming up', 'Heating up', 'On fire', 'Insane', 'MAX HYPE'];
+  const fx = createFx();
+  let hype = 0, level = 1;
+  const POINTS = { like: 0.25, follow: 6, share: 5, subscribe: 25, join: 0.3 };
+
+  function add(n) {
+    hype = Math.min(100, hype + n * speed);
+    if (n * speed >= 3) { const p = el('div', { class: 'pop' }, `+${Math.round(n * speed)}`); box.append(p); p.addEventListener('animationend', () => p.remove()); }
+    draw();
+  }
+  function draw() {
+    const lv = Math.min(5, Math.floor(hype / 20) + 1);
+    document.getElementById('fill').style.width = `${hype}%`;
+    document.getElementById('pct').textContent = `${Math.floor(hype)}%`;
+    if (lv !== level) {
+      const up = lv > level;
+      level = lv;
+      document.getElementById('lvl').textContent = lv;
+      document.getElementById('name').textContent = NAMES[lv - 1];
+      box.className = `hype panel shadow l${lv}`;
+      if (up) {
+        const l = document.getElementById('lvl'); l.classList.remove('up'); void l.offsetWidth; l.classList.add('up');
+        const r = box.getBoundingClientRect();
+        fx.confetti(r.left + 40, r.top + 30, { count: 30 + lv * 20, spread: Math.PI * 2, power: 8 + lv * 1.5 });
+      }
+    }
+  }
+  // cools down a little every second, faster when it's very high
+  setInterval(() => { if (cool && hype > 0) { hype = Math.max(0, hype - cool * (0.35 + hype / 160)); draw(); } }, 1000);
+
+  io().on('event', (e) => {
+    if (e.type === 'gift') add(Math.min(60, 2 + Math.sqrt(e.gift.coins) * 2));
+    else if (e.type === 'like') add((e.likes || 1) * POINTS.like);
+    else if (POINTS[e.type]) add(POINTS[e.type]);
+    else if (e.type === 'chat') add(0.6);
+  });
+  draw();
+</script>
+</body></html>

@@ -56,3 +56,6 @@ body { font-family: var(--tt-font); color: var(--tt-text); -webkit-font-smoothin
 .panel.shadow, .panel .shadow { text-shadow: none; }
 .avatar { box-shadow: 0 0 0 2px var(--tt-line); }
 :root[data-theme="white"] .panel, :root[data-theme="white"] .panel * { text-shadow: none; }
+/* panels ease in when an overlay opens, instead of popping on */
+@keyframes tt-panel-in { from { opacity: 0; transform: translateY(8px) scale(.98); } }
+.panel { animation: tt-panel-in .5s cubic-bezier(.2, 1.2, .4, 1) both; }

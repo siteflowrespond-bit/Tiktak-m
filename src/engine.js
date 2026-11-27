@@ -143,7 +143,8 @@ export class Engine extends EventEmitter {
       viewers: 0, likes: 0, coins: 0, follows: 0, shares: 0, comments: 0, gifts: 0, joins: 0, subs: 0,
       startedAt: Date.now(),
       topGift: null, // biggest single gift (by coins, combo included)
-      topStreak: null // longest combo (by count)
+      topStreak: null, // longest combo (by count)
+      giftCounts: {} // gift name (lower case) -> how many of that gift this stream
     };
     this.gifters = new Map(); // user id -> { user, coins }
     this.likers = new Map(); // user id -> { user, likes }
@@ -171,6 +172,7 @@ export class Engine extends EventEmitter {
       case 'chat': s.comments++; bump(this.chatters, evt.user, 'comments', 1); this.#pollVote(evt); this.#queueCommand(evt); break;
       case 'gift': {
         s.gifts += evt.gift.count;
+        { const k = String(evt.gift.name || '').toLowerCase(); if (k) s.giftCounts[k] = (s.giftCounts[k] || 0) + evt.gift.count; }
         s.coins += evt.gift.coins;
         bump(this.gifters, evt.user, 'coins', evt.gift.coins);
         if (!s.topGift || evt.gift.coins > s.topGift.gift.coins) s.topGift = { user: evt.user, gift: evt.gift, ts: evt.ts };

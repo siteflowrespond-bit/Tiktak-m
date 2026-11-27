@@ -83,6 +83,12 @@ Copy a URL from the **Overlays** page. In TikTok LIVE Studio, add it as a *Link*
 | Recent followers / gifts | `/overlays/recent.html?type=follow` | `type=follow\|gift\|share\|join\|subscribe` (comma list), `count=5`, `title=...`. Catches up on what happened before it opened |
 | Camera frame | `/overlays/camframe.html` | `name=@you`, `style=corners`, `live=0`, `viewers=0`, `radius=28`, `width=4` |
 | Wins & losses | `/overlays/record.html` | `draws=0`, `streak=0`, `title=...`, `compact=1`, `bg=0`, `rate=1` (win rate), `last=1` (last result) |
+| Hype meter | `/overlays/hype.html` | `title=...`, `speed=1` (how fast it fills), `cool=1` (how fast it cools down; `0` = never). 5 levels with confetti |
+| Podium | `/overlays/podium.html` | `by=coins\|likes\|comments`, `title=...` (empty to hide). Top 3 on a podium with a crown |
+| Top fan | `/overlays/topfan.html` | `by=coins\|likes`, `title=...`. Your #1 supporter, crowned; "NEW TOP FAN" when it changes |
+| Gift counter | `/overlays/giftcount.html?gift=Rose&goal=100` | `gift=`, `goal=` (`0` = no bar), `title=...` |
+| Social links | `/overlays/socials.html` | `items=instagram:@you,youtube:@you,discord:discord.gg/you` (any `Label:value` works), `every=6` |
+| Starting soon / BRB / Ending | `/overlays/screen.html?mode=starting` | `mode=starting\|brb\|ending`, `title=`, `text=`, `mins=5` or `until=20:30` (countdown), `stats=0`, `bg=0` (transparent), `flock=0` |
 
 ## ✨ FlockAi: describe a layout, get a layout
 
@@ -115,6 +121,8 @@ You can keep several layouts (for example one for chatting and one for games) an
 Shortcuts: arrow keys nudge (Shift = 10 px), Delete removes, Ctrl+D duplicates, Ctrl+Z undoes, Ctrl+S saves, Esc deselects, F full screen, H panels, P preview. Hold Alt while dragging to turn off snapping.
 
 ## OBS
+
+OBS lives at the bottom of the **Settings** page.
 
 flock.tt can control OBS Studio (version 28 or newer) through OBS's built-in WebSocket server.
 

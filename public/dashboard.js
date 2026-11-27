@@ -924,7 +924,8 @@ function overlayCatalog() {
       ['Top gift spotlight', 'Biggest gift of the stream under a spotlight. Flips when someone beats it.', '/overlays/topgift.html'],
       ['Longest combo', 'Same spotlight for the longest gift combo.', '/overlays/topgift.html?mode=streak'],
       ['Emoji rain', 'Emojis from chat fall, bounce and pile up.', '/overlays/emojis.html', { idle: 'Chat with emojis' }],
-      ['Celebrations', 'Fireworks for big gifts, confetti for follows and subscribes.', '/overlays/celebrate.html?min=100', { idle: 'Send a big test gift' }]
+      ['Celebrations', 'Fireworks for big gifts, confetti for follows and subscribes.', '/overlays/celebrate.html?min=100', { idle: 'Send a big test gift' }],
+      ['Hype meter', 'Likes, gifts, follows and shares fill it up through 5 levels; it cools down when things go quiet.', '/overlays/hype.html', { idle: 'Send test likes or a gift' }]
     ]],
     ['alerts', 'Alerts & sound', [
       ['Alerts', 'Pop-up alerts. Also plays sound actions and text-to-speech.', '/overlays/alerts.html', { pv: 'tts=0&volume=0', idle: 'Press Test on an alert' }],
@@ -942,6 +943,8 @@ function overlayCatalog() {
       ['Stats list', 'The same stats stacked in a column. Pick with ?show=', '/overlays/stats.html?layout=column&show=viewers,likes,coins,follows,shares,comments,time'],
       ['Stats rotator', 'Shows one stat at a time and cycles every 5 seconds.', '/overlays/stats.html?layout=rotate'],
       ['Top gifters', 'Biggest supporters this stream.', '/overlays/gifters.html'],
+      ['Podium', 'Your top 3 supporters on a 1st / 2nd / 3rd podium, with a crown.', '/overlays/podium.html'],
+      ['Top fan', 'Your #1 supporter, crowned. "NEW TOP FAN" when someone takes the spot.', '/overlays/topfan.html'],
       ['Top likers', 'Who tapped the most.', '/overlays/gifters.html?by=likes'],
       ['Top chatters', 'Who is talking the most.', '/overlays/gifters.html?by=comments'],
       ['Recent followers', 'The latest people to follow, newest on top.', '/overlays/recent.html?type=follow', { idle: 'Waiting for a follow' }],
@@ -955,6 +958,10 @@ function overlayCatalog() {
       ['Viewer queue', 'Viewers type !join to get in line for your games. You call them up with Next.', '/overlays/queue.html'],
       ['Banner', 'A message bar you change from the Interactive page while you are live.', '/overlays/banner.html'],
       ['Scrolling banner', 'The same message, scrolling across like a news ticker.', '/overlays/banner.html?scroll=1'],
+      ['Social links', 'Your Instagram, YouTube, Discord … taking turns. Set them with ?items=instagram:@you,youtube:@you', '/overlays/socials.html'],
+      ['Starting soon', 'Full-screen card with a moving flock, a countdown (?mins=5) and live numbers.', '/overlays/screen.html?mode=starting&mins=5'],
+      ['Be right back', 'The same card for a break.', '/overlays/screen.html?mode=brb'],
+      ['Stream ending', 'Thanks-for-watching card for the end of your LIVE.', '/overlays/screen.html?mode=ending'],
       ['Camera frame', 'A frame for your camera with your @name and a LIVE badge with viewer count.', '/overlays/camframe.html'],
       ['Camera corners', 'Just the four corners, for a lighter look.', '/overlays/camframe.html?style=corners']
     ]],
@@ -963,6 +970,7 @@ function overlayCatalog() {
       ['Wins & losses', 'Your battle record and win streak. Counts TikTok LIVE battles by itself.', '/overlays/record.html'],
       ['Wins & losses (no draws)', 'Just W – L, with the streak.', '/overlays/record.html?draws=0'],
       ['Wins & losses + win rate', 'Your record with the win rate and your last result.', '/overlays/record.html?rate=1&last=1'],
+      ['Gift counter', 'Counts one gift toward a target, e.g. 87 / 100 Roses. Change it with ?gift=Rose&goal=100', '/overlays/giftcount.html?gift=Rose&goal=100', { idle: 'Send test Roses' }],
       ...goalCards
     ]]
   ];

@@ -6,10 +6,11 @@ window.TT_SIZES = {
   'ticker.html': [1000, 110], 'jar.html': [380, 480], 'wheel.html': [720, 820], 'battle.html': [1000, 260], 'race.html': [1000, 330],
   'topgift.html': [420, 420], 'emojis.html': [1080, 900], 'celebrate.html': [1080, 1920], 'stats.html': [900, 140], 'gifters.html': [520, 330],
   'counter.html': [420, 130], 'timer.html': [600, 240], 'record.html': [520, 210], 'poll.html': [620, 380], 'queue.html': [460, 420], 'banner.html': [900, 90],
-  'recent.html': [460, 300], 'camframe.html': [1080, 1920], 'goal.html': [900, 110]
+  'recent.html': [460, 300], 'camframe.html': [1080, 1920], 'goal.html': [900, 110],
+  'hype.html': [620, 140], 'podium.html': [620, 380], 'topfan.html': [380, 420], 'giftcount.html': [520, 120], 'socials.html': [640, 94], 'screen.html': [1080, 1920]
 };
 /* Effects that fill whatever box they're in, so they're never scaled. */
-window.TT_FIT_FREE = new Set(['celebrate.html', 'emojis.html', 'camframe.html', 'hearts.html', 'sounds.html']);
+window.TT_FIT_FREE = new Set(['celebrate.html', 'emojis.html', 'camframe.html', 'hearts.html', 'sounds.html', 'screen.html']);
 /** How much to scale an overlay's content to fill a w x h box (1 = natural size). */
 window.ttFitScale = function ttFitScale(src, w, h) {
   const file = String(src).split('?')[0];

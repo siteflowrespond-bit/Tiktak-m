@@ -1,0 +1,75 @@
+<!doctype html>
+<!-- flock.tt (c) 2026 siteflowrespond-bit. Owner proof sha256:99891628516a57a623400d9ccde22b170ecfac1527631e923149d480260a9270 -->
+<html><head><meta charset="utf-8"><title>Podium</title>
+<link rel="stylesheet" href="overlay.css">
+<style>
+  body { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100vh; padding-bottom: 12px; box-sizing: border-box; }
+  .title { font-family: var(--tt-display); font-size: 16px; font-weight: 800; letter-spacing: 2.5px; text-transform: uppercase; margin-bottom: 40px; }
+  .pod { display: flex; align-items: flex-end; gap: 10px; }
+  .spot { width: 180px; display: flex; flex-direction: column; align-items: center; }
+  .who { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-bottom: 10px; transition: transform .5s cubic-bezier(.3, 1.6, .5, 1), opacity .3s; }
+  .who.in { animation: rise .7s cubic-bezier(.3, 1.6, .5, 1); }
+  @keyframes rise { from { transform: translateY(24px) scale(.8); opacity: 0; } }
+  .ring { position: relative; border-radius: 50%; padding: 3px; background: var(--tt-a); }
+  .spot.s2 .ring, .spot.s3 .ring { background: var(--tt-line); }
+  .ring .avatar { display: flex; box-shadow: none; font-size: 26px; }
+  .s1 .ring .avatar { font-size: 36px; }
+  .crown { position: absolute; left: 50%; top: -28px; transform: translateX(-50%) rotate(-8deg); width: 38px; height: 28px; filter: drop-shadow(0 2px 4px rgba(0,0,0,.4)); animation: bob 2.4s ease-in-out infinite; }
+  @keyframes bob { 50% { transform: translateX(-50%) translateY(-3px) rotate(6deg); } }
+  .crown path { fill: var(--tt-a); stroke: var(--tt-panel); stroke-width: 1.5; }
+  .nm { max-width: 170px; font-weight: 800; font-size: 16px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .amt { font-size: 13px; font-weight: 700; opacity: .75; font-variant-numeric: tabular-nums; }
+  .step { width: 100%; display: grid; place-items: center; border-radius: 14px 14px 6px 6px; font-family: var(--tt-display); font-weight: 800; font-size: 40px; letter-spacing: -1px;
+    transition: height .6s cubic-bezier(.3, 1.3, .5, 1); }
+  .s1 .step { height: 120px; background: var(--tt-a); color: var(--tt-on-accent); border: 0; }
+  .s2 .step { height: 86px; }
+  .s3 .step { height: 62px; }
+  .empty-who { opacity: .5; font-weight: 700; font-size: 14px; }
+</style></head>
+<body>
+<div class="title shadow" id="title"></div>
+<div class="pod" id="pod"></div>
+<script src="/socket.io/socket.io.js"></script>
+<script src="common.js"></script>
+<script src="fx.js"></script>
+<script>
+  // Top 3 on a podium. ?by=coins|likes|comments  ?title=Top%20supporters (empty to hide)
+  const by = ['likes', 'comments'].includes(params.get('by')) ? params.get('by') : 'coins';
+  const unit = { coins: 'coins', likes: 'likes', comments: 'messages' }[by];
+  const title = params.get('title') ?? { coins: 'Top supporters', likes: 'Top tappers', comments: 'Top chatters' }[by];
+  document.getElementById('title').textContent = title;
+  if (!title) document.getElementById('title').remove();
+  const fx = createFx();
+  const crown = '<svg class="crown" viewBox="0 0 38 28"><path d="M3 24 1 6l10 8 8-13 8 13 10-8-2 18z"/></svg>';
+  const order = [2, 1, 3]; // left to right: 2nd, 1st, 3rd
+  const spots = {};
+  for (const n of order) {
+    const who = el('div', { class: 'who' });
+    const step = el('div', { class: 'step panel' }, String(n));
+    if (n === 1) step.classList.remove('panel');
+    spots[n] = { who, id: null };
+    document.getElementById('pod').append(el('div', { class: `spot s${n}` }, who, step));
+  }
+  let first = true;
+  io().on('stats', (s) => {
+    const list = ({ likes: s.topLikers, comments: s.topChatters }[by] || s.topGifters || []).slice(0, 3);
+    for (const n of [1, 2, 3]) {
+      const row = list[n - 1], sp = spots[n];
+      const id = row ? row.user.id : null;
+      if (id === sp.id && !first) { const a = sp.who.querySelector('.amt'); if (a && row) a.textContent = `${fmt(row[by])} ${row[by] === 1 && by === 'comments' ? 'message' : unit}`; continue; }
+      if (row) {
+        const ring = el('div', { class: 'ring' }, avatarEl(row.user, n === 1 ? 84 : 64));
+        if (n === 1) ring.insertAdjacentHTML('afterbegin', crown);
+        sp.who.replaceChildren(ring, el('div', { class: 'nm' }, row.user.nickname), el('div', { class: 'amt num' }, `${fmt(row[by])} ${row[by] === 1 && by === 'comments' ? 'message' : unit}`));
+      } else sp.who.replaceChildren(el('div', { class: 'empty-who' }, n === 1 ? 'Be the first!' : '—'));
+      if (id !== sp.id) {
+        sp.who.classList.remove('in'); void sp.who.offsetWidth; sp.who.classList.add('in');
+        // someone new took first place
+        if (n === 1 && id && !first) { const r = sp.who.getBoundingClientRect(); fx.confetti(r.left + r.width / 2, r.top + 30, { count: 110, spread: Math.PI * 2, power: 11 }); }
+        sp.id = id;
+      }
+    }
+    first = false;
+  });
+</script>
+</body></html>

@@ -1,0 +1,64 @@
+<!doctype html>
+<!-- flock.tt (c) 2026 siteflowrespond-bit. Owner proof sha256:99891628516a57a623400d9ccde22b170ecfac1527631e923149d480260a9270 -->
+<html><head><meta charset="utf-8"><title>Gift counter</title>
+<link rel="stylesheet" href="overlay.css">
+<style>
+  .gc { display: flex; align-items: center; gap: 14px; margin: 10px; padding: 12px 18px 12px 12px; }
+  .pic { position: relative; flex: none; width: 74px; height: 74px; display: grid; place-items: center; border-radius: 18px; background: var(--tt-track); }
+  .pic img { width: 60px; height: 60px; object-fit: contain; animation: float 3s ease-in-out infinite; }
+  .pic.hit img { animation: hit .45s cubic-bezier(.3, 1.8, .5, 1); }
+  @keyframes float { 50% { transform: translateY(-3px) rotate(3deg); } }
+  @keyframes hit { 40% { transform: scale(1.3) rotate(-8deg); } }
+  .body { flex: 1; min-width: 0; }
+  .top { display: flex; align-items: baseline; gap: 10px; }
+  .nm { flex: 1; min-width: 0; font-size: 13px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; opacity: .75; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .n { font-family: var(--tt-display); font-size: 34px; font-weight: 800; letter-spacing: -1px; line-height: 1; font-variant-numeric: tabular-nums; }
+  .n small { font-size: 18px; opacity: .55; font-weight: 700; letter-spacing: -.3px; }
+  .bar { margin-top: 10px; height: 12px; border-radius: 999px; background: var(--tt-track); overflow: hidden; }
+  .fill { height: 100%; width: 0; min-width: 12px; border-radius: inherit; background: var(--tt-a); transition: width .6s cubic-bezier(.3, 1.2, .4, 1); }
+  .gc.done .fill { animation: glow 1.4s ease-in-out infinite; }
+  @keyframes glow { 50% { filter: brightness(1.4); } }
+  .plus { position: absolute; right: -6px; top: -8px; font: 800 15px var(--tt-display); padding: 1px 7px; border-radius: 999px; background: var(--tt-a); color: var(--tt-on-accent); animation: up 1.1s ease-out forwards; }
+  @keyframes up { from { opacity: 1; transform: translateY(4px); } to { opacity: 0; transform: translateY(-20px); } }
+</style></head>
+<body>
+<div class="gc panel shadow" id="gc">
+  <div class="pic" id="pic"><img id="img" alt="" referrerpolicy="no-referrer"></div>
+  <div class="body">
+    <div class="top"><span class="nm" id="nm"></span><span class="n" id="n">0</span></div>
+    <div class="bar" id="bar"><div class="fill" id="fill"></div></div>
+  </div>
+</div>
+<script src="/socket.io/socket.io.js"></script>
+<script src="common.js"></script>
+<script src="fx.js"></script>
+<script>
+  // Counts one gift during the stream. ?gift=Rose  ?goal=100 (0 = no bar)  ?title=Roses
+  const gift = params.get('gift') || 'Rose';
+  const key = gift.toLowerCase();
+  const goal = Math.max(0, Number(params.get('goal') ?? 100) || 0);
+  const ART = { rose: 'rose', tiktok: 'note', 'finger heart': 'finger-heart', doughnut: 'doughnut', 'hand hearts': 'hand-hearts', galaxy: 'galaxy', lion: 'lion' };
+  const img = document.getElementById('img'), pic = document.getElementById('pic');
+  img.src = ART[key] ? `gifts/${ART[key]}.svg` : 'gift.svg';
+  document.getElementById('nm').textContent = params.get('title') || `${gift} goal`;
+  if (!goal) document.getElementById('bar').remove();
+  const fx = createFx();
+  let count = null;
+  function draw(n) {
+    const prev = count; count = n;
+    document.getElementById('n').replaceChildren(fmt(n), goal ? el('small', {}, ` / ${fmt(goal)}`) : '');
+    if (goal) document.getElementById('fill').style.width = `${Math.min(100, (n / goal) * 100)}%`;
+    document.getElementById('gc').classList.toggle('done', goal > 0 && n >= goal);
+    if (prev !== null && n > prev) {
+      pic.classList.remove('hit'); void pic.offsetWidth; pic.classList.add('hit');
+      const p = el('span', { class: 'plus' }, `+${fmt(n - prev)}`); pic.append(p); p.addEventListener('animationend', () => p.remove());
+      if (goal && prev < goal && n >= goal) { const r = pic.getBoundingClientRect(); fx.confetti(r.left + 37, r.top + 37, { count: 120, spread: Math.PI * 2, power: 11 }); }
+    }
+  }
+  const sock = io();
+  sock.on('stats', (s) => { const n = s.giftCounts?.[key] || 0; if (n !== count) draw(n); });
+  // use the real gift picture as soon as one arrives
+  sock.on('event', (e) => { if (e.type === 'gift' && e.gift.name.toLowerCase() === key && e.gift.image && !img.src.endsWith(e.gift.image)) img.src = e.gift.image; });
+  img.onerror = () => { img.onerror = null; img.src = 'gift.svg'; };
+</script>
+</body></html>

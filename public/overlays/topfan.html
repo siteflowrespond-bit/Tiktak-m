@@ -1,0 +1,59 @@
+<!doctype html>
+<!-- flock.tt (c) 2026 siteflowrespond-bit. Owner proof sha256:99891628516a57a623400d9ccde22b170ecfac1527631e923149d480260a9270 -->
+<html><head><meta charset="utf-8"><title>Top fan</title>
+<link rel="stylesheet" href="overlay.css">
+<style>
+  .wrap { position: fixed; inset: 0; display: grid; place-items: center; }
+  .card { position: relative; width: 300px; padding: 46px 20px 20px; text-align: center; }
+  .halo { position: absolute; left: 50%; top: 4px; width: 150px; height: 150px; margin-left: -75px; border-radius: 50%;
+    background: conic-gradient(from 0deg, transparent, var(--tt-a), transparent 30%, transparent 50%, var(--tt-a), transparent 80%); opacity: .5; filter: blur(10px); animation: spin 6s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .av { position: relative; display: inline-block; padding: 4px; border-radius: 50%; background: var(--tt-a); }
+  .av .avatar { display: flex; width: 110px; height: 110px; font-size: 46px; box-shadow: 0 0 0 4px var(--tt-panel); }
+  .crown { position: absolute; left: 50%; top: -34px; width: 56px; height: 40px; transform: translateX(-50%) rotate(-10deg); filter: drop-shadow(0 3px 6px rgba(0,0,0,.45)); animation: bob 2.6s ease-in-out infinite; }
+  .crown path { fill: var(--tt-a); stroke: var(--tt-panel); stroke-width: 1.5; }
+  .crown circle { fill: var(--tt-panel); }
+  @keyframes bob { 50% { transform: translateX(-50%) translateY(-4px) rotate(7deg); } }
+  .label { margin-top: 14px; font-size: 12px; font-weight: 800; letter-spacing: 2.5px; text-transform: uppercase; opacity: .7; }
+  .nm { font-family: var(--tt-display); font-size: 28px; font-weight: 800; letter-spacing: -.5px; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .amt { margin-top: 6px; display: inline-block; padding: 3px 12px; border-radius: 999px; background: var(--tt-a); color: var(--tt-on-accent); font-weight: 800; font-size: 15px; font-variant-numeric: tabular-nums; }
+  .card.new { animation: take .8s cubic-bezier(.3, 1.6, .5, 1); }
+  @keyframes take { 0% { transform: scale(.85) rotateY(70deg); opacity: .2; } 100% { transform: none; opacity: 1; } }
+  .stamp { position: absolute; top: 18px; right: -10px; transform: rotate(12deg) scale(0); padding: 4px 10px; border-radius: 6px; background: var(--tt-a); color: var(--tt-on-accent); font-weight: 900; font-size: 13px; letter-spacing: 1px; }
+  .stamp.on { animation: stamp 3s ease forwards; }
+  @keyframes stamp { 0% { transform: rotate(12deg) scale(2.2); opacity: 0; } 12% { transform: rotate(12deg) scale(1); opacity: 1; } 85% { opacity: 1; } 100% { opacity: 0; transform: rotate(12deg) scale(1); } }
+  .wait { padding: 18px 0 6px; font-weight: 700; opacity: .7; }
+</style></head>
+<body>
+<div class="wrap"><div class="card panel shadow" id="card"></div></div>
+<script src="/socket.io/socket.io.js"></script>
+<script src="common.js"></script>
+<script src="fx.js"></script>
+<script>
+  // Your #1 supporter of the stream, crowned. ?by=coins|likes  ?title=Top%20fan
+  const by = params.get('by') === 'likes' ? 'likes' : 'coins';
+  const label = params.get('title') || (by === 'likes' ? 'Top tapper' : 'Top fan');
+  const card = document.getElementById('card');
+  const fx = createFx();
+  const crown = '<svg class="crown" viewBox="0 0 56 40"><path d="M4 35 2 8l14 11L28 2l12 17 14-11-2 27z"/><circle cx="28" cy="25" r="3.5"/><circle cx="15" cy="27" r="2.5"/><circle cx="41" cy="27" r="2.5"/></svg>';
+  let current = undefined;
+  io().on('stats', (s) => {
+    const top = (by === 'likes' ? s.topLikers : s.topGifters)?.[0];
+    const id = top ? top.user.id : null;
+    if (id === current) { const a = card.querySelector('.amt'); if (a && top) a.textContent = `${fmt(top[by])} ${by}`; return; } // same person: just update the number
+    const changed = current !== undefined;
+    current = id;
+    if (!top) { card.replaceChildren(el('div', { class: 'label' }, label), el('div', { class: 'wait' }, by === 'likes' ? 'Tap the screen to take the crown' : 'Send a gift to take the crown')); return; }
+    const av = el('div', { class: 'av' }, avatarEl(top.user, 110));
+    av.insertAdjacentHTML('afterbegin', crown);
+    const stamp = el('div', { class: 'stamp' }, 'NEW TOP FAN');
+    card.replaceChildren(el('div', { class: 'halo' }), av, el('div', { class: 'label' }, label), el('div', { class: 'nm' }, top.user.nickname), el('div', { class: 'amt num' }, `${fmt(top[by])} ${by}`), stamp);
+    if (changed) {
+      card.classList.remove('new'); void card.offsetWidth; card.classList.add('new');
+      stamp.classList.add('on');
+      const r = card.getBoundingClientRect();
+      fx.confetti(r.left + r.width / 2, r.top + 60, { count: 140, spread: Math.PI * 2, power: 12 });
+    }
+  });
+</script>
+</body></html>
