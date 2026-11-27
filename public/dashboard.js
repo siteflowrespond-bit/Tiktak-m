@@ -961,6 +961,7 @@ function searchEntries() {
     ['Start a poll', 'Viewers vote in chat', 'interactive', '#pollQ', 'poll vote question'],
     ['Viewer queue', 'Let viewers !join a line', 'interactive', '#queueOpen', 'queue join line play with viewers'],
     ['Banner message', 'Change the message on stream', 'interactive', '#bannerText', 'banner text ticker message'],
+    ['FlockAi', 'Describe a layout and FlockAi builds it', 'layout', '#edAI', 'ai generate auto layout magic make design flockai'],
     ['Wins & losses', 'Battle record, +win, +loss, undo', 'goals', '#recPanel', 'record score battle match win loss draw streak counter'],
     ['Time per gift / follow', 'How much time each event adds', 'goals', '#timerForm', 'subathon seconds coin'],
     ['Goals', 'Like, follow, coin and share targets', 'goals', '#goals', 'target goal bar'],

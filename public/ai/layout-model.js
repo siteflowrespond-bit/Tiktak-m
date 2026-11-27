@@ -1,5 +1,5 @@
 // flock.tt (c) 2026 siteflowrespond-bit. Owner proof sha256:99891628516a57a623400d9ccde22b170ecfac1527631e923149d480260a9270
-/* flock.tt layout model: runs the small neural network trained in scripts/ai (from scratch, no API)
+/* FlockAi, flock.tt's layout model: runs the small neural network trained in scripts/ai (from scratch, no API)
    right here in the app, then places the overlays it picked with a layout engine.
    The text featurizer must match scripts/ai/spec.py exactly. */
 (function () {

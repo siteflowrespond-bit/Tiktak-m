@@ -1,4 +1,4 @@
-# flock.tt layout model: evaluation
+# FlockAi (flock.tt layout model): evaluation
 
 Trained from scratch on 120,000 generated prompts (`make_data.py`), 40 epochs, 2048 hashed features -> 192 hidden -> 6 heads.
 

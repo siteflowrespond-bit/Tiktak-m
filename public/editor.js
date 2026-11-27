@@ -123,7 +123,7 @@ function edStarter() {
   edDirty(); edRender();
 }
 
-// ── ✨ Generate: flock.tt's own layout model (public/ai/layout-model.js, trained in scripts/ai) ──
+// ── ✨ FlockAi: flock.tt's own layout model (public/ai/layout-model.js, trained in scripts/ai) ──
 const AI_EXAMPLES = ['chill pink stream with a poll and a like goal', 'landscape gaming layout, no chat', 'subathon with a timer and top gifters',
   'battle stream with wins and losses in gold', 'minimal white just chatting setup', 'play with viewers: queue, poll and chat in blue'];
 let aiChoice = null;
@@ -162,7 +162,7 @@ function aiCreate() {
   $e('#aiDlg').close();
   edOpenLayout(layout.id);
   edDirty();
-  toast(dropped.length ? `Layout made. Left out ${dropped.map((d) => flockAI.NAME[d]).join(', ')} so the rest fit; add them from the list.` : 'Layout made! Drag anything to adjust, then Save.');
+  toast(dropped.length ? `FlockAi made your layout. Left out ${dropped.map((d) => flockAI.NAME[d]).join(', ')} so the rest fit; add them from the list.` : 'FlockAi made your layout! Drag anything to adjust, then Save.');
 }
 $e('#edAI').addEventListener('click', aiOpen);
 $e('#aiGo').addEventListener('click', aiGenerate);
