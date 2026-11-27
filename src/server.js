@@ -229,6 +229,72 @@ app.post('/api/sounds', express.raw({ type: () => true, limit: '8mb' }), (req, r
   res.json({ kind: 'custom', name: safe.replace(AUDIO_EXT, ''), src: `/sounds/custom/${encodeURIComponent(safe)}` });
 });
 
+// ---- MyInstants: search it and add a sound to your own library ----
+// Only ever talks to myinstants.com and only saves .mp3 files from its /media/sounds/ folder.
+const MI = 'https://www.myinstants.com';
+const MI_HOSTS = new Set(['www.myinstants.com', 'myinstants.com']);
+const decodeHtml = (t) => String(t).replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#0?39;|&#x27;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+async function miFetch(url, asBuffer = false) {
+  const r = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (flock.tt sound picker)', Accept: asBuffer ? 'audio/mpeg,*/*' : 'text/html' }, signal: AbortSignal.timeout(12000), redirect: 'follow' });
+  if (!r.ok) throw new Error(`MyInstants answered ${r.status}`);
+  if (!asBuffer) return r.text();
+  const len = Number(r.headers.get('content-length') || 0);
+  if (len > 8 * 1024 * 1024) throw new Error('That sound is too big (over 8 MB)');
+  const buf = Buffer.from(await r.arrayBuffer());
+  if (buf.length > 8 * 1024 * 1024) throw new Error('That sound is too big (over 8 MB)');
+  return buf;
+}
+const miMp3 = (raw) => {
+  try { const u = new URL(raw, MI); return MI_HOSTS.has(u.hostname) && /^\/media\/sounds\/[^/]+\.mp3$/i.test(u.pathname) ? `${MI}${u.pathname}` : ''; } catch { return ''; }
+};
+/** Pulls the sounds off a MyInstants page: each one is a play('/media/sounds/x.mp3') button next to a link with its name. */
+function miParse(html) {
+  const out = [], seen = new Set();
+  const blocks = html.split(/<div[^>]+class="[^"]*\binstant\b[^"]*"/i).slice(1);
+  for (const b of blocks) {
+    const mp3 = miMp3((/(\/media\/sounds\/[^'"\s)]+?\.mp3)/i.exec(b) || [])[1]);
+    if (!mp3 || seen.has(mp3)) continue;
+    const link = /<a[^>]+href="(\/[a-z]{2}\/instant\/[^"]+)"[^>]*>([\s\S]*?)<\/a>/i.exec(b);
+    const title = decodeHtml(link ? link[2] : '') || decodeURIComponent(mp3.split('/').pop().replace(/\.mp3$/i, '')).replace(/[-_]+/g, ' ');
+    seen.add(mp3);
+    out.push({ title: title.slice(0, 80), mp3, page: link ? `${MI}${link[1]}` : '' });
+  }
+  // a page laid out differently: fall back to every mp3 on it
+  if (!out.length) for (const m of html.matchAll(/(\/media\/sounds\/[^'"\s)]+?\.mp3)/gi)) {
+    const mp3 = miMp3(m[1]);
+    if (mp3 && !seen.has(mp3)) { seen.add(mp3); out.push({ title: decodeURIComponent(mp3.split('/').pop().replace(/\.mp3$/i, '')).replace(/[-_]+/g, ' '), mp3, page: '' }); }
+  }
+  return out.slice(0, 48);
+}
+app.get('/api/myinstants', async (req, res) => {
+  const q = String(req.query.q || '').trim().slice(0, 80);
+  const url = q ? `${MI}/en/search/?name=${encodeURIComponent(q)}` : `${MI}/en/trending/`;
+  try { res.json({ query: q, results: miParse(await miFetch(url)) }); }
+  catch (e) { res.status(502).json({ error: `Couldn't reach MyInstants: ${e.message}. Check your internet connection.` }); }
+});
+app.post('/api/myinstants', async (req, res) => {
+  const link = String(req.body?.url || '').trim();
+  let mp3 = miMp3(link), name = String(req.body?.name || '').trim();
+  try {
+    if (!mp3) {
+      // a page link (myinstants.com/en/instant/...): find the sound on that page
+      let u; try { u = new URL(link); } catch { return res.status(400).json({ error: 'Paste a link from myinstants.com' }); }
+      if (!MI_HOSTS.has(u.hostname) || !/^\/[a-z]{2}\/instant\//i.test(u.pathname)) return res.status(400).json({ error: 'Paste a link from myinstants.com' });
+      const html = await miFetch(`${MI}${u.pathname}`);
+      mp3 = miMp3((/(\/media\/sounds\/[^'"\s)]+?\.mp3)/i.exec(html) || [])[1]);
+      if (!mp3) return res.status(404).json({ error: 'No sound found on that page' });
+      if (!name) name = decodeHtml((/<h1[^>]*>([\s\S]*?)<\/h1>/i.exec(html) || [])[1] || '');
+    }
+    const buf = await miFetch(mp3, true);
+    if (buf.length < 200 || !(buf.slice(0, 3).toString() === 'ID3' || (buf[0] === 0xff && (buf[1] & 0xe0) === 0xe0))) return res.status(415).json({ error: 'That file is not an mp3 sound' });
+    const base = (name || decodeURIComponent(mp3.split('/').pop().replace(/\.mp3$/i, ''))).replace(/[^\w.\- ]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 60) || 'sound';
+    let file = `${base}.mp3`, n = 2;
+    while (fs.existsSync(path.join(SOUND_DIRS.custom, file))) file = `${base} ${n++}.mp3`;
+    writeFileSafe(path.join(SOUND_DIRS.custom, file), buf);
+    res.json({ kind: 'custom', name: file.replace(AUDIO_EXT, ''), src: `/sounds/custom/${encodeURIComponent(file)}` });
+  } catch (e) { res.status(502).json({ error: `Couldn't get that sound: ${e.message}` }); }
+});
+
 app.delete('/api/sounds/:file', (req, res) => {
   const file = path.basename(req.params.file);
   const full = path.join(SOUND_DIRS.custom, file);

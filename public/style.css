@@ -801,3 +801,28 @@ kbd { border-radius: 6px; background: rgba(255,255,255,.06); border: 1px solid v
 @media (max-width: 560px) { .ai-chat { right: 12px; bottom: 84px; width: calc(100vw - 24px); height: calc(100vh - 110px); } .ai-fab { right: 14px; bottom: 14px; } }
 /* full-screen layout editing keeps the bubble but tucks it smaller */
 body.ed-full .ai-fab { width: 46px; height: 46px; opacity: .85; }
+/* ── MyInstants sound finder ── */
+.mi { margin-top: 18px; }
+.mi-search { display: flex; gap: 8px; }
+.mi-q { position: relative; flex: 1; }
+.mi-q svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--faint); }
+.mi-q input { padding-left: 36px; }
+.mi-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 4px; }
+.mi-res { margin-top: 12px; max-height: 420px; overflow-y: auto; }
+.mi-msg { margin: 6px 0; }
+.mi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
+.mi-item { display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 8px; border-radius: 12px; border: 1px solid var(--line); background: rgba(255,255,255,.03); transition: border-color .15s, background .15s; }
+.mi-item:hover { border-color: var(--line-2); background: rgba(255,255,255,.05); }
+.mi-t { flex: 1; min-width: 0; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mi-play { width: 34px; height: 34px; flex: none; border-radius: 50%; border: 0; cursor: pointer; display: grid; place-items: center; color: #000; background: #fff; transition: transform .12s; }
+.mi-play:hover { transform: scale(1.08); }
+.mi-play svg { width: 14px; height: 14px; margin-left: 2px; fill: currentColor; }
+.mi-play.on { animation: mi-pulse 1s ease-in-out infinite; }
+@keyframes mi-pulse { 50% { box-shadow: 0 0 0 6px rgba(255,255,255,.18); } }
+.mi-link { display: flex; gap: 8px; margin-top: 14px; }
+.mi-fine { margin: 10px 0 0; font-size: 12px; color: var(--faint); }
+.mi { margin-top: 0; }
+.lib { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+/* toasts sit above the FlockAi bubble, not under it */
+.toasts { right: 22px; bottom: 92px; z-index: 950; align-items: flex-end; }
+@media (max-width: 560px) { .toasts { right: 14px; bottom: 84px; } }

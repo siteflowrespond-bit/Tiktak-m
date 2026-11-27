@@ -197,6 +197,7 @@
           <div id="soundRules"></div>
         </div>
         <div class="cols">
+          <div class="stack">
           <div class="panel">
             <div class="panel-head">
               <h2>Sound library</h2><div class="grow"></div>
@@ -206,6 +207,20 @@
               <p class="note"><svg class="i" style="vertical-align:-3px"><use href="#i-play"/></svg> previews here. <svg class="i" style="vertical-align:-3px"><use href="#i-cast"/></svg> plays it on stream. Uploads are saved with your settings, so updates keep them.</p>
               <div class="lib" id="library"></div>
             </div>
+          </div>
+          <div class="panel mi" id="miPanel">
+            <div class="panel-head"><h2>Find sounds on MyInstants</h2><div class="grow"></div><a class="btn flat sm" href="https://www.myinstants.com" target="_blank" rel="noopener">myinstants.com ↗</a></div>
+            <div class="panel-body">
+              <form class="mi-search" id="miForm">
+                <div class="mi-q"><svg class="i"><use href="#i-search"/></svg><input id="miQ" type="search" placeholder="Search: vine boom, bruh, sus, airhorn…" maxlength="80" autocomplete="off" data-nosave></div>
+                <button class="btn red" type="submit">Search</button>
+              </form>
+              <div class="mi-tags" id="miTags"></div>
+              <div class="mi-res" id="miRes"><p class="note mi-msg">Search for a sound, or pick one of the ideas above. Press ▶ to listen and <b>+ Add</b> to put it in your library.</p></div>
+              <form class="mi-link" id="miLinkForm"><input id="miLink" placeholder="…or paste a myinstants.com link" data-nosave><button class="btn" type="submit">Add</button></form>
+              <p class="note mi-fine">Sounds come from myinstants.com, where anyone can upload. Only use sounds you're allowed to play on your stream.</p>
+            </div>
+          </div>
           </div>
           <div class="stack">
             <div class="panel">

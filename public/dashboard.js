@@ -550,6 +550,49 @@ $('#upload').addEventListener('change', async (e) => {
   loadSounds();
 });
 
+// ── MyInstants: search, listen, add to your library ──
+const MI_IDEAS = ['vine boom', 'bruh', 'airhorn', 'sad violin', 'oh no', 'among us', 'wow', 'fart', 'rizz', 'emotional damage', 'anime wow', 'drum roll'];
+let miAudio = null, miPlaying = null;
+function miStop() { if (miAudio) { miAudio.pause(); miAudio = null; } if (miPlaying) { miPlaying.classList.remove('on'); miPlaying = null; } }
+function miPlay(url, btn) {
+  const same = miPlaying === btn;
+  miStop();
+  if (same) return;
+  miAudio = new Audio(url); miAudio.volume = 0.8; miPlaying = btn; btn.classList.add('on');
+  miAudio.addEventListener('ended', miStop);
+  miAudio.play().catch(() => { miStop(); toast("Couldn't play that one", true); });
+}
+async function miAdd(body, btn) {
+  if (btn) { btn.disabled = true; btn.textContent = 'Adding…'; }
+  try {
+    const s = await api('POST', '/api/myinstants', body);
+    toast(`Added "${s.name}" to your library. Pick it in a sound action or an alert.`);
+    if (btn) { btn.textContent = '✓ Added'; btn.classList.remove('red'); }
+    await loadSounds();
+  } catch (e) { toast(e.message, true); if (btn) { btn.disabled = false; btn.textContent = '+ Add'; } }
+}
+async function miSearch(q = '') {
+  $('#miQ').value = q;
+  miStop();
+  $('#miRes').replaceChildren(el('p', { class: 'note mi-msg' }, q ? `Searching MyInstants for "${q}"…` : 'Loading what\'s trending…'));
+  try {
+    const { results } = await api('GET', `/api/myinstants?q=${encodeURIComponent(q)}`);
+    if (!results.length) { $('#miRes').replaceChildren(el('p', { class: 'note mi-msg' }, `Nothing found for "${q}". Try another word.`)); return; }
+    const have = new Set(sounds.map((x) => x.name.toLowerCase()));
+    $('#miRes').replaceChildren(el('div', { class: 'mi-grid' }, results.map((r) => {
+      const play = el('button', { type: 'button', class: 'mi-play', title: 'Listen', 'aria-label': `Listen to ${r.title}` }, icon('play'));
+      play.addEventListener('click', () => miPlay(r.mp3, play));
+      const added = have.has(r.title.toLowerCase());
+      const add = el('button', { type: 'button', class: `btn sm${added ? '' : ' red'}`, disabled: added }, added ? '✓ Added' : '+ Add');
+      add.addEventListener('click', () => miAdd({ url: r.mp3, name: r.title }, add));
+      return el('div', { class: 'mi-item' }, play, el('span', { class: 'mi-t', title: r.title }, r.title), add);
+    })));
+  } catch (e) { $('#miRes').replaceChildren(el('p', { class: 'note mi-msg' }, e.message)); }
+}
+$('#miTags').replaceChildren(el('button', { type: 'button', class: 'chip', onclick: () => miSearch('') }, '🔥 Trending'), ...MI_IDEAS.map((t) => el('button', { type: 'button', class: 'chip', onclick: () => miSearch(t) }, t)));
+$('#miForm').addEventListener('submit', (e) => { e.preventDefault(); miSearch($('#miQ').value.trim()); });
+$('#miLinkForm').addEventListener('submit', (e) => { e.preventDefault(); const url = $('#miLink').value.trim(); if (!url) return; miAdd({ url }).then(() => { $('#miLink').value = ''; }); });
+
 // play sound actions locally if asked
 const playHere = () => { try { return localStorage.getItem('playHere') === '1'; } catch { return false; } };
 $('#playHere').addEventListener('change', (e) => { try { localStorage.setItem('playHere', e.target.checked ? '1' : '0'); } catch {} });
@@ -1060,6 +1103,7 @@ function searchEntries() {
     ['Blocked words', 'Words text-to-speech skips', 'voice', '#vBlocked', 'tts filter ban swear'],
     ['Skip message', 'Skip the message being read', 'voice', '#vSkip', 'tts stop queue'],
     ['Master volume', 'Volume of all sound actions', 'sounds', '#master', 'loud quiet'],
+    ['MyInstants', 'Find meme sounds and add them', 'sounds', '#miQ', 'myinstants meme sound effect download find search vine boom bruh'],
     ['Play sounds in this tab', 'Hear sounds on this computer', 'sounds', '#playHere', 'preview listen'],
     ['Subathon timer', 'Start, pause, add time', 'goals', '#clock', 'countdown'],
     ['Start a poll', 'Viewers vote in chat', 'interactive', '#pollQ', 'poll vote question'],
