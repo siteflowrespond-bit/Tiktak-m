@@ -9,7 +9,11 @@
   .team { display: flex; flex-direction: column; gap: 2px; }
   .team.b { align-items: flex-end; text-align: right; }
   .tname { font-size: 15px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; }
-  .a .tname { color: var(--a); } .b .tname { color: var(--b); }
+  /* names stay readable in the text colour; the team colour is the chip beside them */
+  .tname { display: inline-flex; align-items: center; gap: 7px; }
+  .tname::before { content: ""; width: 10px; height: 10px; border-radius: 3px; box-shadow: 0 0 0 1.5px var(--tt-line); }
+  .a .tname::before { background: var(--a); } .b .tname::before { background: var(--b); }
+  .b .tname { flex-direction: row-reverse; }
   .score { font-family: var(--tt-display); font-size: 32px; font-weight: 700; line-height: 1.05; letter-spacing: -1px; }
   .score.bump { animation: bump .35s ease; }
   @keyframes bump { 40% { transform: scale(1.18); } }
@@ -48,15 +52,15 @@
   // Two teams push a bar with gifts.
   // ?a=Red&b=Blue (team names)  ?ga=Rose&gb=TikTok (gift that joins/scores for each team)
   // Viewers can also pick a side in chat with !red / !blue (the team names). Others join the smaller team.
-  // ?time=180 (round length, seconds)  ?likes=1 (every 10 likes = 1 point)  ?ca=%23ff4d5e&cb=%233ba7ff (colors)
+  // ?time=180 (round length, seconds)  ?likes=1 (every 10 likes = 1 point)  ?ca=ff4d5e&cb=3ba7ff (team colours)
   const A = params.get('a') || 'Red', B = params.get('b') || 'Blue';
   const GA = (params.get('ga') || 'Rose').toLowerCase(), GB = (params.get('gb') || 'TikTok').toLowerCase();
   const ROUND = Number(params.get('time') || 180);
   const countLikes = params.get('likes') === '1';
-  if (params.get('ca')) document.documentElement.style.setProperty('--a', params.get('ca'));
-  if (params.get('cb')) document.documentElement.style.setProperty('--b', params.get('cb'));
-  const colA = params.get('ca') || tt('team-a');
-  const colB = params.get('cb') || tt('team-b');
+  const colA = ttHex(params.get('ca')) || tt('team-a');
+  const colB = ttHex(params.get('cb')) || tt('team-b');
+  document.documentElement.style.setProperty('--a', colA);
+  document.documentElement.style.setProperty('--b', colB);
   document.getElementById('nA').textContent = A;
   document.getElementById('nB').textContent = B;
 
@@ -121,7 +125,7 @@
     const w = score.a === score.b ? null : score.a > score.b ? 'a' : 'b';
     const win = $('win');
     win.textContent = w ? `${w === 'a' ? A : B} wins` : 'Draw';
-    win.style.color = w ? (w === 'a' ? colA : colB) : '#fff';
+    win.style.color = w ? (w === 'a' ? colA : colB) : tt('text');
     win.classList.add('on');
     const col = w === 'a' ? colA : w === 'b' ? colB : tt('butter');
     for (let i = 0; i < 6; i++) setTimeout(() => fx.firework(undefined, undefined, col), i * 300);

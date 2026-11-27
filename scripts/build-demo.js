@@ -23,7 +23,7 @@ const emitter = `class EventEmitter {
 }`;
 const stripModule = (src) => src.replace(/^import .*$/gm, '').replace(/^export /gm, '');
 const cfg = read('src/config.js');
-const defaults = cfg.slice(cfg.indexOf('export const DEFAULT_CONFIG'), cfg.indexOf('function merge')).replace('export ', '');
+const defaults = cfg.slice(cfg.indexOf('export const DEFAULT_CONFIG'), cfg.search(/(export )?function merge/)).replace('export ', '');
 const engineCode = [emitter, defaults, stripModule(read('src/engine.js')), stripModule(read('src/simulate.js'))].join('\n\n');
 write('demo-backend.js', read('scripts/demo/backend.js').replace('/* @@ENGINE@@ */', engineCode));
 write('overlays/demo-socket.js', read('scripts/demo/socket.js'));

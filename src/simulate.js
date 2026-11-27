@@ -29,7 +29,7 @@ export function simulate(type, opts = {}) {
   const ts = Date.now();
   switch (type) {
     case 'chat':
-      return { type, user, comment: opts.comment || pick(COMMENTS), ts };
+      return { type, user, comment: opts.comment ? String(opts.comment).slice(0, 300) : pick(COMMENTS), ts };
     case 'gift': {
       const g = opts.giftName ? (GIFTS.find((x) => x.name === opts.giftName) || GIFTS[0]) : pick(GIFTS);
       const count = g.diamonds < 10 ? 1 + Math.floor(Math.random() * 10) : 1;

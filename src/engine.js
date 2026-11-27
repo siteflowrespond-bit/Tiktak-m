@@ -16,6 +16,7 @@ export class Engine extends EventEmitter {
     this.recordHistory = [];
     this.poll = null; // { question, options: [{ label, votes }], open, endsAt, winner }
     this.pollVoters = new Map(); // user id -> option index
+    this.pollHistory = []; // finished polls, newest first: { question, options, winner, tie, total, at }
     this.queue = { open: false, list: [], current: null };
     this.resetStats();
   }
@@ -40,7 +41,14 @@ export class Engine extends EventEmitter {
       if (!this.poll) return 'No poll running';
       const top = Math.max(...this.poll.options.map((o) => o.votes));
       const leaders = this.poll.options.filter((o) => o.votes === top);
+      const wasOpen = this.poll.open;
       this.poll = { ...this.poll, open: false, endsAt: 0, winner: top > 0 && leaders.length === 1 ? leaders[0].label : null, tie: top > 0 && leaders.length > 1 };
+      if (wasOpen) {
+        const p = this.pollState();
+        this.pollHistory.unshift({ question: p.question, options: p.options.map((o) => ({ ...o })), winner: p.winner, tie: p.tie, total: p.total, at: Date.now() });
+        this.pollHistory.length = Math.min(this.pollHistory.length, 10);
+        this.emit('pollHistory', this.pollHistory);
+      }
     } else if (action === 'clear') {
       this.poll = null;
     } else return 'Unknown action';
@@ -67,6 +75,7 @@ export class Engine extends EventEmitter {
     if (action === 'open') q.open = true;
     else if (action === 'close') q.open = false;
     else if (action === 'next') q.current = q.list.shift() || null;
+    else if (action === 'random') q.current = q.list.length ? q.list.splice(Math.floor(Math.random() * q.list.length), 1)[0] : null;
     else if (action === 'done') q.current = null;
     else if (action === 'remove') q.list = q.list.filter((x) => x.id !== id);
     else if (action === 'clear') { q.list = []; q.current = null; }
@@ -139,6 +148,7 @@ export class Engine extends EventEmitter {
     this.gifters = new Map(); // user id -> { user, coins }
     this.likers = new Map(); // user id -> { user, likes }
     this.chatters = new Map(); // user id -> { user, comments }
+    this.recent = []; // latest follows, gifts, shares, subscribes and joins, newest first (overlays catch up from this when they open)
     this.emitStats();
   }
 
@@ -184,14 +194,45 @@ export class Engine extends EventEmitter {
       case 'join': s.joins++; break;
       case 'viewers': s.viewers = evt.viewers; break;
     }
+    if (['follow', 'gift', 'share', 'subscribe', 'join'].includes(evt.type)) {
+      this.recent.unshift(evt);
+      // at most 10 of each kind
+      const seen = {};
+      this.recent = this.recent.filter((e) => (seen[e.type] = (seen[e.type] || 0) + 1) <= 10);
+    }
     if (evt.type !== 'viewers') this.emit('event', evt);
-    if (evt.type !== 'giftStreak') this.emitStats();
+    if (evt.type !== 'giftStreak') { this.emitStats(); this.#stackGoals(); }
 
     if (evt.type === 'giftStreak') return; // actions run once, when the combo ends
     this.#runAlertRules(evt);
     this.#runSoundRules(evt);
     this.#runObsRules(evt);
     this.#chatTts(evt);
+  }
+
+  /** Stacking goals: a goal with a step moves its target up by that step each time it's reached. */
+  #stackGoals() {
+    const goals = this.getConfig().goals || {};
+    let changed = false;
+    for (const [k, g] of Object.entries(goals)) {
+      const step = Math.floor(Number(g?.step) || 0);
+      const value = this.stats[k] || 0;
+      if (!g?.enabled || step <= 0 || value < (Number(g.target) || 1)) continue;
+      // wait a moment so the overlay can show the goal reached (and its confetti) before it moves on
+      if (this.goalHold?.[k]) continue;
+      (this.goalHold ||= {})[k] = setTimeout(() => {
+        delete this.goalHold[k];
+        const cur = this.getConfig().goals?.[k]; // settings may have been saved meanwhile
+        const st = Math.floor(Number(cur?.step) || 0);
+        if (!cur || st <= 0) return;
+        const now = this.stats[k] || 0;
+        cur.target = Math.max(1, Number(cur.target) || 1);
+        while (cur.target <= now) cur.target += st;
+        this.emit('goalsChanged', this.getConfig().goals);
+      }, 4000);
+      changed = true;
+    }
+    return changed;
   }
 
   #cooldownOk(id, seconds) {
@@ -212,7 +253,8 @@ export class Engine extends EventEmitter {
           text: fill(rule.alert.text, vars),
           image: fill(rule.alert.image || '', vars),
           sound: rule.alert.sound || '',
-          duration: Number(rule.alert.duration) || 4
+          duration: Number(rule.alert.duration) || 4,
+          user: evt.user ? { nickname: evt.user.nickname || '', avatar: evt.user.avatar || '' } : null
         });
       }
       if (rule.tts && this.getConfig().tts?.alerts !== false) this.emit('tts', { text: fill(rule.tts, vars), kind: 'alert' });

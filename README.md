@@ -58,31 +58,31 @@ Copy a URL from the **Overlays** page. In TikTok LIVE Studio, add it as a *Link*
 
 | Overlay | URL | Options |
 |---|---|---|
-| Alerts (also plays sounds + TTS) | `/overlays/alerts.html` | `volume=0.5`, `tts=0`, `sounds=0`, `style=plain`, `accent=%23ff0000` |
+| Alerts (also plays sounds + TTS) | `/overlays/alerts.html` | `volume=0.5`, `tts=0`, `sounds=0`, `style=plain`, `anim=slide\|pop\|drop\|side`. The viewer's name is picked out in the accent colour, and their initial shows when there's no picture |
 | Sound player (audio only) | `/overlays/sounds.html` | `volume=0.5`, `tts=0`. Plays sound actions and text-to-speech. Use instead of Alerts, not together |
 | Layout (several overlays in one) | `/overlays/scene.html?layout=main` | `layout=` the layout's id |
 | Gift jar | `/overlays/jar.html` | `goal=1000`, `title=...`, `max=260` (coins on screen) |
 | Spin wheel | `/overlays/wheel.html` | `items=A,B,C`, `min=100` or `gift=Rose` or `cmd=!spin`, `cooldown=30`, `hide=1`, `sound=0` |
-| Team battle | `/overlays/battle.html` | `a=Red&b=Blue`, `ga=Rose&gb=TikTok`, `time=180`, `likes=1`, `ca=`/`cb=` colors |
+| Team battle | `/overlays/battle.html` | `a=Red&b=Blue`, `ga=Rose&gb=TikTok`, `time=180`, `likes=1`, `ca=ff4d5e`/`cb=3ba7ff` team colours |
 | Like race | `/overlays/race.html` | `by=likes\|coins`, `goal=300`, `lanes=5` |
 | Top gift spotlight | `/overlays/topgift.html` | `mode=gift\|streak` |
 | Emoji rain | `/overlays/emojis.html` | `mode=rain\|float`, `size=46`, `likes=1` |
 | Celebrations | `/overlays/celebrate.html` | `min=100`, `follows=0`, `subs=0`, `text=0` |
-| Chat | `/overlays/chat.html` | `max=8`, `events=0`, `fade=30` |
+| Chat | `/overlays/chat.html` | `max=8`, `events=0`, `fade=30`, `commands=0` (hide `!commands`), `badges=0` (no HOST/MOD/SUB badges), `size=big` |
 | Gift combos | `/overlays/combos.html` | `max=5`, `hold=4` |
-| Like hearts | `/overlays/hearts.html` | `side=left\|center\|right`, `max=60` |
-| Ticker | `/overlays/ticker.html` | |
+| Like hearts | `/overlays/hearts.html` | `side=left\|center\|right`, `max=60` (hearts take the `accent=` colour) |
+| Ticker | `/overlays/ticker.html` | Catches up on the latest follower, gift and share when it opens |
 | Top gifters / likers / chatters | `/overlays/gifters.html` | `by=coins\|likes\|comments`, `count=5`, `title=...` |
 | Counter | `/overlays/counter.html?stat=likes` | `stat=likes\|viewers\|coins\|follows\|shares\|comments`, `label=...`, `bg=0` |
 | Live stats | `/overlays/stats.html` | `show=viewers,likes,coins,follows,shares,comments,gifts,subs,time`, `layout=row\|column\|rotate`, `every=5`, `bg=0` |
-| Subathon timer | `/overlays/timer.html` | `label=...`, `bg=0` |
-| Goal bar | `/overlays/goal.html?goal=likes` | `goal=likes\|follows\|coins\|shares` |
+| Subathon timer | `/overlays/timer.html` | `label=...`, `bg=0`, `end=Time's up!` (shown at zero; empty to keep 0:00:00), `format=ms` (no hours while under an hour) |
+| Goal bar | `/overlays/goal.html?goal=likes` | `goal=likes\|follows\|coins\|shares`, `confetti=0`. Goals can stack (see Goals & timer) |
 | Poll | `/overlays/poll.html` | `hide=0` keeps the result on screen. Run polls from the Interactive page |
 | Viewer queue | `/overlays/queue.html` | `count=6`, `title=...`, `bg=0` |
-| Banner | `/overlays/banner.html` | `scroll=1`, `text=...` (overrides the Interactive page), `dot=0`, `bg=0` |
-| Recent followers / gifts | `/overlays/recent.html?type=follow` | `type=follow\|gift\|share\|join\|subscribe` (comma list), `count=5`, `title=...` |
+| Banner | `/overlays/banner.html` | `scroll=1`, `text=...` (overrides the Interactive page), `every=8` (seconds per message when there are several), `dot=0`, `bg=0` |
+| Recent followers / gifts | `/overlays/recent.html?type=follow` | `type=follow\|gift\|share\|join\|subscribe` (comma list), `count=5`, `title=...`. Catches up on what happened before it opened |
 | Camera frame | `/overlays/camframe.html` | `name=@you`, `style=corners`, `live=0`, `viewers=0`, `radius=28`, `width=4` |
-| Wins & losses | `/overlays/record.html` | `draws=0`, `streak=0`, `title=...`, `compact=1`, `bg=0` |
+| Wins & losses | `/overlays/record.html` | `draws=0`, `streak=0`, `title=...`, `compact=1`, `bg=0`, `rate=1` (win rate), `last=1` (last result) |
 
 ## ✨ FlockAi: describe a layout, get a layout
 
@@ -139,15 +139,15 @@ The **Sounds** page maps events to sounds: a specific gift, a coin range, follow
 
 The **Interactive** page runs things your viewers join in with:
 
-- **Poll:** type a question and 2 to 6 options, pick how long, and press Start. Viewers vote by typing the number (`1`, `2`, `!2`) or the option in chat. One vote each. The Poll overlay shows live bars, the time left and the winner.
-- **Viewer queue:** open it and viewers type `!join` (you can change the command) to get in line, or `!leave`. Press **Next** to call the first person up; remove anyone with the bin. The Viewer queue overlay shows who's up and who's next.
-- **Banner:** a message on stream that you can change while you're live, static or scrolling.
+- **Poll:** type a question and 2 to 6 options, pick how long, and press Start. Viewers vote by typing the number (`1`, `2`, `!2`) or the option in chat. One vote each. The Poll overlay shows live bars, the time left and the winner. Finished polls are listed underneath with **Run again**.
+- **Viewer queue:** open it and viewers type `!join` (you can change the command) to get in line, or `!leave`. Press **Next** to call the first person up, or **Random** to pick anyone in line; remove anyone with the bin. The Viewer queue overlay shows who's up and who's next.
+- **Banner:** a message on stream that you can change while you're live, static or scrolling. Put several messages on separate lines and they take turns.
 
 
 On the **Goals & timer** page, the **Wins & losses** panel keeps your record and streak:
 
 - **Automatic:** every TikTok LIVE battle that finishes adds a win, loss or draw. flock.tt matches your username against the battle's hosts.
-- **By hand:** + Win, + Loss, + Draw, Undo, Reset and Edit numbers.
+- **By hand:** + Win, + Loss, + Draw, Undo, Reset and Edit numbers (type the numbers straight in). **Battle** under Test events on the Live page tries it out.
 - **Chat:** you and your moderators can type `!win`, `!loss`, `!draw` or `!undo` (handy for game matches).
 
 The record is saved in the data folder, so it carries over between streams. Show it with the `/overlays/record.html` overlay or add "Wins & losses" in the Layout editor.
@@ -168,9 +168,11 @@ Speech plays through the Alerts or Sound player overlay, so one of them must be 
 
 On the **Goals & timer** page, start the countdown. While it runs, coins, follows, shares, subscribes and every 100 likes add time (the amounts are configurable). You can also add or remove time by hand.
 
+**Stacking goals:** give a goal a **Then +** amount and it moves up by itself each time it's reached (10,000 likes → 20,000 → 30,000 …), after a moment of celebration on the goal bar.
+
 ## Configuration
 
-Settings are saved to `data/config.json`, which is git-ignored. Environment variables:
+Settings are saved to `data/config.json`, which is git-ignored. Saves are atomic and the previous copy is kept as `config.json.bak`, so a power cut mid-save can't wipe your setup. **Settings → Backup & restore** saves everything (except your API key and OBS password) to one file you can load on another computer. Environment variables:
 
 - `PORT` (default `8787`)
 - `HOST` (default `127.0.0.1`). Set it to `0.0.0.0` to open the overlays from another device on your network.

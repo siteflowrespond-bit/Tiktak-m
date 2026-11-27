@@ -56,3 +56,36 @@ window.avatarEl = function avatarEl(user, size = 32) {
 /** Pixel density for canvases: the screen's, times the layout's scale-up (?px=) so scaled overlays stay sharp. */
 window.ttDPR = () => Math.min(6, Math.min(2, devicePixelRatio || 1) * Math.max(1, Number(params.get('px')) || 1));
 window.fmt = (n) => Number(n || 0).toLocaleString();
+/** A hex colour from a link (?ca=ff3366 or %23ff3366), or '' if it isn't one. */
+window.ttHex = (v) => { const h = String(v || '').trim().replace(/^#/, ''); return /^([0-9a-f]{3}|[0-9a-f]{6})$/i.test(h) ? `#${h.toLowerCase()}` : ''; };
+/** True when a custom ?accent= colour is set (black and white otherwise). */
+window.ttAccented = () => Boolean(ttHex(params.get('accent')));
+/** Runs update() in fixed 60 Hz steps and draw() once per frame, so animations move at the same speed
+    whatever the frame rate (OBS often renders browser sources at 30 fps). */
+window.ttLoop = function ttLoop(update, draw) {
+  const STEP = 1000 / 60;
+  let last = 0, acc = 0;
+  (function frame(now) {
+    acc += Math.min(250, last ? now - last : STEP);
+    last = now;
+    let n = 0;
+    while (acc >= STEP && n < 8) { update(); acc -= STEP; n++; }
+    if (n === 8) acc = 0;
+    draw();
+    requestAnimationFrame(frame);
+  })(performance.now());
+};
+/** In the app's previews (?preview=1) an overlay with nothing to show yet can say what it's waiting for. */
+window.ttPreview = params.has('preview');
+window.ttHint = function ttHint(text) {
+  if (!ttPreview) return;
+  let h = document.getElementById('tt-hint');
+  if (!h) {
+    h = document.createElement('div');
+    h.id = 'tt-hint';
+    h.style.cssText = 'position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);max-width:86%;padding:10px 16px;border-radius:12px;border:1.5px dashed rgba(255,255,255,.45);background:rgba(0,0,0,.55);color:#fff;font:600 16px/1.3 var(--tt-font);text-align:center;pointer-events:none;z-index:99';
+    document.body.append(h);
+  }
+  h.textContent = text;
+  h.hidden = !text;
+};

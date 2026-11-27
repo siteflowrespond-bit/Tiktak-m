@@ -33,10 +33,10 @@ export const DEFAULT_CONFIG = {
     alerts: true // also speak the "Say out loud" lines on alerts
   },
   goals: {
-    likes: { enabled: true, label: 'Like goal', target: 10000 },
-    follows: { enabled: true, label: 'Follow goal', target: 100 },
-    coins: { enabled: true, label: 'Coin goal', target: 1000 },
-    shares: { enabled: false, label: 'Share goal', target: 50 }
+    likes: { enabled: true, label: 'Like goal', target: 10000, step: 0 }, // step: when reached, raise the target by this much (0 = stop)
+    follows: { enabled: true, label: 'Follow goal', target: 100, step: 0 },
+    coins: { enabled: true, label: 'Coin goal', target: 1000, step: 0 },
+    shares: { enabled: false, label: 'Share goal', target: 50, step: 0 }
   },
   // Sound actions: play a sound when something happens (independent of alerts)
   sounds: {
@@ -75,15 +75,16 @@ export const DEFAULT_CONFIG = {
       ]
     }
   ],
-  // Subathon timer: events add time while it's running
   polls: { enabled: true },
   queue: { command: '!join', max: 50 },
-  banner: { text: 'Welcome in! Follow for more', scroll: false },
+  // one message per line; several lines take turns every `every` seconds
+  banner: { text: 'Welcome in! Follow for more', scroll: false, every: 8 },
   // wins & losses counter
   record: {
     auto: true, // count TikTok LIVE battles automatically
     chatCommands: true // you and your moderators can type !win !loss !draw !undo
   },
+  // Subathon timer: events add time while it's running
   timer: {
     startMinutes: 60,
     perCoin: 6,
@@ -141,7 +142,7 @@ export const DEFAULT_CONFIG = {
   ]
 };
 
-function merge(base, override) {
+export function merge(base, override) {
   if (Array.isArray(base)) return Array.isArray(override) ? override : base;
   if (base && typeof base === 'object') {
     const out = { ...base };
@@ -153,16 +154,67 @@ function merge(base, override) {
   return override === undefined ? base : override;
 }
 
-export function loadConfig() {
-  try {
-    const raw = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
-    return merge(DEFAULT_CONFIG, raw);
-  } catch {
-    return structuredClone(DEFAULT_CONFIG);
+/** Keeps only settings that have the right shape (numbers are numbers, lists are lists …), so a bad save
+    can't break the app. Unknown top-level keys are dropped. */
+function clean(base, v) {
+  if (Array.isArray(base)) return Array.isArray(v) ? v.filter((x) => x && typeof x === 'object' && !Array.isArray(x)) : undefined;
+  if (base && typeof base === 'object') {
+    if (!v || typeof v !== 'object' || Array.isArray(v)) return undefined;
+    const out = {};
+    for (const k of Object.keys(v)) {
+      if (k === '__proto__' || k === 'constructor' || k === 'prototype') continue;
+      const c = k in base ? clean(base[k], v[k]) : v[k];
+      if (c !== undefined) out[k] = c;
+    }
+    return out;
   }
+  if (typeof base === 'number') { const n = typeof v === 'string' && v.trim() === '' ? NaN : Number(v); return typeof v !== 'boolean' && v !== null && Number.isFinite(n) ? n : undefined; }
+  if (typeof base === 'boolean') return typeof v === 'boolean' ? v : undefined;
+  if (typeof base === 'string') return typeof v === 'string' || typeof v === 'number' ? String(v) : undefined;
+  return v;
+}
+const hasTrigger = (r) => r.trigger && typeof r.trigger === 'object' && typeof r.trigger.type === 'string';
+export function cleanConfig(incoming) {
+  const out = {};
+  for (const k of Object.keys(incoming || {})) {
+    if (!(k in DEFAULT_CONFIG)) continue;
+    const c = clean(DEFAULT_CONFIG[k], incoming[k]);
+    if (c !== undefined) out[k] = c;
+  }
+  if (out.rules) out.rules = out.rules.filter(hasTrigger);
+  if (out.sounds?.rules) out.sounds.rules = out.sounds.rules.filter(hasTrigger);
+  if (out.obs?.rules) out.obs.rules = out.obs.rules.filter((r) => hasTrigger(r) && r.action && typeof r.action === 'object');
+  if (out.layouts) out.layouts = out.layouts.filter((l) => typeof l.id === 'string' && Array.isArray(l.widgets)).map((l) => ({ ...l, widgets: l.widgets.filter((w) => w && typeof w.src === 'string') }));
+  if (out.goals) for (const [k, g] of Object.entries(out.goals)) if (!g || typeof g !== 'object' || Array.isArray(g)) delete out.goals[k];
+  return out;
+}
+
+export function loadConfig() {
+  // the saved file, else the copy kept from the save before (if the file got cut off, e.g. a power cut while saving)
+  for (const file of [CONFIG_FILE, `${CONFIG_FILE}.bak`]) {
+    try {
+      const raw = JSON.parse(fs.readFileSync(file, 'utf8'));
+      if (file !== CONFIG_FILE) {
+        try { fs.copyFileSync(CONFIG_FILE, path.join(DATA_DIR, `config.broken-${Date.now()}.json`)); } catch { /* nothing to keep */ }
+        try { fs.copyFileSync(file, CONFIG_FILE); } catch { /* read-only: still use it */ }
+        console.log('Settings file was damaged; loaded the previous copy instead.');
+      }
+      return merge(DEFAULT_CONFIG, raw);
+    } catch { /* missing or damaged: try the next */ }
+  }
+  return structuredClone(DEFAULT_CONFIG);
+}
+
+/** Writes a file so it's never left half-written: write a temp file, then swap it in. */
+export function writeFileSafe(file, text) {
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  const tmp = `${file}.tmp`;
+  fs.writeFileSync(tmp, text);
+  fs.renameSync(tmp, file);
 }
 
 export function saveConfig(config) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
-  fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2));
+  try { if (fs.existsSync(CONFIG_FILE)) fs.copyFileSync(CONFIG_FILE, `${CONFIG_FILE}.bak`); } catch { /* keep going */ }
+  writeFileSafe(CONFIG_FILE, JSON.stringify(config, null, 2));
 }

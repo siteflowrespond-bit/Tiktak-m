@@ -23,23 +23,29 @@
 </div>
 <script src="/socket.io/socket.io.js"></script>
 <script src="common.js"></script>
+<script src="fx.js"></script>
 <script>
-  // ?goal=likes|follows|coins|shares
+  // ?goal=likes|follows|coins|shares  ?confetti=0
   const key = params.get('goal') || 'likes';
-  let goal = null, value = 0;
+  const fx = params.get('confetti') === '0' ? null : createFx();
+  let goal = null, value = 0, wasDone = null, seen = false;
   const socket = io();
   socket.on('config', (c) => { goal = c.goals[key]; render(); });
-  socket.on('stats', (s) => { value = s[key] || 0; render(); });
+  socket.on('stats', (s) => { value = s[key] || 0; seen = true; render(); });
   function render() {
     const box = document.getElementById('goal');
-    if (!goal || !goal.enabled) { box.hidden = true; return; }
-    box.hidden = false;
-    const pct = Math.min(100, (value / goal.target) * 100);
+    if (!goal || !goal.enabled) { box.hidden = true; ttHint(goal ? `This goal is off. Turn it on in Goals & timer.` : `No "${key}" goal. Use ?goal=likes, follows, coins or shares.`); return; }
+    box.hidden = false; ttHint('');
+    const target = Math.max(1, Number(goal.target) || 1);
+    const pct = Math.min(100, (value / target) * 100);
     document.getElementById('label').textContent = goal.label;
-    document.getElementById('count').textContent = `${fmt(value)} / ${fmt(goal.target)}`;
+    document.getElementById('count').textContent = `${fmt(value)} / ${fmt(target)}`;
     document.getElementById('fill').style.width = pct + '%';
     document.getElementById('pct').textContent = pct >= 100 ? 'Done!' : `${Math.floor(pct)}%`;
     box.classList.toggle('done', pct >= 100);
+    // confetti the moment it's reached (not when the page opens on a goal that's already done)
+    if (fx && wasDone === false && pct >= 100) { const r = box.getBoundingClientRect(); fx.confetti(r.left + r.width / 2, r.top + r.height / 2, { count: 120, spread: Math.PI * 2, power: 11 }); }
+    if (seen) wasDone = pct >= 100;
   }
 </script>
 </body></html>

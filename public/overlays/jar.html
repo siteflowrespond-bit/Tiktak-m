@@ -41,11 +41,16 @@
   }
   addEventListener('resize', layout);
 
-  // coin look by value
-  // coin look by value, in the theme's colours: small = ember, 10+ = butter, 100+ = rose, 1000+ = sky
-  const coinOf = (c, r) => ({ r, a: ttShade(c, 0.55), b: c, rim: ttShade(c, -0.4) });
+  // coin look by value: bigger gifts are bigger, lighter coins. With a custom ?accent= the coins take that colour.
+  const coinOf = (c, r) => ({ r, a: ttShade(c, 0.55), b: c, rim: ttShade(c, -0.45) });
+  const ACC = ttAccented() ? tt('a') : '';
   function tier(coinsEach) {
-    // black and white: bigger gifts are bigger and lighter coins
+    if (ACC) {
+      if (coinsEach >= 1000) return coinOf(ttShade(ACC, 0.3), 26);
+      if (coinsEach >= 100) return coinOf(ACC, 21);
+      if (coinsEach >= 10) return coinOf(ttShade(ACC, -0.2), 16);
+      return coinOf(ttShade(ACC, -0.4), 12);
+    }
     if (coinsEach >= 1000) return { r: 26, a: '#ffffff', b: '#e6e6e6', rim: '#000000' };
     if (coinsEach >= 100) return { r: 21, a: '#f2f2f2', b: '#bdbdbd', rim: '#1a1a1a' };
     if (coinsEach >= 10) return { r: 16, a: '#d9d9d9', b: '#8c8c8c', rim: '#1a1a1a' };
@@ -53,6 +58,7 @@
   }
 
   function drop(e) {
+    ttHint('');
     if (emptying) return;
     const per = e.gift.diamonds || Math.max(1, Math.round(e.gift.coins / e.gift.count));
     const t = tier(per);
@@ -159,7 +165,6 @@
   }
 
   function frame() {
-    step();
     ctx.clearRect(0, 0, W, H);
     // back of jar
     jarPath(); ctx.closePath(); ctx.fillStyle = 'rgba(180,220,255,.10)'; ctx.fill();
@@ -183,11 +188,11 @@
     ctx.fillRect(jar.x1 + 10, jar.top, 6, jar.h * (1 - pct));
     // remove coins that fell off-screen while emptying
     for (let i = coins.length - 1; i >= 0; i--) if (coins[i].y > H + 60) coins.splice(i, 1);
-    requestAnimationFrame(frame);
   }
 
   layout();
-  requestAnimationFrame(frame);
+  ttLoop(step, frame); // physics at a steady 60 steps a second, whatever OBS's frame rate
+  ttHint('Gifts drop in here as coins. Send a test gift.');
   const socket = io();
   socket.on('event', (e) => { if (e.type === 'gift') drop(e); });
 </script>

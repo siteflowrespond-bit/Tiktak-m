@@ -5,7 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import express from 'express';
 import { Server } from 'socket.io';
-import { loadConfig, saveConfig, DATA_DIR } from './config.js';
+import { loadConfig, saveConfig, cleanConfig, merge, writeFileSafe, DATA_DIR } from './config.js';
 import { TikTokSource } from './tiktok.js';
 import { Engine } from './engine.js';
 import { ObsLink } from './obs.js';
@@ -105,7 +105,7 @@ function rememberGifts(list) {
   for (const g of list) if (g.name) byName.set(g.name, { ...byName.get(g.name), ...g, image: g.image || byName.get(g.name)?.image || '' });
   giftCatalog = [...byName.values()].sort((a, b) => a.diamonds - b.diamonds);
   giftImageByName = giftImages();
-  try { fs.writeFileSync(GIFT_FILE, JSON.stringify(giftCatalog)); } catch (e) { log(`Could not save gift pictures: ${e.message}`); }
+  try { writeFileSafe(GIFT_FILE, JSON.stringify(giftCatalog)); } catch (e) { log(`Could not save gift pictures: ${e.message}`); }
 }
 /** Gives a gift event a picture: its own, else the saved one for that gift, else a plain gift-box icon. */
 function withGiftImage(evt) {
@@ -115,7 +115,11 @@ function withGiftImage(evt) {
   return { ...evt, gift: { ...evt.gift, image: giftImageByName.get(key) || art || GIFT_FALLBACK } };
 }
 
-tiktok.on('event', (evt) => engine.handle(withGiftImage(evt)));
+// One bad event (or a bug) must never take the whole app down mid-stream.
+function handle(evt) {
+  try { engine.handle(evt); } catch (e) { log(`Could not handle a ${evt?.type || 'unknown'} event: ${e.message}`); }
+}
+tiktok.on('event', (evt) => handle(withGiftImage(evt)));
 tiktok.on('gifts', (list) => rememberGifts(list));
 // Learn each gift's picture from real gift events, so test gifts can show it later too.
 tiktok.on('event', (evt) => {
@@ -133,15 +137,19 @@ engine.on('ttsSkipped', (t) => io.emit('ttsSkipped', t));
 engine.on('sound', (snd) => io.emit('sound', snd));
 engine.on('timer', (t) => io.emit('timer', t));
 engine.on('poll', (p) => io.emit('poll', p));
+engine.on('pollHistory', (h) => io.emit('pollHistory', h));
+// a stacking goal moved up: keep the new target and tell everyone
+engine.on('goalsChanged', () => { try { saveConfig(config); } catch (e) { log(`Could not save goals: ${e.message}`); } io.emit('config', publicConfig()); });
 engine.on('queue', (q) => io.emit('queue', q));
 
 // ---- Wins & losses: kept on disk so the record carries over between streams ----
 const RECORD_FILE = path.join(DATA_DIR, 'record.json');
+let lastLoggedResult = 0;
 try { const r = JSON.parse(fs.readFileSync(RECORD_FILE, 'utf8')); engine.record = { wins: 0, losses: 0, draws: 0, streak: 0, last: null, ...r }; } catch { /* first run */ }
 engine.on('record', (r) => {
   io.emit('record', r);
-  try { fs.writeFileSync(RECORD_FILE, JSON.stringify(r)); } catch (e) { log(`Could not save wins & losses: ${e.message}`); }
-  if (r.last && Date.now() - r.last.at < 2000) log(`Record: ${r.last.result}${r.last.opponent ? ` vs ${r.last.opponent}` : ''} (${r.wins}W ${r.losses}L ${r.draws}D)`);
+  try { writeFileSafe(RECORD_FILE, JSON.stringify(r)); } catch (e) { log(`Could not save wins & losses: ${e.message}`); }
+  if (r.last && r.last.at !== lastLoggedResult && Date.now() - r.last.at < 2000 && (lastLoggedResult = r.last.at)) log(`Record: ${r.last.result}${r.last.opponent ? ` vs ${r.last.opponent}` : ''} (${r.wins}W ${r.losses}L ${r.draws}D)`);
 });
 
 // ---- OBS ----
@@ -186,9 +194,11 @@ io.on('connection', (socket) => {
   socket.emit('status', { status: tiktok.status, username: tiktok.username });
   socket.emit('config', publicConfig());
   socket.emit('stats', engine.snapshot());
+  socket.emit('recent', engine.recent);
   socket.emit('timer', engine.timerState());
   socket.emit('record', engine.record);
   socket.emit('poll', engine.pollState());
+  socket.emit('pollHistory', engine.pollHistory);
   socket.emit('queue', engine.queue);
   socket.emit('obsStatus', { status: obs.status, detail: obs.detail });
 });
@@ -215,7 +225,7 @@ app.post('/api/sounds', express.raw({ type: () => true, limit: '8mb' }), (req, r
   if (!AUDIO_EXT.test(original)) return res.status(400).json({ error: 'Use an mp3, wav, ogg, m4a or webm file' });
   if (!req.body?.length) return res.status(400).json({ error: 'The file is empty' });
   const safe = original.replace(/[^\w.\- ]+/g, '_').slice(-80);
-  fs.writeFileSync(path.join(SOUND_DIRS.custom, safe), req.body);
+  try { fs.writeFileSync(path.join(SOUND_DIRS.custom, safe), req.body); } catch (e) { return res.status(500).json({ error: `Could not save the sound: ${e.message}` }); }
   res.json({ kind: 'custom', name: safe.replace(AUDIO_EXT, ''), src: `/sounds/custom/${encodeURIComponent(safe)}` });
 });
 
@@ -229,8 +239,9 @@ app.delete('/api/sounds/:file', (req, res) => {
 
 app.post('/api/play-sound', (req, res) => {
   const { src, volume = 1 } = req.body || {};
-  if (!src) return res.status(400).json({ error: 'No sound' });
-  io.emit('sound', { src, volume: Number(volume) * config.sounds.volume, times: 1 });
+  // only flock.tt's own sounds: overlays must never be told to fetch something from elsewhere
+  if (typeof src !== 'string' || !src.startsWith('/sounds/') || src.includes('..')) return res.status(400).json({ error: 'No sound' });
+  io.emit('sound', { src, volume: Math.max(0, Math.min(1, Number(volume) || 0)) * config.sounds.volume, times: 1 });
   res.json({ ok: true });
 });
 
@@ -254,17 +265,37 @@ app.post('/api/obs/run', async (req, res) => {
 app.post('/api/timer', (req, res) => {
   const { action, seconds } = req.body || {};
   if (!['start', 'pause', 'reset', 'add'].includes(action)) return res.status(400).json({ error: 'Unknown timer action' });
-  engine.timerAction(action, seconds);
+  engine.timerAction(action, Math.max(-86400, Math.min(86400, Number(seconds) || 0)));
   res.json(engine.timerState());
 });
 
 app.put('/api/config', (req, res) => {
-  const incoming = req.body || {};
-  const signApiKey = incoming.signApiKey ? incoming.signApiKey : config.signApiKey;
-  delete incoming.hasSignApiKey;
-  delete incoming.hasObsPassword;
-  if (incoming.obs) incoming.obs = { ...config.obs, ...incoming.obs, password: incoming.obs.password || config.obs?.password || '' };
-  config = { ...config, ...incoming, signApiKey };
+  const raw = req.body && typeof req.body === 'object' && !Array.isArray(req.body) ? req.body : {};
+  const signApiKey = typeof raw.signApiKey === 'string' && raw.signApiKey.trim() ? raw.signApiKey.trim() : config.signApiKey;
+  const incoming = cleanConfig(raw); // wrong types and unknown settings are dropped
+  delete incoming.signApiKey;
+  if (incoming.obs) incoming.obs.password = incoming.obs.password || config.obs?.password || '';
+  // nested settings merge (sending { tts: { voice } } keeps the rest of tts); lists are replaced
+  config = { ...merge(config, incoming), signApiKey };
+  saveConfig(config);
+  io.emit('config', publicConfig());
+  res.json(publicConfig());
+});
+
+// ---- Backup & restore: every setting except the secrets ----
+app.get('/api/backup', (req, res) => {
+  const { signApiKey, username, ...rest } = config;
+  const { password, ...obsRest } = config.obs || {};
+  res.set('Content-Disposition', `attachment; filename="flocktt-backup-${new Date().toISOString().slice(0, 10)}.json"`);
+  res.json({ app: 'flock.tt', version: VERSION, savedAt: new Date().toISOString(), config: { ...rest, obs: obsRest } });
+});
+app.post('/api/restore', (req, res) => {
+  const b = req.body;
+  if (!b || b.app !== 'flock.tt' || !b.config || typeof b.config !== 'object') return res.status(400).json({ error: 'That file is not a flock.tt backup' });
+  const incoming = cleanConfig(b.config);
+  delete incoming.signApiKey; delete incoming.username;
+  if (incoming.obs) delete incoming.obs.password;
+  config = { ...merge(config, incoming), signApiKey: config.signApiKey, username: config.username, obs: { ...merge(config.obs, incoming.obs || {}), password: config.obs?.password || '' } };
   saveConfig(config);
   io.emit('config', publicConfig());
   res.json(publicConfig());
@@ -301,11 +332,11 @@ app.post('/api/simulate', (req, res) => {
     // Play it out like a real combo: x1, x2, x3 … then the final gift event.
     const total = evt.gift.count;
     for (let i = 1; i < total; i++) {
-      setTimeout(() => engine.handle({ ...evt, type: 'giftStreak', gift: { ...evt.gift, count: i, coins: evt.gift.diamonds * i } }), (i - 1) * 220);
+      setTimeout(() => handle({ ...evt, type: 'giftStreak', gift: { ...evt.gift, count: i, coins: evt.gift.diamonds * i } }), (i - 1) * 220);
     }
-    setTimeout(() => engine.handle(evt), (total - 1) * 220);
+    setTimeout(() => handle(evt), (total - 1) * 220);
   } else {
-    engine.handle(evt);
+    handle(evt);
   }
   res.json(evt);
 });
@@ -346,10 +377,23 @@ app.post('/api/tts/control', (req, res) => {
 });
 
 app.post('/api/test-alert', (req, res) => {
-  const { text = 'Test alert!', image = '', sound = '', duration = 4, tts = '' } = req.body || {};
-  if (text) io.emit('alert', { text, image, sound, duration: Number(duration) || 4 });
-  if (tts) io.emit('tts', { text: tts });
+  const b = req.body || {};
+  const str = (v, n) => (typeof v === 'string' || typeof v === 'number' ? String(v).slice(0, n) : '');
+  const text = 'text' in b ? str(b.text, 300) : 'Test alert!';
+  const image = str(b.image, 2000), sound = str(b.sound, 300), tts = str(b.tts, 300);
+  const duration = Math.max(1, Math.min(60, Number(b.duration) || 4));
+  if (text) io.emit('alert', { text, image, sound: sound.startsWith('/sounds/') ? sound : '', duration, user: b.user && typeof b.user === 'object' ? { nickname: str(b.user.nickname, 40), avatar: '' } : null });
+  if (tts) io.emit('tts', { text: tts, kind: 'test' });
   res.json({ ok: true });
+});
+
+// Anything that goes wrong in a request answers with a short message, never a stack trace with file paths.
+app.use('/api/', (req, res) => res.status(404).json({ error: 'Not found' }));
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  const status = err.status || err.statusCode || 500;
+  if (status >= 500) log(`Request failed: ${req.method} ${req.path}: ${err.message}`);
+  res.status(status).json({ error: status === 400 ? 'That request was not valid' : status === 413 ? 'That is too big' : 'Something went wrong' });
 });
 
 /** Resolves once the server is listening; rejects (e.g. EADDRINUSE) if it can't start. Used by the desktop app. */

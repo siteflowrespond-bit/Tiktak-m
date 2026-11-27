@@ -231,6 +231,7 @@
               </div>
               <div class="v-btns" style="margin-top:12px"><button class="btn red" id="pollStart">Start poll</button><button class="btn" id="pollEnd" hidden>End now</button><button class="btn flat" id="pollClear" hidden>Hide from stream</button></div>
               <div class="poll-live" id="pollLive"></div>
+              <div class="poll-hist" id="pollHist"></div>
               <div class="url"><input id="pollLink" readonly data-nosave><button class="btn sq" data-copy="pollLink" title="Copy overlay link"><svg class="i"><use href="#i-copy"/></svg></button></div>
             </div>
           </div>
@@ -240,7 +241,7 @@
               <div class="panel-body">
                 <p class="note" style="margin-top:0">Viewers type <code id="queueCmdShow">!join</code> to get in line and <code>!leave</code> to drop out. Press Next to call someone up.</p>
                 <div class="queue-now" id="queueNow"></div>
-                <div class="v-btns"><button class="btn red" id="queueNext">Next</button><button class="btn" id="queueDone">Done with them</button><button class="btn flat" id="queueClear">Clear the queue</button></div>
+                <div class="v-btns"><button class="btn red" id="queueNext">Next</button><button class="btn" id="queueRandom" title="Call up someone at random instead of the first in line">Random</button><button class="btn" id="queueDone">Done with them</button><button class="btn flat" id="queueClear">Clear the queue</button></div>
                 <div class="queue-list" id="queueList"></div>
                 <div class="form" style="margin-top:12px"><div class="f"><span>Join command</span><input id="queueCmd" maxlength="20"></div><div class="f"><span>Most people in line</span><input id="queueMax" type="number" min="1" max="500"></div></div>
                 <div class="url"><input id="queueLink" readonly data-nosave><button class="btn sq" data-copy="queueLink" title="Copy overlay link"><svg class="i"><use href="#i-copy"/></svg></button></div>
@@ -249,8 +250,9 @@
             <div class="panel">
               <div class="panel-head"><h2>Banner</h2></div>
               <div class="panel-body">
-                <div class="f"><span>Message on stream <small class="muted">(updates live; leave empty to hide)</small></span><input id="bannerText" maxlength="160" placeholder="Road to 10k followers!"></div>
-                <label class="check" style="margin-top:10px"><input type="checkbox" id="bannerScroll"> Scroll the text</label>
+                <div class="f"><span>Message on stream <small class="muted">(updates live; one per line and they take turns; empty hides it)</small></span><textarea id="bannerText" rows="3" maxlength="800" placeholder="Road to 10k followers!&#10;Type !join to play with me"></textarea></div>
+                <div class="row" style="margin-top:10px;gap:16px"><label class="check"><input type="checkbox" id="bannerScroll"> Scroll the text</label>
+                  <label class="check" id="bannerEveryWrap">Switch every <select id="bannerEvery" style="width:auto"><option value="5">5 s</option><option value="8">8 s</option><option value="12">12 s</option><option value="20">20 s</option><option value="30">30 s</option></select></label></div>
                 <div class="url"><input id="bannerLink" readonly data-nosave><button class="btn sq" data-copy="bannerLink" title="Copy overlay link"><svg class="i"><use href="#i-copy"/></svg></button></div>
               </div>
             </div>
@@ -276,7 +278,7 @@
             <div class="panel">
               <div class="panel-head"><h2>Read chat out loud</h2><div class="grow"></div><label class="switch"><input type="checkbox" id="vEnabled"><i></i><span id="vEnabledText">Off</span></label></div>
               <div class="panel-body form">
-                <div class="f"><span>Read</span><select id="vMode"><option value="command">Only messages with a command</option><option value="all">Every message</option></select></div>
+                <div class="f"><span>Read</span><select id="vMode"><option value="command">Only with the command</option><option value="all">Every message</option></select></div>
                 <div class="f" id="vPrefixF"><span>Command</span><input id="vPrefix" placeholder="!tts" maxlength="20"></div>
                 <div class="f"><span>Who can use it</span><select id="vWho"><option value="everyone">Everyone</option><option value="followers">Followers</option><option value="subscribers">Subscribers</option><option value="gifters">People who sent a gift</option><option value="moderators">Only moderators</option></select></div>
                 <div class="f"><span>Longest message</span><select id="vMax"><option value="60">Short (60 letters)</option><option value="150">Medium (150)</option><option value="300">Long (300)</option></select></div>
@@ -391,7 +393,9 @@
           <div class="panel">
             <div class="panel-head"><h2>Goals</h2><div class="grow"></div><button hidden data-autosave class="btn red sm" id="saveGoals">Save</button></div>
             <div class="panel-body">
-              <p class="note">Likes use TikTok's total for the whole stream. Follows, coins and shares count from when you connect (or reset stats).</p>
+              <p class="note">Likes use TikTok's total for the whole stream. Follows, coins and shares count from when you connect (or reset stats).
+                <b>Then +</b> makes a goal stack: when it's reached, it moves up by that much by itself (leave it at 0 to stop at the goal).</p>
+              <div class="goal-head"><span></span><span>Name on stream</span><span>Goal</span><span>Then +</span><span></span></div>
               <div id="goals"></div>
             </div>
           </div>
@@ -440,6 +444,13 @@
             <div class="f"><span>Euler Stream API key (optional)</span><input id="signApiKey" type="password" placeholder="Leave empty for the free tier" autocomplete="off"></div>
             <p class="note" style="margin-top:8px"><span id="keyState"></span> Connections are signed through Euler Stream. The free tier has rate limits.</p>
             <button hidden data-autosave class="btn red" id="saveSettings">Save</button>
+          </div>
+        </div>
+        <div class="panel about" style="max-width:640px;margin-top:16px">
+          <div class="panel-head"><h2>Backup &amp; restore</h2></div>
+          <div class="panel-body">
+            <p class="note" style="margin-top:0">Save all your alerts, sound actions, layouts, goals, voice and OBS actions to one file. Load it on another computer, or after a reinstall. Your API key and OBS password are never put in the file.</p>
+            <div class="v-btns"><button class="btn" id="backupSave">Save a backup</button><button class="btn" id="backupLoad">Load a backup…</button><input type="file" id="backupFile" accept=".json,application/json" hidden></div>
           </div>
         </div>
         <div class="panel about" style="max-width:640px;margin-top:16px">

@@ -22,6 +22,7 @@
 <script src="common.js"></script>
 <script>
   // Text comes from the Interactive page and updates live. ?text=... overrides it  ?scroll=1  ?dot=0  ?bg=0
+  // Several messages (one per line on the Interactive page) take turns: ?every=8 seconds each
   const b = document.getElementById('b'), t = document.getElementById('t'), track = document.getElementById('track');
   if (params.get('dot') === '0') b.querySelector('.dot').remove();
   if (params.get('bg') === '0') b.classList.remove('panel');
@@ -29,11 +30,29 @@
     b.classList.toggle('hide', !text);
     if (t.textContent === text && track.classList.contains('scroll') === scroll) return;
     t.textContent = text;
+    track.classList.remove('scroll'); void t.offsetWidth; // restart the scroll from the right for the new message
     track.classList.toggle('scroll', scroll);
     track.style.setProperty('--dur', `${Math.max(8, text.length * 0.28)}s`);
     t.classList.remove('swap'); void t.offsetWidth; t.classList.add('swap');
   }
-  if (params.get('text')) show(params.get('text'), params.get('scroll') === '1');
-  else io().on('config', (c) => show(c.banner?.text || '', params.has('scroll') ? params.get('scroll') === '1' : Boolean(c.banner?.scroll)));
+  // rotate through the messages, one at a time
+  let msgs = [], idx = 0, rot = 0, scrolling = false;
+  function play(list, scroll, every) {
+    const same = list.join('\n') === msgs.join('\n') && scroll === scrolling;
+    msgs = list; scrolling = scroll;
+    if (same) return;
+    clearTimeout(rot); idx = 0;
+    ttHint(msgs.length ? '' : 'The banner is empty. Type a message on the Interactive page.');
+    (function turn() {
+      show(msgs[idx] || '', scrolling);
+      if (msgs.length < 2) return;
+      // a scrolling message gets to finish its trip across before the next one
+      const secs = scrolling ? Math.max(every, 8, msgs[idx].length * 0.28) : Math.max(3, every);
+      rot = setTimeout(() => { idx = (idx + 1) % msgs.length; turn(); }, secs * 1000);
+    })();
+  }
+  const lines = (t) => String(t || '').split('\n').map((x) => x.trim()).filter(Boolean);
+  if (params.get('text')) play(lines(params.get('text')), params.get('scroll') === '1', Number(params.get('every')) || 8);
+  else io().on('config', (c) => play(lines(c.banner?.text), params.has('scroll') ? params.get('scroll') === '1' : Boolean(c.banner?.scroll), Number(params.get('every')) || Number(c.banner?.every) || 8));
 </script>
 </body></html>

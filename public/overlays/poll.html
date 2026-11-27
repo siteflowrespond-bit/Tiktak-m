@@ -27,8 +27,8 @@
   let poll = null, hideTimer;
   function draw() {
     clearTimeout(hideTimer);
-    if (!poll) { box.classList.add('hide'); return; }
-    box.classList.remove('hide');
+    if (!poll) { box.classList.add('hide'); ttHint('Start a poll on the Interactive page and it shows here.'); return; }
+    box.classList.remove('hide'); ttHint('');
     const total = poll.total || 0;
     const left = poll.open && poll.endsAt ? Math.max(0, Math.ceil((poll.endsAt - Date.now()) / 1000)) : 0;
     const meta = poll.open ? `${fmt(total)} vote${total === 1 ? '' : 's'}${left ? ` · ${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}` : ''}` : (poll.winner ? 'Final result' : poll.tie ? 'It\'s a tie!' : 'Poll closed');

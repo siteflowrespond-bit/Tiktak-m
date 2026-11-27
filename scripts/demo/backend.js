@@ -31,16 +31,19 @@
     send('status', status);
     send('config', publicConfig());
     send('stats', engine.snapshot());
+    send('recent', engine.recent);
     send('timer', engine.timerState());
     send('record', engine.record);
     send('poll', engine.pollState());
+    send('pollHistory', engine.pollHistory);
     send('queue', engine.queue);
   }
   // overlay iframes subscribe directly through the parent window
   window.__flocktBus = { subscribe(fn) { frames.add(fn); snapshotFor(fn); return () => frames.delete(fn); } };
   if (channel) channel.onmessage = (m) => { if (m.data?.hello) snapshotFor((evt, data) => channel.postMessage({ evt, data })); };
 
-  for (const evt of ['event', 'stats', 'alert', 'tts', 'ttsSkipped', 'sound', 'timer', 'record', 'poll', 'queue']) engine.on(evt, (d) => broadcast(evt, d));
+  for (const evt of ['event', 'stats', 'alert', 'tts', 'ttsSkipped', 'sound', 'timer', 'record', 'poll', 'pollHistory', 'queue']) engine.on(evt, (d) => broadcast(evt, d));
+  engine.on('goalsChanged', () => broadcast('config', publicConfig()));
   const setStatus = (s) => { status = s; broadcast('status', s); };
   const publicConfig = () => { const { signApiKey, ...rest } = config; const { password, ...obs } = config.obs || {}; return { ...rest, obs, hasSignApiKey: false, hasObsPassword: false }; };
 
@@ -50,9 +53,11 @@
       local.get(evt).push(fn);
       if (evt === 'status') fn(status);
       if (evt === 'stats') fn(engine.snapshot());
+      if (evt === 'recent') fn(engine.recent);
       if (evt === 'timer') fn(engine.timerState());
       if (evt === 'record') fn(engine.record);
       if (evt === 'poll') fn(engine.pollState());
+      if (evt === 'pollHistory') fn(engine.pollHistory);
       if (evt === 'queue') fn(engine.queue);
       if (evt === 'config') fn(publicConfig());
       if (evt === 'obsStatus') fn({ status: fakeObs.status, detail: fakeObs.detail });
@@ -191,8 +196,8 @@
     if (path === '/api/tts/control') { if (!['skip', 'clear'].includes(body.action)) return json({ error: 'Unknown action' }, 400); broadcast('ttsControl', { action: body.action }); return json({ ok: true }); }
     if (path === '/api/test-alert') {
       const { text = 'Test alert!', image = '', sound = '', duration = 4, tts = '' } = body;
-      if (text) broadcast('alert', { text, image, sound: abs(sound), duration: Number(duration) || 4 });
-      if (tts) broadcast('tts', { text: tts });
+      if (text) broadcast('alert', { text, image, sound: abs(sound), duration: Number(duration) || 4, user: body.user || null });
+      if (tts) broadcast('tts', { text: tts, kind: 'test' });
       return json({ ok: true });
     }
     return json({ error: 'Not in the demo' }, 404);

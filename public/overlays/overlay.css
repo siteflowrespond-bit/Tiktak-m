@@ -1,5 +1,5 @@
 /* flock.tt (c) 2026 siteflowrespond-bit. Owner proof sha256:99891628516a57a623400d9ccde22b170ecfac1527631e923149d480260a9270 */
-/* flock.tt overlay theme. Pick one per overlay link with ?theme=dusk|mint|candy|mono (dusk is the default).
+/* flock.tt overlay theme: black (default) or ?theme=white, plus optional ?accent= ?text= ?panel= colours (see common.js).
    Backgrounds stay transparent for TikTok LIVE Studio / OBS. */
 @import url("https://fonts.googleapis.com/css2?family=Geist:wght@500;600;700;800&display=swap");
 
@@ -37,10 +37,11 @@
   --tt-team-a: #000000; --tt-team-b: #9a9a9a;
   --tt-avatar-bg: #000000; --tt-avatar-fg: #ffffff; --tt-on-accent: #ffffff;
   --tt-sheen: rgba(255, 255, 255, .6);
+  --tt-shadow: 0 1px 2px rgba(255,255,255,.9), 0 0 12px rgba(255,255,255,.55); /* text straight on video: a soft white halo */
 }
 
 html, body { margin: 0; background: transparent; overflow: hidden; }
-body { font-family: var(--tt-font); color: #fff; -webkit-font-smoothing: antialiased; }
+body { font-family: var(--tt-font); color: var(--tt-text); -webkit-font-smoothing: antialiased; }
 .shadow { text-shadow: var(--tt-shadow); }
 .num { font-variant-numeric: tabular-nums; font-family: var(--tt-display); }
 .avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: var(--tt-avatar-bg); flex: none; color: var(--tt-avatar-fg); text-shadow: none;
@@ -55,4 +56,3 @@ body { font-family: var(--tt-font); color: #fff; -webkit-font-smoothing: antiali
 .panel.shadow, .panel .shadow { text-shadow: none; }
 .avatar { box-shadow: 0 0 0 2px var(--tt-line); }
 :root[data-theme="white"] .panel, :root[data-theme="white"] .panel * { text-shadow: none; }
-:root[data-theme="white"] .shadow, :root[data-theme="white"] .shadow *, :root[data-theme="white"] body { text-shadow: none; }

@@ -58,8 +58,7 @@
     }, delay);
   }
 
-  function frame() {
-    ctx.clearRect(0, 0, W, H);
+  function update() {
     for (let i = items.length - 1; i >= 0; i--) {
       const p = items[i];
       p.age++;
@@ -74,8 +73,13 @@
       } else {
         p.y += p.vy; p.x += Math.sin(p.age / 18 + p.wob) * 1.2;
       }
+      if (p.age >= p.life) items.splice(i, 1);
+    }
+  }
+  function frame() {
+    ctx.clearRect(0, 0, W, H);
+    for (const p of items) {
       const t = p.age / p.life;
-      if (t >= 1) { items.splice(i, 1); continue; }
       ctx.save();
       ctx.globalAlpha = t > 0.85 ? (1 - t) / 0.15 : Math.min(1, p.age / 8);
       ctx.translate(p.x, p.y); ctx.rotate(p.rot);
@@ -83,11 +87,12 @@
       ctx.drawImage(sprite(p.e), -p.r * sc, -p.r * sc, p.r * 2 * sc, p.r * 2 * sc);
       ctx.restore();
     }
-    requestAnimationFrame(frame);
   }
-  requestAnimationFrame(frame);
+  ttLoop(update, frame); // same speed at 30 fps (OBS) and on fast screens
+  ttHint('Emojis people type in chat rain down here.');
 
   io().on('event', (e) => {
+    if (e.type === 'chat' || e.type === 'like') ttHint('');
     if (e.type === 'chat') emojisIn(e.comment).slice(0, PER).forEach((em, i) => spawn(em, i * 90));
     if (likes && e.type === 'like') for (let i = 0; i < Math.min(4, e.likes); i++) spawn('❤️', i * 80);
   });

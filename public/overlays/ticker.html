@@ -21,11 +21,14 @@
 <script src="common.js"></script>
 <script>
   const socket = io();
-  const set = (id, text) => { const b = document.getElementById(id); b.textContent = text; b.classList.remove('new'); void b.offsetWidth; b.classList.add('new'); };
-  socket.on('event', (e) => {
-    if (e.type === 'follow') set('follow', e.user.nickname);
-    if (e.type === 'share') set('share', e.user.nickname);
-    if (e.type === 'gift') set('gift', `${e.user.nickname} · ${e.gift.count > 1 ? `${e.gift.count}× ` : ''}${e.gift.name}`);
-  });
+  const set = (id, text, anim = true) => { const b = document.getElementById(id); b.textContent = text; b.title = text; b.classList.remove('new'); if (anim) { void b.offsetWidth; b.classList.add('new'); } };
+  function show(e, anim) {
+    if (e.type === 'follow') set('follow', e.user.nickname, anim);
+    if (e.type === 'share') set('share', e.user.nickname, anim);
+    if (e.type === 'gift') set('gift', `${e.user.nickname} · ${e.gift.count > 1 ? `${e.gift.count}× ` : ''}${e.gift.name}`, anim);
+  }
+  socket.on('event', (e) => show(e, true));
+  // catch up when the overlay opens (OBS reloads sources when you switch scenes)
+  socket.on('recent', (list) => { for (const e of [...(list || [])].reverse()) show(e, false); });
 </script>
 </body></html>

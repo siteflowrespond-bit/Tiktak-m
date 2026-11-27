@@ -21,17 +21,22 @@
   .flash.on { animation: flash 1.6s ease forwards; }
   @keyframes flash { 0% { opacity: 0; transform: translateY(14px) scale(.9); } 15% { opacity: 1; transform: none; } 75% { opacity: 1; } 100% { opacity: 0; transform: translateY(-10px); } }
   .row.compact .n { font-size: 40px; }
+  .rate { font-size: 13px; font-weight: 800; letter-spacing: 1px; opacity: .75; font-variant-numeric: tabular-nums; }
+  .rate:empty { display: none; }
+  .k.w { color: var(--tt-a); opacity: 1; }
 </style></head>
 <body>
 <div class="card panel shadow" id="card">
   <div class="title" id="title"></div>
   <div class="row" id="row"></div>
+  <div class="rate" id="rate"></div>
   <div class="streak" id="streak"></div>
 </div>
 <script src="/socket.io/socket.io.js"></script>
 <script src="common.js"></script>
 <script>
   // ?draws=0 hide draws  ?streak=0 hide the streak  ?title=Record (empty to hide)  ?bg=0  ?compact=1
+  // ?rate=1 show the win rate  ?last=1 show the last result (W vs @opponent)
   const showDraws = params.get('draws') !== '0';
   const showStreak = params.get('streak') !== '0';
   const title = params.get('title') ?? 'Wins & losses';
@@ -45,7 +50,7 @@
   keys.forEach(([k, label], i) => {
     if (i) row.append(el('span', { class: 'dash' }, '–'));
     cells[k] = el('span', { class: 'n num' }, '0');
-    row.append(el('div', { class: 'cell' }, cells[k], el('span', { class: 'k' }, label)));
+    row.append(el('div', { class: 'cell' }, cells[k], el('span', { class: `k${k === 'wins' ? ' w' : ''}` }, label)));
   });
   let prev = null;
   io().on('record', (r) => {
@@ -56,6 +61,11 @@
     const s = document.getElementById('streak');
     s.className = 'streak' + (r.streak < 0 ? ' lose' : '');
     s.textContent = !showStreak || Math.abs(r.streak) < 2 ? '' : r.streak > 0 ? `🔥 ${r.streak} win streak` : `${-r.streak} losses in a row`;
+    const games = (r.wins || 0) + (r.losses || 0) + (r.draws || 0);
+    const bits = [];
+    if (params.get('rate') === '1' && games) bits.push(`${Math.round(((r.wins || 0) / games) * 100)}% WIN RATE`);
+    if (params.get('last') === '1' && r.last) bits.push(`LAST: ${{ win: 'W', loss: 'L', draw: 'D' }[r.last.result] || ''}${r.last.opponent ? ` VS ${r.last.opponent.toUpperCase()}` : ''}`);
+    document.getElementById('rate').textContent = bits.join(' · ');
     prev = r;
   });
 </script>

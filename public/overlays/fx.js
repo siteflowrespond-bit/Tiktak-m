@@ -9,7 +9,9 @@ window.createFx = function createFx(zIndex = 50) {
   const parts = [];
   const rockets = [];
   let dpr = 1, W = 0, H = 0, running = false;
-  const COLORS = ['#ffffff', '#ffffff', '#e6e6e6', '#bdbdbd', '#8c8c8c'];
+  // black and white by default; a custom ?accent= colour joins in
+  const accent = window.params?.get('accent') && window.tt ? tt('a') : '';
+  const COLORS = accent ? [accent, accent, ttShade(accent, 0.45), '#ffffff', ttShade(accent, -0.3)] : ['#ffffff', '#ffffff', '#e6e6e6', '#bdbdbd', '#8c8c8c'];
 
   function resize() {
     dpr = window.ttDPR ? window.ttDPR() : Math.min(2, window.devicePixelRatio || 1);
@@ -59,31 +61,43 @@ window.createFx = function createFx(zIndex = 50) {
     start();
   }
 
-  function loop() {
-    ctx.clearRect(0, 0, W, H);
+  // Physics runs in fixed 60 Hz steps, so effects move at the same speed in OBS at 30 fps and on a 144 Hz screen.
+  const STEP = 1000 / 60;
+  let last = 0, acc = 0;
+  function update() {
     for (let i = rockets.length - 1; i >= 0; i--) {
       const r = rockets[i];
       r.trail.push([r.x, r.y]); if (r.trail.length > 10) r.trail.shift();
       r.x += r.vx; r.y += r.vy; r.vy += 0.16;
-      ctx.strokeStyle = r.color; ctx.lineWidth = 2; ctx.globalAlpha = 0.8;
-      ctx.beginPath(); r.trail.forEach(([tx, ty], j) => (j ? ctx.lineTo(tx, ty) : ctx.moveTo(tx, ty))); ctx.stroke();
       if (r.vy >= -0.5) { explode(r.x, r.y, r.color); rockets.splice(i, 1); }
     }
     for (let i = parts.length - 1; i >= 0; i--) {
       const p = parts[i];
       p.age++;
-      const t = p.age / p.life;
-      if (t >= 1 || p.y > H + 40) { parts.splice(i, 1); continue; }
+      if (p.age >= p.life || p.y > H + 40) { parts.splice(i, 1); continue; }
       if (p.kind === 'paper') {
         p.vx *= 0.985; p.vy = p.vy * 0.985 + 0.22; p.x += p.vx + Math.sin(p.age / 9 + p.flip) * 0.6; p.y += p.vy;
         p.rot += p.vr; p.flip += 0.12;
+      } else {
+        if (p.trail) { p.trail.push([p.x, p.y]); if (p.trail.length > 5) p.trail.shift(); }
+        p.vx *= 0.97; p.vy = p.vy * 0.97 + 0.06; p.x += p.vx; p.y += p.vy;
+      }
+    }
+  }
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    for (const r of rockets) {
+      ctx.strokeStyle = r.color; ctx.lineWidth = 2; ctx.globalAlpha = 0.8;
+      ctx.beginPath(); r.trail.forEach(([tx, ty], j) => (j ? ctx.lineTo(tx, ty) : ctx.moveTo(tx, ty))); ctx.lineTo(r.x, r.y); ctx.stroke();
+    }
+    for (const p of parts) {
+      const t = p.age / p.life;
+      if (p.kind === 'paper') {
         ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.scale(1, Math.cos(p.flip));
         ctx.globalAlpha = t > 0.8 ? (1 - t) / 0.2 : 1;
         ctx.fillStyle = p.color; ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); ctx.restore();
       } else {
-        if (p.trail) { p.trail.push([p.x, p.y]); if (p.trail.length > 5) p.trail.shift(); }
-        p.vx *= 0.97; p.vy = p.vy * 0.97 + 0.06; p.x += p.vx; p.y += p.vy;
-        ctx.globalAlpha = 1 - t;
+        ctx.globalAlpha = Math.max(0, 1 - t);
         ctx.fillStyle = p.color; ctx.strokeStyle = p.color;
         if (p.trail && p.trail.length > 1) {
           ctx.lineWidth = p.size; ctx.beginPath(); p.trail.forEach(([tx, ty], j) => (j ? ctx.lineTo(tx, ty) : ctx.moveTo(tx, ty))); ctx.stroke();
@@ -91,7 +105,15 @@ window.createFx = function createFx(zIndex = 50) {
       }
     }
     ctx.globalAlpha = 1;
-    if (parts.length || rockets.length) requestAnimationFrame(loop); else { running = false; ctx.clearRect(0, 0, W, H); }
+  }
+  function loop(now) {
+    acc += Math.min(250, last ? now - last : STEP);
+    last = now;
+    let n = 0;
+    while (acc >= STEP && n < 8) { update(); acc -= STEP; n++; }
+    if (n === 8) acc = 0;
+    draw();
+    if (parts.length || rockets.length) requestAnimationFrame(loop); else { running = false; last = 0; acc = 0; ctx.clearRect(0, 0, W, H); }
   }
 
   return { confetti, sparks, firework, get width() { return W; }, get height() { return H; } };

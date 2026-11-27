@@ -8,7 +8,9 @@
   .label { font-size: 15px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; opacity: .8; }
   .time { font-size: 58px; font-weight: 700; line-height: 1.05; font-family: var(--tt-display); letter-spacing: -1.5px; }
   .box.paused .time { opacity: .55; }
-  .box.ending .time { color: var(--tt-rose); }
+  .box.ending .time { color: var(--tt-rose); animation: beat 1s ease-in-out infinite; }
+  .box.over .time { font-size: 44px; letter-spacing: -.5px; animation: beat 1.6s ease-in-out infinite; }
+  @keyframes beat { 50% { transform: scale(1.04); } }
   .add { position: absolute; right: -8px; top: 0; font-size: 26px; font-weight: 800; color: var(--tt-mint); animation: up 1.6s ease-out forwards; }
   @keyframes up { from { transform: translateY(10px); opacity: 0 } 15% { opacity: 1 } to { transform: translateY(-30px); opacity: 0 } }
 </style></head>
@@ -20,7 +22,7 @@
 <script src="/socket.io/socket.io.js"></script>
 <script src="common.js"></script>
 <script>
-  // ?label=Stream%20ends%20in  ?bg=0 (no background)
+  // ?label=Stream%20ends%20in  ?bg=0 (no background)  ?end=Time's%20up! (shown when it reaches zero)  ?format=hms|ms
   if (params.get('label') !== null) document.getElementById('label').textContent = params.get('label');
   if (params.get('bg') === '0') document.getElementById('box').classList.remove('panel');
   let state = { running: false, remaining: 0, endsAt: 0 };
@@ -34,13 +36,18 @@
     }
     draw();
   });
+  const endText = params.get('end') ?? "Time's up!";
+  const short = params.get('format') === 'ms';
   function draw() {
     const ms = state.running ? Math.max(0, state.endsAt - Date.now()) : state.remaining;
     const s = Math.ceil(ms / 1000);
     const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
-    document.getElementById('time').textContent = `${h}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+    const over = state.running && s === 0 && endText;
+    document.getElementById('time').textContent = over ? endText
+      : short && !h ? `${m}:${String(sec).padStart(2, '0')}` : `${h}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
     box.classList.toggle('paused', !state.running);
-    box.classList.toggle('ending', state.running && s <= 60);
+    box.classList.toggle('ending', state.running && s > 0 && s <= 60);
+    box.classList.toggle('over', Boolean(over));
   }
   setInterval(draw, 250);
 </script>

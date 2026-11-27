@@ -5,7 +5,9 @@
 <style>
   .r { margin: 10px; padding: 14px 16px; width: calc(100% - 20px); box-sizing: border-box; }
   .title { font-size: 14px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; opacity: .75; margin-bottom: 6px; }
-  .row { display: flex; align-items: center; gap: 10px; padding: 6px 0; font-size: 17px; font-weight: 700; animation: in .5s cubic-bezier(.2, 1.4, .4, 1); }
+  .row { display: flex; align-items: center; gap: 10px; padding: 6px 0; font-size: 17px; font-weight: 700; }
+  .row.fresh { animation: in .5s cubic-bezier(.2, 1.4, .4, 1); }
+  .row > span:nth-child(2) { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .row .what { margin-left: auto; font-size: 13px; opacity: .7; font-weight: 700; white-space: nowrap; }
   .row .gift { width: 26px; height: 26px; object-fit: contain; }
   .empty { font-size: 15px; opacity: .65; font-weight: 600; padding: 4px 0; }
@@ -23,14 +25,24 @@
   const box = document.getElementById('r');
   if (params.get('bg') === '0') box.classList.remove('panel');
   const items = [];
-  function draw() {
+  function draw(anim = true) {
     box.replaceChildren(...[el('div', { class: 'title' }, params.get('title') || (types.length === 1 ? names[types[0]] || 'Recent' : 'Recent activity')),
-      items.length ? items.map((e) => el('div', { class: 'row' }, avatarEl(e.user, 28), el('span', {}, e.user?.nickname || 'Someone'),
+      items.length ? items.map((e, i) => el('div', { class: `row${anim && i === 0 ? ' fresh' : ''}` }, avatarEl(e.user, 28), el('span', {}, e.user?.nickname || 'Someone'),
         e.type === 'gift' ? [e.gift.image ? el('img', { class: 'gift', src: e.gift.image, alt: '', referrerPolicy: 'no-referrer' }) : null, el('span', { class: 'what' }, `${e.gift.count > 1 ? `${e.gift.count}× ` : ''}${e.gift.name}`)] : el('span', { class: 'what' }, { follow: 'followed', share: 'shared', join: 'joined', subscribe: 'subscribed' }[e.type] || ''))) : el('div', { class: 'empty' }, 'Waiting…')].flat());
   }
-  io().on('event', (e) => {
+  const sock = io();
+  sock.on('event', (e) => {
     if (!types.includes(e.type) || !e.user) return;
+    // the same person following again (TikTok can send it twice) moves to the top instead of showing twice
+    if (e.type !== 'gift') { const i = items.findIndex((x) => x.type === e.type && x.user?.id === e.user.id); if (i >= 0) items.splice(i, 1); }
     items.unshift(e); items.length = Math.min(items.length, count); draw();
+  });
+  // catch up on what happened before this overlay opened
+  sock.on('recent', (list) => {
+    if (items.length) return;
+    const seen = new Set();
+    items.push(...(list || []).filter((e) => types.includes(e.type) && e.user && (e.type === 'gift' || !seen.has(`${e.type}:${e.user.id}`) && seen.add(`${e.type}:${e.user.id}`))).slice(0, count));
+    draw(false);
   });
   draw();
 </script>

@@ -44,8 +44,9 @@
   const autoHide = params.get('hide') === '1';
   const sound = params.get('sound') !== '0';
   // black and white: alternate four shades so neighbouring segments always differ
-  const COLORS = ['#ffffff', '#1a1a1a', '#bdbdbd', '#4a4a4a'];
-  const ink = (c) => (['#ffffff', '#bdbdbd'].includes(c) ? '#000' : '#fff');
+  // (with a custom ?accent= colour, two of the four shades are that colour)
+  const COLORS = ttAccented() ? [tt('a'), '#1a1a1a', ttShade(tt('a'), 0.45), '#4a4a4a'] : ['#ffffff', '#1a1a1a', '#bdbdbd', '#4a4a4a'];
+  const ink = (c) => { const n = parseInt(c.slice(1), 16); return 0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255) > 150 ? '#000' : '#fff'; };
 
   const cv = document.getElementById('c'), ctx = cv.getContext('2d');
   const wrap = document.getElementById('wrap'), ptr = document.getElementById('ptr');
@@ -77,11 +78,14 @@
       ctx.strokeStyle = 'rgba(0,0,0,.25)'; ctx.lineWidth = 2; ctx.stroke();
       ctx.save(); ctx.rotate(i * seg + seg / 2);
       ctx.fillStyle = ink(COLORS[i % COLORS.length]); ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
-      const fs = Math.max(11, Math.min(20, (r * seg) / 3.2));
-      ctx.font = `800 ${fs}px "Segoe UI", system-ui, sans-serif`;
+      // shrink long prizes to fit before cutting them short
+      let fs = Math.max(11, Math.min(20, (r * seg) / 3.2));
+      const font = () => `800 ${fs}px "Segoe UI", system-ui, sans-serif`;
+      ctx.font = font();
+      while (ctx.measureText(items[i]).width > r * 0.7 && fs > 9) { fs -= 0.5; ctx.font = font(); }
       ctx.shadowBlur = 0;
       let text = items[i];
-      while (ctx.measureText(text).width > r * 0.68 && text.length > 3) text = text.slice(0, -2) + '…';
+      while (ctx.measureText(text).width > r * 0.7 && text.length > 3) text = text.slice(0, -2) + '…';
       ctx.fillText(text, r - 22, 0);
       ctx.restore();
     }

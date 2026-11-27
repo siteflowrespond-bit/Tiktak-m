@@ -117,7 +117,8 @@ const EVENTS = {
   share: { label: 'share', color: 'var(--blue)' },
   like: { label: 'like', color: 'var(--rose)' },
   join: { label: 'join', color: 'var(--green)' },
-  subscribe: { label: 'sub', color: 'var(--plum)' }
+  subscribe: { label: 'sub', color: 'var(--plum)' },
+  battle: { label: 'battle', color: 'var(--text)' }
 };
 
 // ── navigation ───────────────────────────────────────────
@@ -231,7 +232,7 @@ function drawGoalMini() {
   if (!config) return;
   const on = Object.entries(config.goals).filter(([, g]) => g.enabled);
   $('#goalMini').replaceChildren(...(on.length ? on.map(([k, g]) => el('div', { class: 'goalline' },
-    el('div', { class: 'row' }, el('span', {}, g.label), el('span', { class: 'mono muted' }, `${fmt(stats[k])} / ${fmt(g.target)}`)),
+    el('div', { class: 'row' }, el('span', {}, g.label, (stats[k] || 0) >= g.target ? el('span', { class: 'muted' }, ' · reached ✓') : ''), el('span', { class: 'mono muted' }, `${fmt(stats[k])} / ${fmt(g.target)}`)),
     el('div', { class: 'meter' }, el('i', { style: `width:${Math.min(100, ((stats[k] || 0) / g.target) * 100)}%` }))))
     : [el('div', { class: 'faint' }, 'All goals are off.')]));
 }
@@ -253,6 +254,7 @@ function describe(e) {
     case 'share': return el('span', { class: 'd' }, 'shared the stream');
     case 'join': return el('span', { class: 'd' }, 'joined');
     case 'subscribe': return el('span', { class: 'd' }, 'subscribed');
+    case 'battle': return el('span', { class: 'd' }, `LIVE battle ${{ win: 'won', loss: 'lost', draw: 'drawn' }[e.result] || 'ended'}${e.opponent ? ` vs ${e.opponent}` : ''}${config?.record?.auto === false ? '' : ' · added to wins & losses'}`);
     default: return e.type;
   }
 }
@@ -272,13 +274,15 @@ socket.on('event', (e) => {
 $('#clearLog').addEventListener('click', () => log.replaceChildren());
 
 // ── test events ──────────────────────────────────────────
-$('#simBtns').append(...[['follow', 'Follow'], ['share', 'Share'], ['like', 'Likes'], ['chat', 'Chat'], ['join', 'Join'], ['subscribe', 'Subscribe']]
-  .map(([t, l]) => el('button', { class: 'btn', 'data-sim': t }, l)));
+$('#simBtns').append(...[['follow', 'Follow'], ['share', 'Share'], ['like', 'Likes'], ['chat', 'Chat'], ['join', 'Join'], ['subscribe', 'Subscribe'],
+  ['battle', 'Battle', 'A TikTok LIVE battle ends (win, loss or draw): counts toward Wins & losses'], ['viewers', 'Viewers', 'Change the viewer count'],
+  ['gift', 'Big gift', 'A 1,000-coin Galaxy: fireworks, spotlight, big-gift alert', 'Galaxy']]
+  .map(([t, l, title, gift]) => el('button', { class: 'btn', 'data-sim': t, title: title || `Send a test ${l.toLowerCase()}`, ...(gift ? { 'data-gift': gift } : {}) }, l)));
 document.addEventListener('click', (e) => {
   const b = e.target.closest('[data-sim]');
   if (!b) return;
   const body = { type: b.dataset.sim };
-  if (body.type === 'gift') body.giftName = $('#simGift').value;
+  if (body.type === 'gift') body.giftName = b.dataset.gift || $('#simGift').value;
   api('POST', '/api/simulate', body).catch((err) => toast(err.message, true));
 });
 $('#simChatForm').addEventListener('submit', (e) => {
@@ -462,10 +466,14 @@ function renderRule(rule, idx) {
 }
 
 function testRule(rule) {
-  const sample = { nickname: 'test_viewer', username: 'test_viewer', avatar: '', giftName: rule.trigger.giftName || 'Rose', giftImage: '', count: 3, coins: 3, comment: rule.trigger.command || 'hello', likes: 15 };
+  const giftName = rule.trigger.giftName || 'Rose';
+  const art = { rose: 'rose', tiktok: 'note', 'finger heart': 'finger-heart', doughnut: 'doughnut', 'hand hearts': 'hand-hearts', galaxy: 'galaxy', lion: 'lion' }[giftName.toLowerCase()];
+  const giftImage = gifts.find((g) => g.name.toLowerCase() === giftName.toLowerCase() && g.image)?.image || (art ? `overlays/gifts/${art}.svg` : 'overlays/gift.svg');
+  const coins = Math.max(3, Number(rule.trigger.minCoins) || 0);
+  const sample = { nickname: 'test_viewer', username: 'test_viewer', avatar: '', giftName, giftImage: new URL(giftImage, location.href).pathname, count: 3, coins, comment: rule.trigger.command || rule.trigger.keyword || 'hello', likes: 15 };
   const fill = (s) => String(s || '').replace(/\{(\w+)\}/g, (m, k) => (k in sample ? sample[k] : m));
-  api('POST', '/api/test-alert', { text: fill(rule.alert.text), image: fill(rule.alert.image), sound: rule.alert.sound, duration: rule.alert.duration, tts: fill(rule.tts) })
-    .then(() => toast('Sent to the Alerts overlay'));
+  api('POST', '/api/test-alert', { text: fill(rule.alert.text), image: fill(rule.alert.image), sound: rule.alert.sound, duration: rule.alert.duration, tts: fill(rule.tts), user: { nickname: sample.nickname } })
+    .then(() => toast(rule.tts ? 'Sent to the Alerts overlay (with the spoken line)' : 'Sent to the Alerts overlay'), (e) => toast(e.message, true));
 }
 
 $('#addRule').addEventListener('click', () => {
@@ -652,6 +660,12 @@ function drawPoll() {
   }));
 }
 socket.on('poll', (p) => { poll = p; drawPoll(); });
+// past polls this session, with "Run again"
+socket.on('pollHistory', (list) => {
+  $('#pollHist').replaceChildren(...(list?.length ? [el('div', { class: 'ph-title' }, 'Earlier polls'), ...list.map((h) => el('div', { class: 'ph' },
+    el('div', { class: 'grow' }, el('b', {}, h.question), el('span', { class: 'muted' }, ` · ${h.winner ? `${h.winner} won` : h.tie ? 'tie' : 'no votes'} · ${fmt(h.total)} vote${h.total === 1 ? '' : 's'} · ${new Date(h.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`)),
+    el('button', { class: 'btn sm', title: 'Put this poll back in the form', onclick: () => { $('#pollQ').value = h.question; $('#pollOpts').value = h.options.map((o) => o.label).join('\n'); $('#pollQ').focus(); } }, 'Run again')))] : []));
+});
 setInterval(() => { if (poll?.open && poll.endsAt) drawPoll(); }, 1000);
 $('#pollStart').addEventListener('click', () => {
   const options = $('#pollOpts').value.split('\n').map((x) => x.trim()).filter(Boolean);
@@ -667,6 +681,7 @@ function drawQueue() {
   $('#queueOpenText').textContent = queue.open ? 'Open' : 'Closed';
   $('#queueNow').replaceChildren(queue.current ? el('div', { class: 'qn' }, el('small', {}, 'Up now'), el('b', {}, queue.current.nickname)) : el('p', { class: 'muted', style: 'margin:0' }, queue.list.length ? 'Press Next to call the first person up.' : 'Nobody is up yet.'));
   $('#queueNext').disabled = !queue.list.length;
+  $('#queueRandom').disabled = queue.list.length < 2;
   $('#queueDone').hidden = !queue.current;
   $('#queueList').replaceChildren(...(queue.list.length ? queue.list.map((x, i) => el('div', { class: 'ql' }, el('span', { class: 'pl-n' }, String(i + 1)), el('span', { class: 'grow' }, x.nickname),
     el('button', { class: 'btn flat sq', title: 'Remove', onclick: () => api('POST', '/api/queue', { action: 'remove', id: x.id }) }, icon('trash')))) : [el('p', { class: 'note', style: 'margin:0' }, queue.open ? 'Waiting for viewers to join…' : 'Open the queue to let viewers join.')]));
@@ -674,6 +689,7 @@ function drawQueue() {
 socket.on('queue', (q) => { queue = q; drawQueue(); });
 $('#queueOpen').addEventListener('change', (e) => api('POST', '/api/queue', { action: e.target.checked ? 'open' : 'close' }));
 $('#queueNext').addEventListener('click', () => api('POST', '/api/queue', { action: 'next' }));
+$('#queueRandom').addEventListener('click', () => api('POST', '/api/queue', { action: 'random' }));
 $('#queueDone').addEventListener('click', () => api('POST', '/api/queue', { action: 'done' }));
 $('#queueClear').addEventListener('click', () => { if (!queue.list.length || confirm('Remove everyone from the queue?')) api('POST', '/api/queue', { action: 'clear' }); });
 
@@ -683,14 +699,20 @@ function renderInteractive() {
   $('#queueMax').value = config.queue?.max || 50;
   $('#bannerText').value = config.banner?.text || '';
   $('#bannerScroll').checked = Boolean(config.banner?.scroll);
+  $('#bannerEvery').value = String(config.banner?.every || 8);
+  drawBannerEvery();
 }
+// the "switch every" choice only matters with more than one message
+function drawBannerEvery() { $('#bannerEveryWrap').hidden = $('#bannerText').value.split('\n').filter((x) => x.trim()).length < 2; }
+$('#bannerText').addEventListener('input', drawBannerEvery);
 const saveInter = () => markUnsaved($('#saveInteractive'));
 $('#page-interactive').addEventListener('input', (e) => { if (!e.target.hasAttribute('data-nosave') && e.target.closest('#queueCmd, #queueMax, #bannerText')) saveInter(); });
 $('#bannerScroll').addEventListener('change', saveInter);
+$('#bannerEvery').addEventListener('change', saveInter);
 $('#saveInteractive').addEventListener('click', (e) => {
   const cmd = ($('#queueCmd').value.trim() || '!join').toLowerCase();
   $('#queueCmdShow').textContent = cmd;
-  saveConfig({ queue: { command: cmd.startsWith('!') ? cmd : `!${cmd}`, max: Math.max(1, Number($('#queueMax').value) || 50) }, banner: { text: $('#bannerText').value.trim(), scroll: $('#bannerScroll').checked } }, 'Saved', e.currentTarget);
+  saveConfig({ queue: { command: cmd.startsWith('!') ? cmd : `!${cmd}`, max: Math.max(1, Number($('#queueMax').value) || 50) }, banner: { text: $('#bannerText').value.split('\n').map((x) => x.trim()).filter(Boolean).join('\n'), scroll: $('#bannerScroll').checked, every: Number($('#bannerEvery').value) || 8 } }, 'Saved', e.currentTarget);
 });
 
 // ── overlays on stream: how many overlay links are open in LIVE Studio / OBS right now ──
@@ -711,8 +733,10 @@ $('#ovPill').addEventListener('click', () => {
 
 // ── wins & losses ────────────────────────────────────────
 let record = { wins: 0, losses: 0, draws: 0, streak: 0, last: null };
+let recEditing = false;
 const recApi = (action, extra = {}) => api('POST', '/api/record', { action, ...extra }).catch((e) => toast(e.message, true));
 function drawRecord() {
+  if (recEditing) return; // don't overwrite what's being typed
   $('#recW').textContent = fmt(record.wins);
   $('#recL').textContent = fmt(record.losses);
   $('#recD').textContent = fmt(record.draws);
@@ -724,12 +748,29 @@ function drawRecord() {
 socket.on('record', (r) => { record = r; drawRecord(); });
 document.querySelectorAll('[data-rec]').forEach((b) => b.addEventListener('click', () => recApi(b.dataset.rec)));
 $('#recReset').addEventListener('click', () => { if (confirm('Reset wins, losses and draws to 0?')) recApi('reset').then(() => toast('Record reset. Undo brings it back.')); });
-$('#recEdit').addEventListener('click', () => {
-  const v = prompt('Set your record as wins-losses-draws, e.g. 12-4-1', `${record.wins}-${record.losses}-${record.draws}`);
-  if (v == null) return;
-  const [wins, losses, draws] = v.split(/[^0-9]+/).map(Number);
-  recApi('set', { wins, losses, draws });
-});
+// Edit numbers: the three numbers turn into boxes you can type in (no pop-up, which the desktop app can't show)
+function recEditMode(on) {
+  recEditing = on;
+  $('#recEdit').textContent = on ? 'Save numbers' : 'Edit numbers';
+  $('#recEdit').classList.toggle('red', on);
+  $('#recEdit').classList.toggle('flat', !on);
+  for (const [id, k] of [['#recW', 'wins'], ['#recL', 'losses'], ['#recD', 'draws']]) {
+    const b = $(id);
+    if (on) {
+      const inp = el('input', { type: 'number', min: 0, max: 1000000, value: record[k], class: 'rec-in', 'aria-label': k });
+      inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') saveRecEdit(); if (e.key === 'Escape') recEditMode(false); });
+      b.replaceChildren(inp);
+    } else b.textContent = fmt(record[k]);
+  }
+  if (on) $('#recW input').select();
+}
+function saveRecEdit() {
+  const v = (id) => Math.max(0, Math.floor(Number($(`${id} input`)?.value) || 0));
+  const body = { wins: v('#recW'), losses: v('#recL'), draws: v('#recD') };
+  recEditMode(false);
+  recApi('set', body).then(() => toast('Record updated. Undo puts it back.'));
+}
+$('#recEdit').addEventListener('click', () => (recEditing ? saveRecEdit() : recEditMode(true)));
 function renderRecordSettings() {
   $('#recAuto').checked = config.record?.auto !== false;
   $('#recChat').checked = config.record?.chatCommands !== false;
@@ -763,15 +804,25 @@ $('#saveTimer').addEventListener('click', (e) => saveConfig({ timer: config.time
 function renderGoals() {
   const dirty = () => markUnsaved($('#saveGoals'));
   $('#goals').replaceChildren(...Object.entries(config.goals).map(([k, g]) => {
-    const on = el('input', { type: 'checkbox', checked: g.enabled });
+    const on = el('input', { type: 'checkbox', checked: g.enabled, title: `Show the ${k} goal` });
     on.addEventListener('change', () => { g.enabled = on.checked; dirty(); });
-    return el('div', { class: 'row', style: 'margin-bottom:10px;flex-wrap:nowrap' },
+    return el('div', { class: 'goal-row' },
       on,
-      el('div', { class: 'grow' }, bind(g, 'label', el('input', { title: `${k} goal label` }), null, dirty)),
-      el('div', { style: 'width:110px' }, bind(g, 'target', el('input', { type: 'number', min: 1, title: 'Target' }), (v) => Number(v) || 1, dirty)),
-      el('span', { class: 'faint mono', style: 'width:52px' }, k));
+      bind(g, 'label', el('input', { title: `${k} goal label`, maxLength: 40 }), null, dirty),
+      bind(g, 'target', el('input', { type: 'number', min: 1, title: 'Target' }), (v) => Math.max(1, Math.floor(Number(v) || 1)), dirty),
+      bind(g, 'step', el('input', { type: 'number', min: 0, placeholder: '0', title: 'When reached, raise the goal by this much (0 = stop)' }), (v) => Math.max(0, Math.floor(Number(v) || 0)), dirty),
+      el('span', { class: 'faint mono' }, k));
   }));
 }
+// a stacking goal moved itself up on the server: show the new target (without touching what you're typing)
+socket.on('config', (c) => {
+  if (!config || !c?.goals) return;
+  let changed = false;
+  for (const [k, g] of Object.entries(c.goals)) if (config.goals[k] && config.goals[k].target !== g.target) { config.goals[k].target = g.target; changed = true; }
+  if (!changed) return;
+  drawGoalMini();
+  if (!$('#goals').contains(document.activeElement)) renderGoals();
+});
 $('#saveGoals').addEventListener('click', async (e) => { if (await saveConfig({ goals: config.goals }, 'Goals saved', e.currentTarget)) { drawGoalMini(); renderOverlays(); } });
 
 // ── overlays ─────────────────────────────────────────────
@@ -794,7 +845,8 @@ function overlayCatalog() {
       ['Sound player', 'Only plays sounds and TTS (invisible). Use instead of Alerts, not together.', '/overlays/sounds.html', { idle: 'Nothing to see, audio only' }]
     ]],
     ['chat', 'Chat & gifts', [
-      ['Chat', 'Chat with gifts, follows and shares mixed in.', '/overlays/chat.html', { idle: 'Waiting for chat' }],
+      ['Chat', 'Chat with gifts, follows and shares mixed in, with MOD and SUB badges.', '/overlays/chat.html', { idle: 'Waiting for chat' }],
+      ['Chat (no commands)', 'Only real chat: hides !commands and the gift/follow lines.', '/overlays/chat.html?commands=0&events=0', { idle: 'Waiting for chat' }],
       ['Gift combos', 'Combo counter that ticks up x1, x2, x3 while gifts stream in.', '/overlays/combos.html', { idle: 'Send a test gift' }],
       ['Like hearts', 'Hearts float up when people tap likes.', '/overlays/hearts.html', { idle: 'Send test likes' }],
       ['Ticker', 'Latest follower, gift and share.', '/overlays/ticker.html']
@@ -808,6 +860,7 @@ function overlayCatalog() {
       ['Top chatters', 'Who is talking the most.', '/overlays/gifters.html?by=comments'],
       ['Recent followers', 'The latest people to follow, newest on top.', '/overlays/recent.html?type=follow', { idle: 'Waiting for a follow' }],
       ['Recent gifts', 'The latest gifts with their pictures.', '/overlays/recent.html?type=gift', { idle: 'Waiting for a gift' }],
+      ['Recent activity', 'Follows, gifts, shares and subscribes together, newest on top.', '/overlays/recent.html?type=follow,gift,share,subscribe', { idle: 'Waiting for activity' }],
       ['Like counter', 'One big number. Change ?stat= for viewers, coins, follows …', '/overlays/counter.html?stat=likes'],
       ['Viewer counter', 'Current viewers.', '/overlays/counter.html?stat=viewers']
     ]],
@@ -823,6 +876,7 @@ function overlayCatalog() {
       ['Subathon timer', 'Countdown that grows with gifts, follows and likes.', '/overlays/timer.html'],
       ['Wins & losses', 'Your battle record and win streak. Counts TikTok LIVE battles by itself.', '/overlays/record.html'],
       ['Wins & losses (no draws)', 'Just W – L, with the streak.', '/overlays/record.html?draws=0'],
+      ['Wins & losses + win rate', 'Your record with the win rate and your last result.', '/overlays/record.html?rate=1&last=1'],
       ...goalCards
     ]]
   ];
@@ -900,6 +954,31 @@ $('#saveSettings').addEventListener('click', async () => {
   const key = $('#signApiKey').value.trim();
   if (key) body.signApiKey = key;
   if (await saveConfig(body, 'Settings saved', $('#saveSettings'))) { $('#signApiKey').value = ''; renderSettings(); }
+});
+
+// ── backup & restore ──
+$('#backupSave').addEventListener('click', async () => {
+  try {
+    const data = await api('GET', '/api/backup');
+    const a = el('a', { href: URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })), download: `flocktt-backup-${new Date().toISOString().slice(0, 10)}.json` });
+    document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    toast('Backup saved');
+  } catch (e) { toast(e.message, true); }
+});
+$('#backupLoad').addEventListener('click', () => $('#backupFile').click());
+$('#backupFile').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  let data;
+  try { data = JSON.parse(await file.text()); } catch { toast('That file is not a flock.tt backup', true); return; }
+  if (!confirm('Replace your current alerts, sounds, layouts and settings with this backup?')) return;
+  try {
+    await api('POST', '/api/restore', data);
+    toast('Backup loaded. Reloading…');
+    setTimeout(() => location.reload(), 900);
+  } catch (err) { toast(err.message, true); }
 });
 
 // ── gifts ────────────────────────────────────────────────
@@ -990,6 +1069,10 @@ function searchEntries() {
     ['Wins & losses', 'Battle record, +win, +loss, undo', 'goals', '#recPanel', 'record score battle match win loss draw streak counter'],
     ['Time per gift / follow', 'How much time each event adds', 'goals', '#timerForm', 'subathon seconds coin'],
     ['Goals', 'Like, follow, coin and share targets', 'goals', '#goals', 'target goal bar'],
+    ['Stacking goals', 'A goal that moves up when it is reached', 'goals', '#goals', 'stack next goal step auto increase raise'],
+    ['Backup & restore', 'Save all settings to a file, load them back', 'settings', '#backupSave', 'export import save load move computer reinstall backup'],
+    ['Random viewer', 'Pick someone at random from the queue', 'interactive', '#queueRandom', 'random pick giveaway queue'],
+    ['Earlier polls', 'Results of past polls, run one again', 'interactive', '#pollLive', 'poll history results again'],
     ['Auto reconnect', 'Keep retrying if the LIVE drops', 'settings', '#autoReconnect', 'retry offline'],
     ['API key', 'Euler Stream sign key', 'settings', '#signApiKey', 'euler sign rate limit'],
     ['Activity filters', 'Show or hide likes, joins …', 'live', '#filters', 'feed log']
