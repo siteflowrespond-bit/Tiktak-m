@@ -417,6 +417,14 @@
             <button hidden data-autosave class="btn red" id="saveSettings">Save</button>
           </div>
         </div>
+        <div class="panel about" id="listPanel" style="max-width:640px;margin-top:16px" hidden>
+          <div class="panel-head"><h2>Public streamer list</h2><div class="grow"></div><label class="switch"><input type="checkbox" id="listMe"><i></i><span id="listMeText">Off</span></label></div>
+          <div class="panel-body">
+            <p class="note" style="margin-top:0">flock.tt keeps a public list of creators who use it, with a red dot when they're live. If you switch this on, while you're connected flock.tt sends <b>only</b> your TikTok @username (which is already public while you're live), the app version and whether you're on Windows or Mac.</p>
+            <p class="note">It never sends your API key, OBS password, viewers, chat, gifts or anything from your computer. Switch it off any time and you're taken off the list.</p>
+            <a class="btn sm" id="listLink" href="#" target="_blank" rel="noopener">See the list ↗</a>
+          </div>
+        </div>
         <div class="panel about" style="max-width:640px;margin-top:16px">
           <div class="panel-head"><h2>Backup &amp; restore</h2></div>
           <div class="panel-body">
@@ -433,7 +441,7 @@
               <div class="meter upd-bar" id="updBar" hidden><i id="updFill" style="width:0%"></i></div>
             </div>
             <div class="f"><span>Your settings, sounds and records are saved in</span><code class="about-path" id="aboutData"></code></div>
-            <p class="note">Everything stays on this computer. <a href="https://flocktt.xyz/privacy.html" target="_blank" rel="noopener">Privacy</a> · <a href="https://flocktt.xyz" target="_blank" rel="noopener">flocktt.xyz</a> · Not affiliated with TikTok or ByteDance.</p>
+            <p class="note">Your settings, sounds and records stay on this computer. <a href="https://flocktt.xyz/privacy.html" target="_blank" rel="noopener">Privacy</a> · <a href="https://flocktt.xyz" target="_blank" rel="noopener">flocktt.xyz</a> · Not affiliated with TikTok or ByteDance.</p>
           </div>
         </div>
         <div class="settings-group" id="obsSection"><h2>OBS Studio</h2><p class="muted">Optional. If you stream with OBS, flock.tt can switch scenes and show or hide sources when something happens on your LIVE.</p></div>
@@ -489,6 +497,12 @@
 
 <datalist id="giftList"></datalist>
 <div class="toasts" id="toasts"></div>
+<dialog class="ask-dlg" id="listAsk" aria-labelledby="listAskTitle">
+  <h2 id="listAskTitle">Show you on the flock.tt streamer list?</h2>
+  <p class="muted">flock.tt has a public list of creators who use it, with a red dot when they're live. If you say yes, flock.tt shares <b>only</b> your TikTok @username (already public while you're live), the app version and your platform. Nothing else, ever.</p>
+  <p class="muted">You can change this any time in Settings.</p>
+  <div class="v-btns"><button class="btn red" id="listAskYes" type="button">Yes, list me</button><button class="btn" id="listAskNo" type="button">No thanks</button><a class="btn flat" id="listAskSee" href="#" target="_blank" rel="noopener">See the list ↗</a></div>
+</dialog>
 <!-- ✨ FlockAi chat: a bubble in the bottom-right corner on every page -->
 <button class="ai-fab" id="aiFab" type="button" aria-label="Open FlockAi" aria-expanded="false" aria-controls="aiChat">
   <svg viewBox="0 0 24 24" aria-hidden="true"><path class="spark" d="M12 3.5l1.9 4.6 4.6 1.9-4.6 1.9L12 16.5l-1.9-4.6L5.5 10l4.6-1.9z"/><path class="spark sm" d="M18.5 15l.8 1.9 1.9.8-1.9.8-.8 1.9-.8-1.9-1.9-.8 1.9-.8z"/></svg>

@@ -6,7 +6,7 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'none'">
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="What flock.tt and flocktt.xyz collect, store and send. Short version: nothing about you leaves your computer except what TikTok LIVE needs to connect.">
+  <meta name="description" content="What flock.tt and flocktt.xyz collect, store and send. Short version: your settings stay on your computer, and the only thing ever shared about you is your public TikTok @username, and only if you agree to be on the streamer list.">
   <title>Privacy · flock.tt</title>
   <link rel="icon" href="logo.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -64,7 +64,7 @@
     <div class="wrap">
       <div class="eyebrow">Privacy</div>
       <h1>Privacy statement</h1>
-      <p class="updated">Last updated 25 November 2026. Applies to the flock.tt desktop app (Windows) and the website flocktt.xyz, including the browser demo.</p>
+      <p class="updated">Last updated 28 November 2026. Applies to the flock.tt desktop app (Windows) and the website flocktt.xyz, including the browser demo.</p>
 
       <nav class="toc" aria-label="On this page">
         <a href="#short">Short version</a><a href="#who">Who we are</a><a href="#stored">What's stored</a><a href="#sent">What's sent</a><a href="#viewers">Your viewers</a><a href="#never">What we never do</a><a href="#security">Security</a><a href="#download">The download</a><a href="#website">This website</a><a href="#age">Age and TikTok rules</a><a href="#choices">Your choices</a><a href="#contact">Contact</a>
@@ -73,9 +73,10 @@
       <section class="short" id="short">
         <h2>The short version</h2>
         <ul>
-          <li>flock.tt runs <strong>entirely on your own computer</strong>. There are no flock.tt servers, accounts or logins, so there's nowhere for us to keep your data.</li>
-          <li>We <strong>don't collect, sell or share</strong> personal data about you or your viewers. No analytics, tracking, advertising, telemetry or cookies.</li>
-          <li>The app only goes online to do what you ask: connect to TikTok LIVE, show your stream's pictures, and talk to OBS.</li>
+          <li>flock.tt runs <strong>on your own computer</strong>. There are no flock.tt accounts or logins, and your settings, sounds and records never leave your computer.</li>
+          <li>The only thing flock.tt can ever share about you is your <strong>public TikTok @username</strong>, on the <a href="#list">public streamer list</a>, and <strong>only if you say yes</strong>. It asks you once, and you can change your mind any time.</li>
+          <li>We <strong>don't sell</strong> data, and there's no analytics, tracking, advertising or cookies. Nothing about your viewers is ever collected.</li>
+          <li>Otherwise the app only goes online to do what you ask: connect to TikTok LIVE, show your stream's pictures, talk to OBS, find sounds, and download updates.</li>
           <li>Your settings, passwords and sounds are saved <strong>only on your computer</strong>. You can delete them at any time.</li>
           <li>TikTok's own rules still apply to you: you must be <strong>18 or older to go LIVE</strong> and to send or receive gifts. See <a href="#age">Age and TikTok rules</a>.</li>
         </ul>
@@ -83,7 +84,7 @@
 
       <h2 id="who">Who we are</h2>
       <p>flock.tt is an independent, free tool for TikTok LIVE creators. It is <strong>not made by, endorsed by or affiliated with TikTok or ByteDance</strong>. "TikTok" and "TikTok LIVE" are trademarks of their owners and are used here only to describe what the app works with.</p>
-      <p>Because flock.tt has no servers or accounts, we are not able to see, access or recover anything you do in the app.</p>
+      <p>Because flock.tt has no accounts and your settings stay on your computer, we are not able to see, access or recover anything you do in the app. The one exception is the opt-in <a href="#list">streamer list</a>.</p>
 
       <h2 id="stored">What the app stores, and where</h2>
       <p>Everything the app saves is kept in one folder on your computer and is never uploaded:</p>
@@ -98,6 +99,7 @@
           <tr><td>Sounds you upload</td><td><code>sounds\custom\</code></td><td>To play them on stream.</td></tr>
           <tr><td>TikTok's gift list</td><td><code>gift-catalog.json</code></td><td>Gift names, coin values and links to TikTok's gift pictures, so gifts show the right picture. Contains nothing about you.</td></tr>
           <tr><td>Display preferences</td><td>app storage</td><td>Small things like which page was open last and whether you hid the setup checklist.</td></tr>
+          <tr><td>Install key</td><td><code>install-key</code></td><td>A random code made on your computer. Only used if you join the streamer list, so that only your copy of flock.tt can take you off it. It says nothing about you.</td></tr>
         </table>
       </div>
       <p>These files are stored as plain files on your computer and are protected by your Windows account, like your other documents. Anyone with access to your Windows account could open them, so keep your computer locked.</p>
@@ -112,9 +114,22 @@
           <tr><td>TikTok's image servers</td><td>While you're live</td><td>Overlays load viewers' profile pictures and gift pictures from TikTok's servers, the same way the TikTok app does. Your computer's IP address is visible to those servers, as with any web request.</td></tr>
           <tr><td>OBS Studio</td><td>If you connect OBS</td><td>Scene and source commands, sent to OBS on your own computer or the address you enter. Normally this never leaves your computer or home network.</td></tr>
           <tr><td>Google Fonts</td><td>When a screen opens</td><td>The app downloads the Geist font, so Google sees your IP address. See <a href="https://developers.google.com/fonts/faq/privacy" rel="noopener">Google Fonts privacy</a>.</td></tr>
+          <tr><td>GitHub</td><td>When the app opens, every 30 minutes, and when you press Check for updates</td><td>The app asks GitHub (where flock.tt's releases are published) whether there's a new version, and downloads it if there is. GitHub sees your IP address and the app version. See <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" rel="noopener">GitHub's Privacy Statement</a>.</td></tr>
+          <tr><td>MyInstants</td><td>Only when you search or add a sound on the Sounds page</td><td>Your search words, to show matching sounds from <a href="https://www.myinstants.com" rel="noopener">myinstants.com</a>, and then the sound you pick. Their own terms apply.</td></tr>
+          <tr><td>flock.tt streamer list</td><td>Only if you said yes, while you're connected to a LIVE</td><td>Your TikTok @username, the flock.tt version and whether you're on Windows or Mac, plus your <code>install-key</code>, every few minutes. See <a href="#list">The streamer list</a>.</td></tr>
         </table>
       </div>
-      <p>The app does <strong>not</strong> check for updates in the background, report crashes, or send usage statistics to anyone. To update, you download the new version yourself.</p>
+      <p>The app does <strong>not</strong> report crashes or send usage statistics, and it never sends anything about your viewers.</p>
+
+      <h2 id="list">The streamer list</h2>
+      <p>flock.tt keeps a <strong>public</strong> list of creators who use it, showing a red dot next to anyone who's live right now. You're only on it if you say yes.</p>
+      <ul>
+        <li><strong>You're asked once,</strong> the first time you connect to a LIVE. Nothing is sent before you answer, and nothing is sent if you say no.</li>
+        <li><strong>What's on it:</strong> your TikTok @username (which is already public while you're live), the flock.tt version, Windows or Mac, how many LIVEs you've done with flock.tt, and when you were first and last seen. Anyone can see this list.</li>
+        <li><strong>What's never sent:</strong> your API key, OBS password, settings, sounds, or anything about your viewers, chat or gifts. Like any website, the list server sees your IP address while it answers, but it doesn't store it.</li>
+        <li><strong>Leaving:</strong> in flock.tt, go to Settings and turn off "Public streamer list". You're removed straight away. Your <code>install-key</code> makes sure only your copy of flock.tt (or the flock.tt owner, if you ask) can remove you.</li>
+        <li><strong>Who runs it:</strong> the flock.tt owner, on a server they run. The server keeps only what's listed above.</li>
+      </ul>
 
       <h2 id="viewers">Your viewers</h2>
       <ul>
@@ -129,7 +144,8 @@
         <li>Ask for or store your TikTok password. flock.tt doesn't log in to your TikTok account at all.</li>
         <li>Post, comment, follow or send gifts on your behalf.</li>
         <li>Track you, profile you or show ads.</li>
-        <li>Sell, rent or share data. There's no data on our side to share.</li>
+        <li>Sell or rent data. The only data on our side is the opt-in streamer list, and it's already public.</li>
+        <li>Put you on the streamer list without asking.</li>
         <li>Install other software, toolbars, background services or start-up items.</li>
       </ul>
 
@@ -185,13 +201,14 @@
       <h2 id="choices">Your choices</h2>
       <ul>
         <li><strong>See your data:</strong> open <code>%APPDATA%\flock.tt</code>. Everything flock.tt keeps is there.</li>
+        <li><strong>Leave the streamer list:</strong> Settings → turn off "Public streamer list". You're taken off it right away.</li>
         <li><strong>Remove a password or key:</strong> close flock.tt and delete <code>config.json</code> in that folder. The app starts fresh next time.</li>
         <li><strong>Delete everything:</strong> uninstall flock.tt, then delete the <code>%APPDATA%\flock.tt</code> folder.</li>
         <li><strong>Data held by TikTok:</strong> your TikTok account data is controlled by TikTok, not flock.tt. Use TikTok's privacy settings or contact TikTok.</li>
       </ul>
 
       <h2>Children</h2>
-      <p>flock.tt doesn't knowingly collect personal information from anyone, including children, because it doesn't collect personal information at all. Under-18s can't host a TikTok LIVE, so flock.tt isn't intended for them.</p>
+      <p>flock.tt doesn't knowingly collect personal information from anyone, including children. The only thing it can share is a creator's public TikTok @username, with their permission. Under-18s can't host a TikTok LIVE, so flock.tt isn't intended for them.</p>
 
       <h2>Changes</h2>
       <p>If anything here changes, this page will be updated and the date at the top will change.</p>

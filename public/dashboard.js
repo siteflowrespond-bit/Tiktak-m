@@ -1085,6 +1085,31 @@ $('#saveSettings').addEventListener('click', async () => {
   if (await saveConfig(body, 'Settings saved', $('#saveSettings'))) { $('#signApiKey').value = ''; renderSettings(); }
 });
 
+// ── public streamer list: asked once on first connect, switch in Settings ──
+function renderListMe() {
+  if (!config?.listEnabled) { $('#listPanel').hidden = true; return; }
+  $('#listPanel').hidden = false;
+  $('#listMe').checked = config.listMe === true;
+  $('#listMeText').textContent = config.listMe === true ? 'On' : 'Off';
+  for (const a of [$('#listLink'), $('#listAskSee')]) a.href = config.listUrl;
+}
+async function setListMe(on) {
+  try {
+    const r = await api('POST', '/api/list-me', { on });
+    config.listMe = r.listMe;
+    renderListMe();
+    toast(on ? "You're on the streamer list while you're live" : "You're off the streamer list");
+  } catch (e) { toast(e.message, true); renderListMe(); }
+}
+$('#listMe').addEventListener('change', (e) => setListMe(e.target.checked));
+$('#listAskYes').addEventListener('click', () => { $('#listAsk').close(); setListMe(true); });
+$('#listAskNo').addEventListener('click', () => { $('#listAsk').close(); setListMe(false); });
+$('#listAsk').addEventListener('cancel', (e) => e.preventDefault()); // a real answer, not Esc (it's asked once)
+// ask the first time they connect to a LIVE (never before they've seen what it is)
+socket.on('status', (st) => {
+  if (st.status === 'connected' && config?.listEnabled && config.listMe == null && !$('#listAsk').open) setTimeout(() => { if (config.listMe == null) $('#listAsk').showModal(); }, 1500);
+});
+
 // ── backup & restore ──
 $('#backupSave').addEventListener('click', async () => {
   try {
@@ -1206,6 +1231,7 @@ function searchEntries() {
     ['Auto reconnect', 'Keep retrying if the LIVE drops', 'settings', '#autoReconnect', 'retry offline'],
     ['API key', 'Euler Stream sign key', 'settings', '#signApiKey', 'euler sign rate limit'],
     ['Check for updates', 'Download the newest flock.tt now', 'settings', '#aboutVersion', 'update upgrade new version download install'],
+    ['Public streamer list', 'Show or hide yourself on the flock.tt streamer list', 'settings', '#listPanel', 'list public directory streamers privacy share opt out'],
     ['Activity filters', 'Show or hide likes, joins …', 'live', '#filters', 'feed log']
   ];
   for (const [title, sub, page, sel, kw] of settings) out.push({ kind: 'Settings', icon: 'sliders', title, sub, where: PAGE_INFO[page][0], kw, run: () => goTo(page, sel) });
@@ -1317,6 +1343,7 @@ document.addEventListener('keydown', (e) => {
   renderSoundRules();
   renderInteractive();
   renderAbout();
+  renderListMe();
   renderRecordSettings();
   renderTts();
   renderTimerForm();

@@ -1,0 +1,8 @@
+{
+  "name": "flocktt-streamer-list",
+  "private": true,
+  "description": "The flock.tt streamer list: records which TikTok accounts flock.tt connects to and shows them on a page.",
+  "type": "module",
+  "engines": { "node": ">=18" },
+  "scripts": { "start": "node server.js" }
+}

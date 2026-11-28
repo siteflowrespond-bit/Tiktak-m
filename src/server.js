@@ -10,6 +10,7 @@ import { TikTokSource } from './tiktok.js';
 import { Engine } from './engine.js';
 import { ObsLink } from './obs.js';
 import { simulate, SIM_GIFTS } from './simulate.js';
+import { startStreamerList } from './streamerList.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const VERSION = (() => { try { return JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8')).version; } catch { return ''; } })();
@@ -86,6 +87,8 @@ app.use(express.static(PUBLIC_DIR));
 
 const tiktok = new TikTokSource();
 const engine = new Engine(() => config);
+// public streamer list: only sends anything if the streamer said yes (see src/streamerList.js)
+const streamerList = startStreamerList({ tiktok, getConfig: () => config, dataDir: DATA_DIR, version: VERSION, log: (m) => log(m) });
 
 // ---- Wiring: TikTok -> engine -> all browser clients ----
 // ---- Gift pictures ----
@@ -167,7 +170,7 @@ function publicConfig() {
   // Never ship secrets (API key, OBS password) to the browser or overlays.
   const { signApiKey, ...rest } = config;
   const { password, ...obsRest } = config.obs || {};
-  return { ...rest, obs: obsRest, hasSignApiKey: Boolean(signApiKey), hasObsPassword: Boolean(password), appVersion: VERSION, dataDir: DATA_DIR };
+  return { ...rest, obs: obsRest, hasSignApiKey: Boolean(signApiKey), hasObsPassword: Boolean(password), appVersion: VERSION, dataDir: DATA_DIR, listEnabled: streamerList.enabled, listUrl: streamerList.url };
 }
 
 // ---- Which overlays are open right now (LIVE Studio / OBS / a browser) ----
@@ -361,6 +364,7 @@ app.put('/api/config', (req, res) => {
   const signApiKey = typeof raw.signApiKey === 'string' && raw.signApiKey.trim() ? raw.signApiKey.trim() : config.signApiKey;
   const incoming = cleanConfig(raw); // wrong types and unknown settings are dropped
   delete incoming.signApiKey;
+  delete incoming.listMe; // only changed with /api/list-me, so it's always a deliberate choice
   if (incoming.obs) incoming.obs.password = incoming.obs.password || config.obs?.password || '';
   // nested settings merge (sending { tts: { voice } } keeps the rest of tts); lists are replaced
   config = { ...merge(config, incoming), signApiKey };
@@ -380,7 +384,7 @@ app.post('/api/restore', (req, res) => {
   const b = req.body;
   if (!b || b.app !== 'flock.tt' || !b.config || typeof b.config !== 'object') return res.status(400).json({ error: 'That file is not a flock.tt backup' });
   const incoming = cleanConfig(b.config);
-  delete incoming.signApiKey; delete incoming.username;
+  delete incoming.signApiKey; delete incoming.username; delete incoming.listMe;
   if (incoming.obs) delete incoming.obs.password;
   config = { ...merge(config, incoming), signApiKey: config.signApiKey, username: config.username, obs: { ...merge(config.obs, incoming.obs || {}), password: config.obs?.password || '' } };
   saveConfig(config);
@@ -396,6 +400,18 @@ app.post('/api/update', (req, res) => {
   if (!u?.state().supported) return res.status(400).json({ error: 'Updates install by themselves in the desktop app' });
   if (req.body?.action === 'install') u.install(); else u.check();
   res.json(u.state());
+});
+
+// ---- Public streamer list: yes / no (asked once, changeable in Settings) ----
+app.post('/api/list-me', async (req, res) => {
+  if (typeof req.body?.on !== 'boolean') return res.status(400).json({ error: 'Say on: true or false' });
+  const was = config.listMe;
+  config.listMe = req.body.on;
+  saveConfig(config);
+  io.emit('config', publicConfig());
+  if (config.listMe) streamerList.beatNow?.();
+  else if (was === true) streamerList.forget(config.username);
+  res.json({ listMe: config.listMe });
 });
 
 app.post('/api/connect', async (req, res) => {

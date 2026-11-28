@@ -180,6 +180,18 @@ On the **Goals & timer** page, start the countdown. While it runs, coins, follow
 
 **Stacking goals:** give a goal a **Then +** amount and it moves up by itself each time it's reached (10,000 likes → 20,000 → 30,000 …), after a moment of celebration on the goal bar.
 
+## Public streamer list (opt-in)
+
+flock.tt can keep a public list of creators who use it, with a red dot when they're live. It's **off until the
+list server is online**: set its address in `DEFAULT_LIST_URL` in `src/streamerList.js` (the server is in
+[`registry/`](registry/README.md), with a step-by-step hosting guide).
+
+Once it's set, the app **asks each creator once**, the first time they connect, and sends nothing before they
+answer. If they say yes, while they're live it sends only their TikTok @username, the flock.tt version and
+Windows/Mac. Never keys, passwords, viewers, chat or gifts. They can leave any time in **Settings → Public
+streamer list**. You see everyone at your list's address, and `/admin` (password protected) lets you remove
+entries. The privacy page explains all of this to creators.
+
 ## Configuration
 
 Settings are saved to `data/config.json`, which is git-ignored. Saves are atomic and the previous copy is kept as `config.json.bak`, so a power cut mid-save can't wipe your setup. **Settings → Backup & restore** saves everything (except your API key and OBS password) to one file you can load on another computer. Environment variables:

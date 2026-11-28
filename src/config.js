@@ -11,6 +11,8 @@ const CONFIG_FILE = path.join(DATA_DIR, 'config.json');
 export const DEFAULT_CONFIG = {
   username: '',
   signApiKey: '',
+  // the public streamer list: null = not asked yet, true = show me on it, false = don't (see src/streamerList.js)
+  listMe: null,
   autoReconnect: true,
   tts: {
     enabled: false,

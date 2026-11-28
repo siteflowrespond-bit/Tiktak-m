@@ -9,3 +9,4 @@ release/
 # generated training data for the layout model (npm run ai:train recreates it)
 scripts/ai/data/
 scripts/ai/__pycache__/
+registry-data.json

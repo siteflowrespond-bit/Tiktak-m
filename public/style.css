@@ -846,3 +846,9 @@ body.ed-full .ai-fab { width: 46px; height: 46px; opacity: .85; }
 .settings-group { margin: 34px 0 14px; padding-top: 22px; border-top: 1px solid var(--line); }
 .settings-group h2 { margin: 0 0 4px; font-size: 18px; letter-spacing: -.02em; }
 .settings-group .muted { margin: 0; font-size: 13px; }
+/* one-time question (streamer list) */
+.ask-dlg { width: min(480px, calc(100vw - 32px)); padding: 24px; border: 1px solid var(--line-2); border-radius: 18px; background: #131316; color: var(--text); box-shadow: 0 30px 80px rgba(0,0,0,.8); }
+.ask-dlg::backdrop { background: rgba(0,0,0,.6); backdrop-filter: blur(4px); }
+.ask-dlg h2 { margin: 0 0 10px; font-size: 19px; letter-spacing: -.02em; }
+.ask-dlg p { margin: 0 0 10px; font-size: 13.5px; line-height: 1.55; }
+.ask-dlg .v-btns { margin-top: 16px; }
